@@ -150,24 +150,6 @@ body {
   padding:10px;
 }
 
-.artcard__theme {
-  top:12px;
-  left:12px;
-  min-height:34px;
-  padding:0 14px;
-  background:var(--tertiary-soft);
-  color:#003A34;
-  box-shadow:0 8px 18px rgba(0,106,96,.18);
-}
-
-.artcard__badge {
-  min-height:30px;
-  display:flex;
-  align-items:center;
-  background:var(--gold) !important;
-  color:#574500 !important;
-}
-
 .artcard__body {
   padding:0 18px 2px;
 }

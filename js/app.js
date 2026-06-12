@@ -1,6 +1,7 @@
 function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95) {
   const width = imageData.width;
   const height = imageData.height;
+  if (startX < 0 || startX >= width || startY < 0 || startY >= height) return;
   const data = imageData.data;
   const getPixelIndex = (x, y) => (y * width + x) * 4;
   const targetIdx = getPixelIndex(startX, startY);
@@ -31,8 +32,9 @@ function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95) {
   const queue = [[startX, startY]];
   const visited = new Uint8Array(width * height);
   visited[startY * width + startX] = 1;
-  while (queue.length > 0) {
-    const [cx, cy] = queue.shift();
+  let head = 0;
+  while (head < queue.length) {
+    const [cx, cy] = queue[head++];
     const currIdx = getPixelIndex(cx, cy);
     data[currIdx] = fillR;
     data[currIdx + 1] = fillG;
@@ -143,7 +145,11 @@ function shouldMergeLastSmallRegion(seed) {
 function markProgressRegion(imageData, x, y) {
   doFloodFill(imageData, x, y, PROGRESS_MARKER);
 }
-function createSafeArtworkCanvas(img) {
+const safeArtworkFrameCache = /* @__PURE__ */ new Map();
+function createSafeArtworkCanvas(img, cacheKey = "") {
+  if (cacheKey && safeArtworkFrameCache.has(cacheKey)) {
+    return safeArtworkFrameCache.get(cacheKey);
+  }
   const width = img.width;
   const height = img.height;
   const pad = Math.min(72, Math.max(32, Math.round(Math.min(width, height) * 0.065)));
@@ -195,7 +201,11 @@ function createSafeArtworkCanvas(img) {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(sourceCanvas, sourceX, sourceY, sourceW, sourceH, offsetX, offsetY, drawWidth, drawHeight);
-  return { canvas, width, height, scale, offsetX, offsetY, sourceX, sourceY };
+  const frame = { canvas, width, height, scale, offsetX, offsetY, sourceX, sourceY };
+  if (cacheKey) {
+    safeArtworkFrameCache.set(cacheKey, frame);
+  }
+  return frame;
 }
 function normalizeFillForFrame(fill, frame) {
   if (!fill || !frame) return fill;
@@ -216,6 +226,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
   const lastArtSrcRef = React.useRef("");
   const [imageReady, setImageReady] = React.useState(false);
   const [paintPulse, setPaintPulse] = React.useState(null);
+  const shouldAnalyzeRegions = interactive || Boolean(onProgressChange) || Boolean(onRegionsChange);
   if (lastArtSrcRef.current !== art.src) {
     regionsRef.current = null;
     lastArtSrcRef.current = art.src;
@@ -240,8 +251,9 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
             let isBackground = false;
             const queue = [[x, y]];
             visited[vIdx] = 1;
-            while (queue.length > 0) {
-              const [cx, cy] = queue.shift();
+            let head = 0;
+            while (head < queue.length) {
+              const [cx, cy] = queue[head++];
               regionSize++;
               if (cx <= 35 || cy <= 35 || cx >= width - 36 || cy >= height - 36) {
                 isBackground = true;
@@ -282,7 +294,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
     setPaintPulse(null);
     const img = new Image();
     img.onload = () => {
-      const frame = createSafeArtworkCanvas(img);
+      const frame = createSafeArtworkCanvas(img, art.src);
       const cw = frame.width;
       const ch = frame.height;
       frameRef.current = frame;
@@ -291,7 +303,11 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
         baseCanvasRef.current.height = ch;
         const ctx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
         ctx.drawImage(frame.canvas, 0, 0);
-        analyzeRegions(ctx, cw, ch);
+        if (shouldAnalyzeRegions) {
+          analyzeRegions(ctx, cw, ch);
+        } else {
+          regionsRef.current = null;
+        }
       }
       redraw(cw, ch);
       if (onImageLoad) {
@@ -300,7 +316,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
       setImageReady(true);
     };
     img.src = art.src;
-  }, [art.src]);
+  }, [art.src, shouldAnalyzeRegions]);
   const redraw = (cw, ch) => {
     if (!canvasRef.current || !baseCanvasRef.current) return;
     canvasRef.current.width = cw;
@@ -465,8 +481,15 @@ function Icon({ name, size = 26, color = "currentColor", stroke = 2.4 }) {
 function BigButton({ children, onClick, variant = "solid", icon, style }) {
   return /* @__PURE__ */ React.createElement("button", { className: "bigbtn bigbtn--" + variant, onClick, style }, icon && /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 28 }), /* @__PURE__ */ React.createElement("span", null, children));
 }
-function Thumb({ art, fills }) {
-  return /* @__PURE__ */ React.createElement(CanvasArt, { art, fills: fills || [], interactive: false });
+function ArtworkImage({ art, priority = false }) {
+  return /* @__PURE__ */ React.createElement("img", { src: art.src, alt: "", loading: priority ? "eager" : "lazy", decoding: "async", fetchpriority: priority ? "high" : "auto", draggable: "false" });
+}
+function Thumb({ art, fills, lightweight = false, priority = false }) {
+  const fillsArray = Array.isArray(fills) ? fills : [];
+  if (lightweight && fillsArray.length === 0) {
+    return /* @__PURE__ */ React.createElement(ArtworkImage, { art, priority });
+  }
+  return /* @__PURE__ */ React.createElement(CanvasArt, { art, fills: fillsArray, interactive: false });
 }
 const SHOWCASE_PALETTE = [
   "#F6D977",
@@ -750,17 +773,14 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
   return /* @__PURE__ */ React.createElement("div", { className: "screen home" }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--home" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "오늘의 색칠")), /* @__PURE__ */ React.createElement("div", { className: "appbar__count" }, totalCount, "장")), /* @__PURE__ */ React.createElement("section", { className: "home-summary", "aria-label": "도안 선택" }, /* @__PURE__ */ React.createElement("div", { className: "home-summary__copy" }, /* @__PURE__ */ React.createElement("span", { className: "home-summary__eyebrow" }, "톡 채우기"), /* @__PURE__ */ React.createElement("h2", null, "색이 차오르는 순간"), /* @__PURE__ */ React.createElement("p", null, "그림을 고르고 빈칸을 눌러 완성해요.")), /* @__PURE__ */ React.createElement("div", { className: "home-preview-showcase", "aria-hidden": "true" }, featuredArt && /* @__PURE__ */ React.createElement(FinishedThumb, { art: featuredArt, limit: 90 }), /* @__PURE__ */ React.createElement("span", null, "완성 미리보기"))), /* @__PURE__ */ React.createElement("div", { className: "cats" }, window.CATEGORIES.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c))), /* @__PURE__ */ React.createElement("div", { className: "prompt" }, /* @__PURE__ */ React.createElement("span", null, cat === "전체" ? "전체 도안" : cat), /* @__PURE__ */ React.createElement("em", null, list.length, "장")), /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, list.map((a, idx) => {
     const pr = progress[a.id];
     const fillsArray = Array.isArray(pr) ? pr : pr ? pr.fills : [];
-    const inProgress = fillsArray && fillsArray.length > 0;
-    let percent = 0;
-    if (pr) percent = Array.isArray(pr) ? Math.min(100, Math.round(pr.length / 25 * 100)) : pr.pct;
-    return /* @__PURE__ */ React.createElement("button", { key: a.id, className: "artcard stagger-fade-in", onClick: () => onPick(a.id), style: { animationDelay: idx * 0.05 + "s" } }, /* @__PURE__ */ React.createElement("div", { className: "artcard__thumb" }, /* @__PURE__ */ React.createElement(Thumb, { art: a, fills: fillsArray }), /* @__PURE__ */ React.createElement("span", { className: "artcard__theme" }, a.category), inProgress && /* @__PURE__ */ React.createElement("span", { className: "artcard__badge", style: { background: percent === 100 ? "var(--ok)" : "var(--gold)", color: percent === 100 ? "#fff" : "#3a2e10" } }, percent === 100 ? "완성" : percent + "% 진행")), /* @__PURE__ */ React.createElement("div", { className: "artcard__body" }, /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, a.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__hint" }, getThemeHint(a.category))));
+    return /* @__PURE__ */ React.createElement("button", { key: a.id, className: "artcard", onClick: () => onPick(a.id) }, /* @__PURE__ */ React.createElement("div", { className: "artcard__thumb" }, /* @__PURE__ */ React.createElement(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })), /* @__PURE__ */ React.createElement("div", { className: "artcard__body" }, /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, a.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__hint" }, getThemeHint(a.category))));
   })));
 }
 function GalleryScreen({ items, onBack, onView }) {
-  return /* @__PURE__ */ React.createElement("div", { className: "screen gallery" }, /* @__PURE__ */ React.createElement("header", { className: "appbar" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "\uB0B4 \uAC24\uB7EC\uB9AC")), /* @__PURE__ */ React.createElement("button", { className: "appbar__action", onClick: onBack }, /* @__PURE__ */ React.createElement(Icon, { name: "grid", size: 22 }), /* @__PURE__ */ React.createElement("span", null, "\uB3C4\uC548"))), items.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("div", { className: "empty__art" }, /* @__PURE__ */ React.createElement(Thumb, { art: window.ARTWORKS[0] })), /* @__PURE__ */ React.createElement("p", { className: "empty__title" }, "\uC544\uC9C1 \uC644\uC131\uD55C \uADF8\uB9BC\uC774 \uC5C6\uC5B4\uC694"), /* @__PURE__ */ React.createElement("p", { className: "empty__sub" }, "\uADF8\uB9BC\uC744 \uACE8\uB77C \uC0C9\uCE60\uD558\uACE0 \uC644\uC131\uD558\uBA74", /* @__PURE__ */ React.createElement("br", null), "\uC774\uACF3\uC5D0 \uBAA8\uC544 \uB4DC\uB824\uC694"), /* @__PURE__ */ React.createElement(BigButton, { icon: "plus", onClick: onBack }, "\uADF8\uB9BC \uACE0\uB974\uB7EC \uAC00\uAE30")) : /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, items.map((it, idx) => {
+  return /* @__PURE__ */ React.createElement("div", { className: "screen gallery" }, /* @__PURE__ */ React.createElement("header", { className: "appbar" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "\uB0B4 \uAC24\uB7EC\uB9AC")), /* @__PURE__ */ React.createElement("button", { className: "appbar__action", onClick: onBack }, /* @__PURE__ */ React.createElement(Icon, { name: "grid", size: 22 }), /* @__PURE__ */ React.createElement("span", null, "\uB3C4\uC548"))), items.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("div", { className: "empty__art" }, /* @__PURE__ */ React.createElement(Thumb, { art: window.ARTWORKS[0] })), /* @__PURE__ */ React.createElement("p", { className: "empty__title" }, "\uC544\uC9C1 \uC644\uC131\uD55C \uADF8\uB9BC\uC774 \uC5C6\uC5B4\uC694"), /* @__PURE__ */ React.createElement("p", { className: "empty__sub" }, "\uADF8\uB9BC\uC744 \uACE8\uB77C \uC0C9\uCE60\uD558\uACE0 \uC644\uC131\uD558\uBA74", /* @__PURE__ */ React.createElement("br", null), "\uC774\uACF3\uC5D0 \uBAA8\uC544 \uB4DC\uB824\uC694"), /* @__PURE__ */ React.createElement(BigButton, { icon: "plus", onClick: onBack }, "\uADF8\uB9BC \uACE0\uB974\uB7EC \uAC00\uAE30")) : /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, items.map((it) => {
     const art = getArtworkById(it.artId);
     if (!art) return null;
-    return /* @__PURE__ */ React.createElement("div", { key: it.id, className: "artcard stagger-fade-in", style: { animationDelay: `${idx * 0.05}s` } }, /* @__PURE__ */ React.createElement("button", { className: "artcard__thumb", onClick: () => onView(it) }, /* @__PURE__ */ React.createElement(Thumb, { art, fills: it.fills })), /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, art.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__date" }, new Date(it.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })));
+    return /* @__PURE__ */ React.createElement("div", { key: it.id, className: "artcard" }, /* @__PURE__ */ React.createElement("button", { className: "artcard__thumb", onClick: () => onView(it) }, /* @__PURE__ */ React.createElement(Thumb, { art, fills: it.fills })), /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, art.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__date" }, new Date(it.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })));
   })));
 }
 function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFinish, tweaks, onProgressChange }) {
@@ -1099,8 +1119,9 @@ function Confetti() {
     return /* @__PURE__ */ React.createElement("span", { key: i, style });
   }));
 }
-const GKEY = "sori_gallery_v1";
-const PKEY = "sori_progress_v1";
+const STORAGE_VERSION = "v3";
+const GKEY = "sori_gallery_" + STORAGE_VERSION;
+const PKEY = "sori_progress_" + STORAGE_VERSION;
 function loadGallery() {
   try {
     return JSON.parse(localStorage.getItem(GKEY)) || [];
@@ -1127,14 +1148,13 @@ function saveProgress(map) {
   } catch (_) {
   }
 }
-Object.assign(window, { loadGallery, saveGallery, loadProgress, saveProgress, Icon, BigButton, Thumb, HomeScreen, GalleryScreen, CompletionScreen, Confetti });
 function downloadCanvasPng(art, fills) {
   return new Promise((resolve, reject) => {
     try {
       const canvas = document.createElement("canvas");
       const img = new Image();
       img.onload = () => {
-        const frame = createSafeArtworkCanvas(img);
+        const frame = createSafeArtworkCanvas(img, art.src);
         canvas.width = frame.width;
         canvas.height = frame.height;
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -1189,7 +1209,13 @@ function App() {
   };
   React.useEffect(() => {
     if (screen === "color" && artId) {
-      const next = { ...progress, [artId]: { fills, pct } };
+      const fillsArray = Array.isArray(fills) ? fills : [];
+      const next = { ...progress };
+      if (fillsArray.length === 0 && pct === 0) {
+        delete next[artId];
+      } else {
+        next[artId] = { fills: fillsArray, pct };
+      }
       setProgress(next);
       saveProgress(next);
     }

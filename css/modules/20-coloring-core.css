@@ -7,15 +7,6 @@
 .canvasinner { margin:auto; flex:0 0 auto; border-radius:24px; overflow:hidden; background:var(--paper);
   box-shadow:var(--shadow-lg); border:1.5px solid var(--line); }
 
-/* SVG 프리미엄 채색 애니메이션 및 데스크탑 호버 UX */
-.canvasinner svg path {
-  transition: fill 0.25s ease-out;
-}
-.canvasinner svg path[stroke="black"]:not([fill="none"]):hover {
-  cursor: crosshair;
-  filter: brightness(0.92);
-}
-
 .progress { flex:1; display:flex; flex-direction:column; gap:5px; min-width:0; padding:0 4px; }
 .progress__bar { height:14px; border-radius:999px; background:var(--accent-soft); overflow:hidden; }
 .progress__bar span { display:block; height:100%; background:linear-gradient(90deg,var(--gold),var(--accent));
@@ -82,9 +73,6 @@
   box-shadow: 0 20px 60px rgba(240, 180, 60, 0.4), inset 0 0 40px rgba(255,255,255,0.6); 
   border-color: #F0B43C;
 }
-.magic-svg { transition: filter 1s ease; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)) saturate(1.2); }
-.magic-svg path { transition: stroke 1.5s ease; stroke: transparent !important; }
-
 /* ── 컨페티 ── */
 .confetti { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
 .confetti span { position:absolute; top:-20px; border-radius:2px; animation:fall linear forwards; }

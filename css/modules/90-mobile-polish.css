@@ -974,32 +974,18 @@ body,
   transform:scale(.98);
 }
 
-.artcard__thumb canvas {
+.artcard__thumb canvas,
+.artcard__thumb img {
+  width:100%;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  display:block;
+  box-sizing:border-box;
   padding:5px;
 }
 
-.artcard__theme {
-  top:8px;
-  left:8px;
-  min-height:24px;
-  padding:0 9px;
-  background:rgba(45,149,140,.92);
-  color:#fff;
-  font-size:11px;
-  box-shadow:0 6px 12px rgba(45,149,140,.16);
-}
-
-.artcard__badge {
-  left:auto;
-  right:8px;
-  bottom:8px;
-  min-height:24px;
-  padding:0 9px;
-  display:inline-flex;
-  align-items:center;
-  font-size:11px;
-  box-shadow:0 6px 12px rgba(75,55,35,.14);
-}
 
 .artcard__body {
   padding:0 2px 3px;
