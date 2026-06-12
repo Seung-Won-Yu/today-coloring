@@ -132,6 +132,14 @@ function findNearestPaintedStart(baseData, progressData, width, height, x, y, ra
   }
   return null;
 }
+function shouldMergeTinyRegion(seed) {
+  if (!seed || seed.isBackground) return false;
+  return seed.size <= 18;
+}
+function shouldMergeLastSmallRegion(seed) {
+  if (!seed || seed.isBackground) return false;
+  return seed.size <= 48;
+}
 function markProgressRegion(imageData, x, y) {
   doFloodFill(imageData, x, y, PROGRESS_MARKER);
 }
@@ -331,8 +339,14 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
         const idx = (s.y * cw + s.x) * 4;
         return !isProgressMarked(progressData, idx);
       });
-      if (uncoloredSeeds.length > 0 && uncoloredSeeds.length <= 2) {
-        uncoloredSeeds.forEach((s) => {
+      const tinySeeds = uncoloredSeeds.filter(shouldMergeTinyRegion);
+      const lastSmallSeeds = uncoloredSeeds.length <= 2 && uncoloredSeeds.every(shouldMergeLastSmallRegion) ? uncoloredSeeds : [];
+      const mergeSeeds = [...tinySeeds, ...lastSmallSeeds].filter((seed, index, all) => {
+        return all.findIndex((item) => item.x === seed.x && item.y === seed.y) === index;
+      });
+      if (mergeSeeds.length > 0 && mergeSeeds.length <= 8) {
+        mergeSeeds.forEach((s) => {
+          markProgressRegion(progressImgData, s.x, s.y);
           nextFills.push({ x: s.x, y: s.y, color: selected });
         });
       }
