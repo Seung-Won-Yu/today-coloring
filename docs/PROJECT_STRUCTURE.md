@@ -16,7 +16,7 @@ ColoringApp/
   assets/
     icons/                 # App/PWA icons
     images/
-      artworks/            # Coloring page PNG/SVG line art
+      artworks/            # Coloring page PNG line art
   css/
     styles.css             # CSS import entry
     modules/
@@ -39,7 +39,7 @@ ColoringApp/
 
 ## Common Edits
 
-- Add or remove a coloring page: edit `js/data/artworks.js`, then place the PNG or SVG in `assets/images/artworks/`.
+- Add or remove a coloring page: edit `js/data/artworks.js`, then place the PNG in `assets/images/artworks/`.
 - Change palette colors: edit `js/data/palette.js`.
 - Change lobby/home visual polish: edit `css/modules/90-mobile-polish.css`.
 - Change how-to slides layout: edit `css/modules/70-guide-repair.css`.
