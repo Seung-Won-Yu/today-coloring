@@ -143,11 +143,76 @@ function shouldMergeLastSmallRegion(seed) {
 function markProgressRegion(imageData, x, y) {
   doFloodFill(imageData, x, y, PROGRESS_MARKER);
 }
+function createSafeArtworkCanvas(img) {
+  const width = img.width;
+  const height = img.height;
+  const pad = Math.min(72, Math.max(32, Math.round(Math.min(width, height) * 0.065)));
+  const sourceCanvas = document.createElement("canvas");
+  sourceCanvas.width = width;
+  sourceCanvas.height = height;
+  const sourceCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
+  sourceCtx.fillStyle = "#fff";
+  sourceCtx.fillRect(0, 0, width, height);
+  sourceCtx.drawImage(img, 0, 0);
+  const sourceData = sourceCtx.getImageData(0, 0, width, height).data;
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      const r = sourceData[idx];
+      const g = sourceData[idx + 1];
+      const b = sourceData[idx + 2];
+      const a = sourceData[idx + 3];
+      if (a > 50 && r < 190 && g < 190 && b < 190) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+  const hasInk = maxX >= minX && maxY >= minY;
+  const sourceX = hasInk ? Math.max(0, minX - 8) : 0;
+  const sourceY = hasInk ? Math.max(0, minY - 8) : 0;
+  const sourceW = hasInk ? Math.min(width - sourceX, maxX - minX + 17) : width;
+  const sourceH = hasInk ? Math.min(height - sourceY, maxY - minY + 17) : height;
+  const innerWidth = Math.max(1, width - pad * 2);
+  const innerHeight = Math.max(1, height - pad * 2);
+  const scale = Math.min(innerWidth / sourceW, innerHeight / sourceH);
+  const drawWidth = Math.round(sourceW * scale);
+  const drawHeight = Math.round(sourceH * scale);
+  const offsetX = Math.round((width - drawWidth) / 2);
+  const offsetY = Math.round((height - drawHeight) / 2);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(sourceCanvas, sourceX, sourceY, sourceW, sourceH, offsetX, offsetY, drawWidth, drawHeight);
+  return { canvas, width, height, scale, offsetX, offsetY, sourceX, sourceY };
+}
+function normalizeFillForFrame(fill, frame) {
+  if (!fill || !frame) return fill;
+  if (fill.v === 2) return fill;
+  return {
+    ...fill,
+    x: Math.round(frame.offsetX + (fill.x - frame.sourceX) * frame.scale),
+    y: Math.round(frame.offsetY + (fill.y - frame.sourceY) * frame.scale),
+    v: 2
+  };
+}
 function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgressChange, onImageLoad, onRegionsChange }) {
   const canvasRef = React.useRef(null);
   const baseCanvasRef = React.useRef(null);
   const fillsArray = Array.isArray(fills) ? fills : [];
   const regionsRef = React.useRef(null);
+  const frameRef = React.useRef(null);
   const lastArtSrcRef = React.useRef("");
   const [imageReady, setImageReady] = React.useState(false);
   const [paintPulse, setPaintPulse] = React.useState(null);
@@ -217,13 +282,15 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
     setPaintPulse(null);
     const img = new Image();
     img.onload = () => {
-      const cw = img.width;
-      const ch = img.height;
+      const frame = createSafeArtworkCanvas(img);
+      const cw = frame.width;
+      const ch = frame.height;
+      frameRef.current = frame;
       if (baseCanvasRef.current) {
         baseCanvasRef.current.width = cw;
         baseCanvasRef.current.height = ch;
         const ctx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(frame.canvas, 0, 0);
         analyzeRegions(ctx, cw, ch);
       }
       redraw(cw, ch);
@@ -246,8 +313,9 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
     const progressData = new Uint8ClampedArray(baseImgData.data);
     const progressImgData = { data: progressData, width: cw, height: ch };
     for (let f of fillsArray) {
-      doFloodFill(imgData, f.x, f.y, hexToRgb(f.color));
-      markProgressRegion(progressImgData, f.x, f.y);
+      const normalizedFill = normalizeFillForFrame(f, frameRef.current);
+      doFloodFill(imgData, normalizedFill.x, normalizedFill.y, hexToRgb(normalizedFill.color));
+      markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y);
     }
     ctx.putImageData(imgData, 0, 0);
     if (regionsRef.current && onProgressChange) {
@@ -287,7 +355,8 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
     const progressData = new Uint8ClampedArray(baseImgData.data);
     const progressImgData = { data: progressData, width: cw, height: ch };
     for (let f of fillsArray) {
-      markProgressRegion(progressImgData, f.x, f.y);
+      const normalizedFill = normalizeFillForFrame(f, frameRef.current);
+      markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y);
     }
     const snapRadius = Math.max(18, Math.round(Math.max(scaleX, scaleY) * 18));
     const clickedIdx = (y * cw + x) * 4;
@@ -311,7 +380,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
         return;
       }
     }
-    const newFill = { x: paintX, y: paintY, color: selected };
+    const newFill = { x: paintX, y: paintY, color: selected, v: 2 };
     let nextFills = [...fillsArray, newFill];
     const progressDataBeforeClick = new Uint8ClampedArray(progressData);
     markProgressRegion(progressImgData, paintX, paintY);
@@ -334,7 +403,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
           const isColored = isProgressMarked(progressData, idx);
           if (!isColored) {
             markProgressRegion(progressImgData, s.x, s.y);
-            nextFills.push({ x: s.x, y: s.y, color: selected });
+            nextFills.push({ x: s.x, y: s.y, color: selected, v: 2 });
           }
         }
       }
@@ -352,7 +421,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
       if (mergeSeeds.length > 0 && mergeSeeds.length <= 8) {
         mergeSeeds.forEach((s) => {
           markProgressRegion(progressImgData, s.x, s.y);
-          nextFills.push({ x: s.x, y: s.y, color: selected });
+          nextFills.push({ x: s.x, y: s.y, color: selected, v: 2 });
         });
       }
     }
@@ -1065,14 +1134,16 @@ function downloadCanvasPng(art, fills) {
       const canvas = document.createElement("canvas");
       const img = new Image();
       img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
+        const frame = createSafeArtworkCanvas(img);
+        canvas.width = frame.width;
+        canvas.height = frame.height;
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        ctx.drawImage(img, 0, 0);
-        const imgData = ctx.getImageData(0, 0, img.width, img.height);
+        ctx.drawImage(frame.canvas, 0, 0);
+        const imgData = ctx.getImageData(0, 0, frame.width, frame.height);
         const fillsArray = Array.isArray(fills) ? fills : [];
         for (let f of fillsArray) {
-          doFloodFill(imgData, f.x, f.y, hexToRgb(f.color));
+          const normalizedFill = normalizeFillForFrame(f, frame);
+          doFloodFill(imgData, normalizedFill.x, normalizedFill.y, hexToRgb(normalizedFill.color));
         }
         ctx.putImageData(imgData, 0, 0);
         const url = canvas.toDataURL("image/png");
