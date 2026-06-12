@@ -105,6 +105,33 @@ function findNearestUnpaintedStart(baseData, progressData, width, height, x, y, 
   }
   return null;
 }
+function findNearestPaintedStart(baseData, progressData, width, height, x, y, radius) {
+  const canRecolor = (px, py) => {
+    if (px < 0 || px >= width || py < 0 || py >= height) return false;
+    const idx = (py * width + px) * 4;
+    return isProgressMarked(progressData, idx) && isPaintableBasePixel(baseData, idx);
+  };
+  if (canRecolor(x, y)) return { x, y };
+  let best = null;
+  let bestDistance = Infinity;
+  for (let r = 1; r <= radius; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+        const px = x + dx;
+        const py = y + dy;
+        if (!canRecolor(px, py)) continue;
+        const distance = dx * dx + dy * dy;
+        if (distance < bestDistance) {
+          best = { x: px, y: py };
+          bestDistance = distance;
+        }
+      }
+    }
+    if (best) return best;
+  }
+  return null;
+}
 function markProgressRegion(imageData, x, y) {
   doFloodFill(imageData, x, y, PROGRESS_MARKER);
 }
@@ -250,9 +277,17 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
       markProgressRegion(progressImgData, f.x, f.y);
     }
     const snapRadius = Math.max(18, Math.round(Math.max(scaleX, scaleY) * 18));
-    const snappedStart = findNearestUnpaintedStart(baseImgData.data, progressData, cw, ch, x, y, snapRadius);
-    const paintX = snappedStart ? snappedStart.x : x;
-    const paintY = snappedStart ? snappedStart.y : y;
+    const clickedIdx = (y * cw + x) * 4;
+    const clickedIsPaintable = isPaintableBasePixel(baseImgData.data, clickedIdx);
+    const clickedIsColored = isProgressMarked(progressData, clickedIdx);
+    let start = { x, y };
+    if (!clickedIsPaintable) {
+      start = findNearestPaintedStart(baseImgData.data, progressData, cw, ch, x, y, Math.round(snapRadius * 0.7)) || findNearestUnpaintedStart(baseImgData.data, progressData, cw, ch, x, y, snapRadius) || start;
+    } else if (!clickedIsColored) {
+      start = findNearestUnpaintedStart(baseImgData.data, progressData, cw, ch, x, y, snapRadius) || start;
+    }
+    const paintX = start.x;
+    const paintY = start.y;
     const pIdx = (paintY * cw + paintX) * 4;
     const isAlreadyColored = isProgressMarked(progressData, pIdx);
     if (isAlreadyColored) {
