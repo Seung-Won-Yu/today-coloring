@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>오늘의 색칠</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script>
+  (function() {
+    var v = new Date().getTime();
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'css/styles.css?v=' + v;
+    document.head.appendChild(link);
+  })();
+</script>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  // 앱 버전 변경 시 localStorage 초기화 (이전 테스트 데이터 제거)
+  (function() {
+    var APP_VER = 'v7.0';
+    if (localStorage.getItem('sori_app_ver') !== APP_VER) {
+      localStorage.removeItem('sori_progress_v1');
+      localStorage.removeItem('sori_gallery_v1');
+      localStorage.setItem('sori_app_ver', APP_VER);
+    }
+  })();
+</script>
+
+<!-- Vendor JS -->
+<script src="js/vendor/react.production.min.js"></script>
+<script src="js/vendor/react-dom.production.min.js"></script>
+<script src="js/data/artworks.js"></script>
+<script src="js/data/palette.js"></script>
+
+<!-- Dynamic Scripts for App -->
+<script>
+  (function() {
+    var v = new Date().getTime();
+    document.write('<script src="js/app.js?v=' + v + '"><\/script>');
+  })();
+</script>
+</body>
+</html>

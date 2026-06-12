@@ -1,0 +1,32 @@
+var PALETTE = [
+  { c: '#E0584F', name: '빨강' },
+  { c: '#E63946', name: '홍매색' },
+  { c: '#D94F6F', name: '진분홍' },
+  { c: '#E79AAE', name: '분홍' },
+  { c: '#FFC3A0', name: '살구' },
+  { c: '#EF9A3D', name: '주황' },
+  { c: '#FFD700', name: '개나리' },
+  { c: '#F6C84C', name: '노랑' },
+  { c: '#EAD7B0', name: '베이지' },
+  { c: '#D4A373', name: '황토색' },
+  { c: '#9CCF5B', name: '연두' },
+  { c: '#808000', name: '올리브' },
+  { c: '#6FA84F', name: '초록' },
+  { c: '#3E8C6E', name: '진초록' },
+  { c: '#A7F2D1', name: '민트' },
+  { c: '#2FA39A', name: '청록' },
+  { c: '#8FD0E8', name: '하늘' },
+  { c: '#3E6FB0', name: '파랑' },
+  { c: '#1A365D', name: '남색' },
+  { c: '#E6E6FA', name: '라벤더' },
+  { c: '#9B6FB0', name: '보라' },
+  { c: '#C97B98', name: '자주' },
+  { c: '#C96F4A', name: '갈색' },
+  { c: '#9A6B44', name: '고동' },
+  { c: '#E5E5E5', name: '연회색' },
+  { c: '#B0A99C', name: '회색' },
+  { c: '#4A4036', name: '먹색' },
+  { c: '#FFFFFF', name: '하양' }
+];
+
+window.PALETTE = PALETTE;

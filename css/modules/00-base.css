@@ -1,0 +1,84 @@
+:root {
+  --bg:#FAF8F5; --surface:#FFFFFF; --paper:#FFFDF9;
+  --ink:#2D251E; --ink-soft:#7C7267;
+  --accent:#E0584F; --accent-d:#B83C34; --accent-soft:#FDECEB;
+  --gold:#F0B43C; --line:rgba(74, 56, 30, 0.08); --ok:#4FA85C;
+  --fs:1; --shadow:0 8px 24px rgba(74,56,30,.05); --shadow-lg:0 18px 48px rgba(74,56,30,.12);
+}
+[data-theme="cool"] {
+  --bg:#F0F4F8; --surface:#FFFFFF; --paper:#F7FAFC;
+  --ink:#24323D; --ink-soft:#718096;
+  --accent:#3E7CB1; --accent-d:#25547D; --accent-soft:#EBF2F7;
+  --gold:#4FB0A4; --line:rgba(36, 50, 61, 0.08); --ok:#3EA88F;
+}
+[data-theme="contrast"] {
+  --bg:#FAF9F6; --surface:#FFFFFF; --paper:#FFFFFF;
+  --ink:#140F08; --ink-soft:#42372A;
+  --accent:#C9351C; --accent-d:#94210E; --accent-soft:#FCEDED;
+  --gold:#C28F0E; --line:#2A2116; --ok:#2F7A3E;
+  --shadow:0 4px 0 rgba(0,0,0,.15); --shadow-lg:0 6px 0 rgba(0,0,0,.18);
+}
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body,#root { margin:0; height:100%; }
+#root { display:flex; }
+body {
+  font-family:'Outfit',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Pretendard',sans-serif;
+  color:var(--ink); background:var(--bg);
+  overscroll-behavior:none; -webkit-user-select:none; user-select:none;
+  font-weight:500;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+button { font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+h1,h2,h3,p { margin:0; }
+
+/* Custom scrollbars */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(74,56,30,0.15); border-radius:99px; }
+::-webkit-scrollbar-thumb:hover { background:rgba(74,56,30,0.25); }
+
+.app { flex:1; min-height:0; background:var(--bg); display:flex; flex-direction:column; overflow:hidden; position:relative; }
+.screen { flex:1; min-height:0; display:flex; flex-direction:column; }
+
+/* ── 상단바 (글래스모피즘) ── */
+.appbar {
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex:0 0 auto;
+  padding:14px 18px; background:rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--line); box-shadow:0 4px 20px rgba(74,56,30,.03); z-index:5;
+  padding-top:max(14px, env(safe-area-inset-top));
+}
+.appbar__brand { display:flex; align-items:center; gap:11px; }
+.appbar__logo { width:42px; height:42px; border-radius:14px; background:linear-gradient(135deg,var(--accent),var(--accent-d));
+  display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); }
+.appbar h1 { font-size:calc(24px * var(--fs)); font-weight:900; letter-spacing:0; }
+.appbar__title { font-size:calc(21px * var(--fs)); font-weight:700; }
+.appbar__action {
+  display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:999px;
+  background:var(--accent-soft); color:var(--accent-d); font-weight:800; font-size:calc(15px * var(--fs));
+  border:2px solid transparent; transition:transform 0.15s ease;
+}
+.appbar__action:active { transform:scale(0.96); }
+.appbar__back { display:flex; align-items:center; gap:6px; padding:8px 16px 8px 10px; border-radius:999px;
+  background:var(--accent-soft); color:var(--accent-d); font-weight:800; font-size:calc(16px * var(--fs));
+  transition:transform 0.15s ease; }
+.appbar__back:active { transform:scale(0.96); }
+@media (max-width: 420px) {
+  .appbar__back {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+}
+.appbar__tools { display:flex; gap:10px; }
+.tool { position:relative; width:48px; height:48px; border-radius:16px; background:var(--surface);
+  border:1.5px solid var(--line); color:var(--ink); display:flex; align-items:center; justify-content:center;
+  box-shadow:var(--shadow); transition:transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s, box-shadow 0.15s; }
+.tool:hover { border-color:rgba(74, 56, 30, 0.15); }
+.tool:active { transform:scale(0.94); }
+.tool:disabled { opacity:.35; box-shadow:none; transform:none; }
+.tool--on { background:var(--accent); color:#fff; border-color:var(--accent); }
+.tool__lvl { position:absolute; bottom:2px; right:4px; font-size:10px; font-weight:900; }

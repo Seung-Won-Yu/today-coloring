@@ -1,0 +1,175 @@
+/* ── 색칠 화면 ── */
+.color { height:100%; }
+.colorbody { flex:1; min-height:0; display:flex; }
+.color--bottom .colorbody { flex-direction:column; }
+.color--side .colorbody { flex-direction:row; }
+.canvaswrap { flex:1; min-height:0; min-width:0; overflow:auto; display:flex; padding:8px; position:relative; -webkit-overflow-scrolling:touch; }
+.canvasinner { margin:auto; flex:0 0 auto; border-radius:24px; overflow:hidden; background:var(--paper);
+  box-shadow:var(--shadow-lg); border:1.5px solid var(--line); }
+
+/* SVG 프리미엄 채색 애니메이션 및 데스크탑 호버 UX */
+.canvasinner svg path {
+  transition: fill 0.25s ease-out;
+}
+.canvasinner svg path[stroke="black"]:not([fill="none"]):hover {
+  cursor: crosshair;
+  filter: brightness(0.92);
+}
+
+.progress { flex:1; display:flex; flex-direction:column; gap:5px; min-width:0; padding:0 4px; }
+.progress__bar { height:14px; border-radius:999px; background:var(--accent-soft); overflow:hidden; }
+.progress__bar span { display:block; height:100%; background:linear-gradient(90deg,var(--gold),var(--accent));
+  border-radius:999px; transition:width .4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.progress__txt { font-size:calc(14px * var(--fs)); font-weight:800; color:var(--ink-soft); text-align:center; }
+
+.palettezone { display:flex; align-items:center; gap:12px; background:rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); z-index:4; }
+.palettezone--bottom { flex-direction:row; padding:12px 16px; border-top:1px solid var(--line);
+  padding-bottom:max(12px, env(safe-area-inset-bottom)); box-shadow:0 -6px 20px rgba(74,56,30,.04); }
+.palettezone--side { flex-direction:column; padding:20px 16px; border-left:1px solid var(--line);
+  width:160px; box-shadow:-6px 0 20px rgba(74,56,30,.04); }
+
+.curcolor { flex:0 0 auto; width:62px; height:62px; border-radius:20px; border:3px solid transparent;
+  display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 0 2px rgba(255,255,255,.4), var(--shadow);
+  transition:transform 0.15s ease; flex-direction:column; gap:2px; }
+.curcolor span { font-size:12px; font-weight:900; }
+.palettezone--side .curcolor { width:100px; height:80px; border-radius:24px; }
+.palettezone--bottom .curcolor { width: 72px; height: 112px; border-radius: 20px; }
+
+.palette { flex:1; min-width:0; }
+.palette--bottom .palette__track { display: grid; grid-template-rows: repeat(2, 52px); grid-auto-flow: column; gap: 8px 10px; overflow-x: auto; padding: 4px 16px 4px 2px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.palette--side .palette__track { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; overflow-y:auto;
+  padding:4px; max-height:100%; scrollbar-width:none; }
+.palette__track::-webkit-scrollbar { display:none; }
+.swatch { flex:0 0 auto; border-radius:50%; border:2px solid transparent; position:relative;
+  display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); transition:transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.swatch--on { transform:scale(1.15); box-shadow:0 0 0 4px var(--surface), 0 0 0 7px var(--accent); }
+.swatch__check { font-size:22px; font-weight:900; }
+
+.finishbar { position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
+  display:flex; align-items:center; gap:10px; padding:15px 30px; border-radius:999px;
+  background:linear-gradient(135deg,var(--ok),#448f2b); color:#fff; font-size:calc(18px * var(--fs)); font-weight:900;
+  box-shadow:var(--shadow-lg); animation:pop .35s cubic-bezier(0.34, 1.56, 0.64, 1); white-space:nowrap; }
+@keyframes pop { from{transform:translateX(-50%) scale(.8); opacity:0;} to{transform:translateX(-50%) scale(1); opacity:1;} }
+.finish-fab { position:absolute; right:16px; bottom:calc(118px + env(safe-area-inset-bottom)); z-index:6;
+  padding:13px 24px; border-radius:999px; background:var(--ink); color:var(--paper);
+  font-size:calc(16px * var(--fs)); font-weight:800; box-shadow:var(--shadow-lg); transition:transform 0.15s ease; }
+.finish-fab:active { transform:scale(0.96); }
+.color--side .finish-fab { bottom:24px; right:134px; }
+[data-theme="warm"] .finish-fab { background:var(--accent); color:#fff; }
+
+.hide-narrow { display:inline; }
+@media (max-width:420px) { .hide-narrow { display:none; } }
+
+/* ── 완성 / 보기 ── */
+.completion { align-items:center; overflow-y:auto; position:relative; }
+.completion__inner { display:flex; flex-direction:column; align-items:center; gap:14px; padding:24px;
+  width:100%; max-width:440px; z-index:2; margin:auto; }
+.completion__eyebrow { display:flex; align-items:center; gap:8px; font-size:calc(17px * var(--fs));
+  font-weight:800; color:var(--accent-d); }
+.completion__title { font-size:calc(28px * var(--fs)); font-weight:900; letter-spacing:0; text-align:center; }
+.completion__frame { width:min(78vw, 44vh, 320px); aspect-ratio:1; border-radius:28px; overflow:hidden;
+  background:var(--paper); border:3px solid var(--surface); box-shadow:var(--shadow-lg); flex:0 0 auto; }
+.completion__btns { display:flex; flex-direction:column; gap:12px; width:100%; max-width:340px; margin-top:6px; }
+.completion__btns .bigbtn { width:100%; }
+.completion__row { display:flex; gap:12px; }
+.completion__row .bigbtn { flex:1; }
+
+/* ── 마법 변환 효과 (Magic Transform) ── */
+.completion__frame { transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.8s, border-color 0.8s; }
+.completion__frame--magic { 
+  transform: scale(1.05); 
+  box-shadow: 0 20px 60px rgba(240, 180, 60, 0.4), inset 0 0 40px rgba(255,255,255,0.6); 
+  border-color: #F0B43C;
+}
+.magic-svg { transition: filter 1s ease; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)) saturate(1.2); }
+.magic-svg path { transition: stroke 1.5s ease; stroke: transparent !important; }
+
+/* ── 컨페티 ── */
+.confetti { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
+.confetti span { position:absolute; top:-20px; border-radius:2px; animation:fall linear forwards; }
+@keyframes fall { to { transform:translateY(110vh) rotate(540deg); } }
+
+/* ── 토스트 ── */
+.toast { position:fixed; left:50%; bottom:calc(40px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+  background:var(--ink); color:var(--paper); padding:14px 26px; border-radius:999px; font-size:calc(15px * var(--fs));
+  font-weight:700; box-shadow:var(--shadow-lg); z-index:50; animation:pop .3s ease; }
+
+@media (prefers-reduced-motion: reduce) { *{animation-duration:.01ms !important;} }
+
+/* 게임 플로팅 툴바 (하단 가로형 구조로 캔버스 침범 차단) */
+.floating-toolbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  padding: 6px 12px;
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  border: 1.5px solid var(--line);
+  margin: 6px 14px 2px;
+  flex: 0 0 auto;
+  z-index: 10;
+}
+.game-tool-btn {
+  flex: 1;
+  max-width: 64px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow);
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  position: relative;
+}
+.game-tool-btn:active {
+  transform: scale(0.92);
+}
+.game-tool-btn--active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(224, 88, 79, 0.25);
+  transform: scale(1.05) translateY(-2px);
+}
+.game-tool-btn__lbl {
+  font-size: 8px;
+  font-weight: 900;
+  margin-top: 1px;
+}
+.tool__lvl-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--gold);
+  color: #3a2e10;
+  font-size: 8px;
+  font-weight: 900;
+  padding: 1px 3px;
+  border-radius: 99px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  line-height: 1;
+}
+@media (max-width: 600px) {
+  .floating-toolbar {
+    margin: 4px 10px 0;
+    gap: 4px;
+    padding: 6px 8px;
+  }
+  .game-tool-btn {
+    height: 44px;
+    border-radius: 12px;
+  }
+}
+.zoom-reset-btn:active {
+  transform: scale(0.92) !important;
+}
