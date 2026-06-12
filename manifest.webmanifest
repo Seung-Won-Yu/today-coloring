@@ -1,0 +1,19 @@
+{
+  "name": "오늘의 색칠",
+  "short_name": "오늘의 색칠",
+  "description": "그림을 고르고 색을 채우는 모바일 색칠 게임",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFF6DE",
+  "theme_color": "#FFF6DE",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/icons/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

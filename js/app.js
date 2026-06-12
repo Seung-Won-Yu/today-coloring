@@ -149,6 +149,8 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
   const fillsArray = Array.isArray(fills) ? fills : [];
   const regionsRef = React.useRef(null);
   const lastArtSrcRef = React.useRef("");
+  const [imageReady, setImageReady] = React.useState(false);
+  const [paintPulse, setPaintPulse] = React.useState(null);
   if (lastArtSrcRef.current !== art.src) {
     regionsRef.current = null;
     lastArtSrcRef.current = art.src;
@@ -211,6 +213,8 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
     }
   };
   React.useEffect(() => {
+    setImageReady(false);
+    setPaintPulse(null);
     const img = new Image();
     img.onload = () => {
       const cw = img.width;
@@ -226,6 +230,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
       if (onImageLoad) {
         onImageLoad({ width: cw, height: ch });
       }
+      setImageReady(true);
     };
     img.src = art.src;
   }, [art.src]);
@@ -351,21 +356,26 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
         });
       }
     }
+    const pulse = { id: Date.now(), x: paintX / cw * 100, y: paintY / ch * 100 };
+    setPaintPulse(pulse);
+    setTimeout(() => {
+      setPaintPulse((current) => current && current.id === pulse.id ? null : current);
+    }, 460);
     onPaint(nextFills);
   };
-  return /* @__PURE__ */ React.createElement("div", { style: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("canvas", { ref: baseCanvasRef, style: { display: "none" } }), /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement("div", { className: "canvas-art-shell" + (imageReady ? " is-ready" : " is-loading"), style: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("canvas", { ref: baseCanvasRef, style: { display: "none" } }), !imageReady && /* @__PURE__ */ React.createElement("div", { className: "canvas-art-loading", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("span", null)), /* @__PURE__ */ React.createElement(
     "canvas",
     {
       ref: canvasRef,
       onPointerUp: handlePointerUp,
       style: { maxWidth: "100%", maxHeight: "100%", objectFit: "contain", touchAction: "none" }
     }
-  ));
+  ), paintPulse && /* @__PURE__ */ React.createElement("span", { key: paintPulse.id, className: "paint-feedback", style: { left: paintPulse.x + "%", top: paintPulse.y + "%" } }));
 }
 function Icon({ name, size = 26, color = "currentColor", stroke = 2.4 }) {
   const p = { fill: "none", stroke: color, strokeWidth: stroke, strokeLinecap: "round", strokeLinejoin: "round" };
   const paths = {
-    back: /* @__PURE__ */ React.createElement("path", { ...p, d: "M15 5l-7 7 7 7" }),
+    back: /* @__PURE__ */ React.createElement("g", { ...p, strokeWidth: Math.max(stroke, 3) }, /* @__PURE__ */ React.createElement("path", { d: "M13.5 5L6.5 12l7 7" }), /* @__PURE__ */ React.createElement("path", { d: "M7.5 12H20" })),
     grid: /* @__PURE__ */ React.createElement("g", { ...p }, /* @__PURE__ */ React.createElement("rect", { x: "4", y: "4", width: "7", height: "7", rx: "1.5" }), /* @__PURE__ */ React.createElement("rect", { x: "13", y: "4", width: "7", height: "7", rx: "1.5" }), /* @__PURE__ */ React.createElement("rect", { x: "4", y: "13", width: "7", height: "7", rx: "1.5" }), /* @__PURE__ */ React.createElement("rect", { x: "13", y: "13", width: "7", height: "7", rx: "1.5" })),
     undo: /* @__PURE__ */ React.createElement("path", { ...p, d: "M9 7H15a5 5 0 010 10H7M9 7L5 4M9 7L5 10" }),
     zoom: /* @__PURE__ */ React.createElement("g", { ...p }, /* @__PURE__ */ React.createElement("circle", { cx: "11", cy: "11", r: "7" }), /* @__PURE__ */ React.createElement("path", { d: "M16 16l4 4M11 8v6M8 11h6" })),
@@ -374,7 +384,7 @@ function Icon({ name, size = 26, color = "currentColor", stroke = 2.4 }) {
     check: /* @__PURE__ */ React.createElement("path", { ...p, d: "M5 12l5 5L19 7" }),
     star: /* @__PURE__ */ React.createElement("path", { ...p, d: "M12 4l2.3 4.9 5.2.7-3.8 3.6.9 5.3L12 16.9 7.4 18.5l.9-5.3L4.5 9.6l5.2-.7z" }),
     plus: /* @__PURE__ */ React.createElement("path", { ...p, d: "M12 5v14M5 12h14" }),
-    trash: /* @__PURE__ */ React.createElement("path", { ...p, d: "M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" }),
+    trash: /* @__PURE__ */ React.createElement("g", { ...p, strokeWidth: Math.max(stroke, 2.7) }, /* @__PURE__ */ React.createElement("path", { d: "M4 7h16" }), /* @__PURE__ */ React.createElement("path", { d: "M9 7V5.5A2.5 2.5 0 0111.5 3h1A2.5 2.5 0 0115 5.5V7" }), /* @__PURE__ */ React.createElement("path", { d: "M7 7l1 13h8l1-13" }), /* @__PURE__ */ React.createElement("path", { d: "M10 11v5M14 11v5" })),
     brush: /* @__PURE__ */ React.createElement("path", { ...p, d: "M18 8a3 3 0 00-3-3l-10 10v3h3L18 8z M14 6l4 4" }),
     fill: /* @__PURE__ */ React.createElement("path", { ...p, d: "M12 22a7 7 0 007-7c0-4.3-7-11-7-11S5 10.7 5 15a7 7 0 007 7z" }),
     pencil: /* @__PURE__ */ React.createElement("path", { ...p, d: "M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" }),
@@ -963,7 +973,25 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   ), /* @__PURE__ */ React.createElement("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } }, /* @__PURE__ */ React.createElement("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } }, /* @__PURE__ */ React.createElement("span", { style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "\uACE0\uB978 \uC0C9"), /* @__PURE__ */ React.createElement("span", { style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")), /* @__PURE__ */ React.createElement(Palette, { selected, onSelect, layout, swatchSize: tweaks.swatchSize || 60 }))));
 }
 function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) {
-  return /* @__PURE__ */ React.createElement("div", { className: "screen completion" }, /* @__PURE__ */ React.createElement(Confetti, null), /* @__PURE__ */ React.createElement("div", { className: "completion__inner" }, /* @__PURE__ */ React.createElement("p", { className: "completion__eyebrow" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 20, color: "var(--secondary)" }), " \uC791\uD488 \uC644\uC131!"), /* @__PURE__ */ React.createElement("h2", { className: "completion__title" }, art.title), /* @__PURE__ */ React.createElement("p", { className: "completion__sub" }, "\uC624\uB298\uC758 \uC0C9\uC774 \uBA4B\uC9C0\uAC8C \uB2F4\uACBC\uC5B4\uC694."), /* @__PURE__ */ React.createElement("div", { className: "completion__frame completion__frame--magic" }, /* @__PURE__ */ React.createElement(CanvasArt, { art, fills, interactive: false })), /* @__PURE__ */ React.createElement("div", { className: "completion__btns" }, !saved ? /* @__PURE__ */ React.createElement(BigButton, { icon: "check", onClick: onKeep }, "\uB0B4 \uAC24\uB7EC\uB9AC\uC5D0 \uB2F4\uAE30") : /* @__PURE__ */ React.createElement(BigButton, { icon: "star", onClick: onNew }, "\uB2E4\uB978 \uADF8\uB9BC \uACE0\uB974\uAE30"), /* @__PURE__ */ React.createElement("div", { className: "completion__row" }, /* @__PURE__ */ React.createElement(BigButton, { icon: "plus", onClick: onNew, variant: "soft" }, "\uC0C8 \uADF8\uB9BC"), /* @__PURE__ */ React.createElement(BigButton, { onClick: onBack, variant: "ghost" }, "\uC870\uAE08 \uB354 \uCE60\uD558\uAE30")))));
+  const e = React.createElement;
+  return e("div", { className: "screen completion" },
+    e(Confetti, null),
+    e("div", { className: "completion__inner" },
+      e("p", { className: "completion__eyebrow" }, e(Icon, { name: "star", size: 20, color: "var(--secondary)" }), " 작품 완성!"),
+      e("h2", { className: "completion__title" }, art.title),
+      e("p", { className: "completion__sub" }, saved ? "갤러리에 담아두었어요." : "오늘의 색이 멋지게 담겼어요."),
+      e("div", { className: "completion__frame completion__frame--magic" }, e(CanvasArt, { art, fills, interactive: false })),
+      e("div", { className: "completion__btns" },
+        !saved ? e(BigButton, { icon: "check", onClick: onKeep }, "내 갤러리에 담기") : e(BigButton, { icon: "star", onClick: onNew }, "다른 그림 고르기"),
+        !saved ? e("div", { className: "completion__row" },
+          e(BigButton, { icon: "plus", onClick: onNew, variant: "soft" }, "새 그림"),
+          e(BigButton, { onClick: onBack, variant: "ghost" }, "조금 더 칠하기")
+        ) : e("div", { className: "completion__row completion__row--single" },
+          e(BigButton, { onClick: onBack, variant: "ghost" }, "조금 더 칠하기")
+        )
+      )
+    )
+  );
 }
 function ViewScreen({ item, onBack, onSave, onRecolor }) {
   const art = getArtworkById(item.artId);

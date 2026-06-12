@@ -26,7 +26,18 @@ var ARTWORK_CATALOG = [
   ['scene_cottage', '초가집', '집과 정원', 'scene_cottage.png'],
   ['animal_turtle', '바다거북', '동물', 'animal_turtle.png'],
   ['scene_mountain', '산과 해', '자연 풍경', 'scene_mountain.png'],
-  ['flower_hibiscus', '무궁화', '꽃과 그릇', 'flower_hibiscus.png']
+  ['flower_hibiscus', '무궁화', '꽃과 그릇', 'flower_hibiscus.png'],
+  ['easy_birdhouse_garden', '새집 정원', '집과 정원', 'easy_birdhouse_garden.svg'],
+  ['easy_fruit_bowl', '과일 그릇', '먹거리', 'easy_fruit_bowl.svg'],
+  ['easy_flower_umbrella', '꽃 우산', '꽃과 그릇', 'easy_flower_umbrella.svg'],
+  ['easy_rabbit_clover', '토끼와 클로버', '동물', 'easy_rabbit_clover.svg'],
+  ['easy_sailboat_sun', '돛단배와 해', '자연 풍경', 'easy_sailboat_sun.svg'],
+  ['medium_korean_lantern', '전통 등', '전통 소품', 'medium_korean_lantern.svg'],
+  ['medium_snack_plate', '간식 접시', '먹거리', 'medium_snack_plate.svg'],
+  ['medium_garden_tools', '정원 도구', '집과 정원', 'medium_garden_tools.svg'],
+  ['medium_koi_pond', '잉어 연못', '동물', 'medium_koi_pond.svg'],
+  ['medium_pine_mountain', '소나무 산길', '자연 풍경', 'medium_pine_mountain.svg'],
+  ['flower_camellia_pot', '동백 화분', '꽃과 그릇', 'flower_camellia_pot.svg']
 ];
 
 window.ARTWORKS = ARTWORK_CATALOG.map(function(entry) {
