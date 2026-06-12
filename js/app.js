@@ -578,6 +578,7 @@ function LobbyScreen({ onStart }) {
   const e = React.createElement;
   const [showGuide, setShowGuide] = React.useState(false);
   const featuredArt = window.ARTWORKS[0];
+  const showcaseArts = [window.ARTWORKS[0], window.ARTWORKS[6], window.ARTWORKS[11]].filter(Boolean);
   const openGuide = () => setShowGuide(true);
   const closeGuide = () => setShowGuide(false);
 
@@ -588,18 +589,25 @@ function LobbyScreen({ onStart }) {
           e("span", { className: "lobby-brand__mark" }, e(Icon, { name: "fill", size: 22, color: "#fff" })),
           e("span", { className: "lobby-brand__name" }, "오늘의 색칠")
         ),
-        e("h1", { className: "lobby-title" }, "톡 하면 색이 번져요"),
-        e("p", { className: "lobby-subtitle" }, "그림을 골라 한 장 완성해요.")
+        e("h1", { className: "lobby-title" }, "오늘은 어떤 그림을 칠할까요?"),
+        e("p", { className: "lobby-subtitle" }, "마음에 드는 그림을 고르고 색을 채워보세요.")
       ),
-      e("div", { className: "lobby-feature" },
-        e("div", { className: "lobby-feature__glow", "aria-hidden": "true" }),
-        e("div", { className: "lobby-feature__art lobby-feature__art--plain" }, featuredArt && e(Thumb, { art: featuredArt })),
-        e("div", { className: "lobby-feature__art lobby-feature__art--color" }, featuredArt && e(FinishedThumb, { art: featuredArt, limit: 90 })),
-        e("div", { className: "lobby-feature__tap" }, e(Icon, { name: "fill", size: 34, color: "#fff" }))
+      e("div", { className: "lobby-showcase", "aria-hidden": "true" },
+        e("div", { className: "lobby-showcase__glow" }),
+        showcaseArts.map((art, index) => e("div", { key: art.id, className: "lobby-showcase__card lobby-showcase__card--" + index },
+          e(FinishedThumb, { art, limit: 90 })
+        )),
+        e("div", { className: "lobby-showcase__badge" },
+          e(Icon, { name: "star", size: 16, color: "#fff" }),
+          e("span", null, "완성 미리보기")
+        )
+      ),
+      e("div", { className: "lobby-theme-row", "aria-label": "테마 예시" },
+        ["집과 정원", "꽃과 그릇", "동물"].map((theme) => e("span", { key: theme }, theme))
       ),
       e("div", { className: "lobby-palette", "aria-hidden": "true" }, PALETTE.slice(0, 6).map((p) => e("span", { key: p.c, style: { background: p.c } }))),
       e("div", { className: "lobby-actions" },
-        e("button", { className: "lobby-start-btn", onClick: onStart }, "바로 시작"),
+        e("button", { className: "lobby-start-btn", onClick: onStart }, "그림 고르기"),
         e("button", { className: "lobby-guide-btn", onClick: openGuide }, e(Icon, { name: "pencil", size: 18, color: "#7C695E" }), "방법")
       )
     ),
