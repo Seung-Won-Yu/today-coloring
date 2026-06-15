@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "check": "node --check js/app.js && node --check js/data/artworks.js && node --check js/data/palette.js && node --check js/utils/storage.js && node --check js/utils/paint.js",
+    "check": "node --check js/app.js && node --check js/data/artworks.js && node --check js/data/palette.js && node --check js/utils/storage.js && node --check js/utils/paint.js && node --check js/utils/assets.js",
     "serve": "python3 -m http.server 8002",
     "thumbs": "scripts/generate-thumbnails.sh"
   },
