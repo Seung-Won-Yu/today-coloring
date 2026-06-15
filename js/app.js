@@ -146,13 +146,19 @@ function markProgressRegion(imageData, x, y) {
   doFloodFill(imageData, x, y, PROGRESS_MARKER);
 }
 const safeArtworkFrameCache = /* @__PURE__ */ new Map();
-function createSafeArtworkCanvas(img, cacheKey = "", layout = null) {
-  if (cacheKey && safeArtworkFrameCache.has(cacheKey)) {
-    return safeArtworkFrameCache.get(cacheKey);
+function createSafeArtworkCanvas(img, cacheKey = "", layout = null, options = {}) {
+  const mode = options.mode || "preview";
+  const frameKey = cacheKey ? cacheKey + "::" + mode : "";
+  if (frameKey && safeArtworkFrameCache.has(frameKey)) {
+    return safeArtworkFrameCache.get(frameKey);
   }
   const width = img.width;
   const height = img.height;
-  const pad = Math.min(72, Math.max(32, Math.round(Math.min(width, height) * 0.065)));
+  const padRatio = mode === "paint" ? 0.018 : 0.065;
+  const minPad = mode === "paint" ? 14 : 32;
+  const maxPad = mode === "paint" ? 24 : 72;
+  const inkPad = mode === "paint" ? 2 : 8;
+  const pad = Math.min(maxPad, Math.max(minPad, Math.round(Math.min(width, height) * padRatio)));
   const sourceCanvas = document.createElement("canvas");
   sourceCanvas.width = width;
   sourceCanvas.height = height;
@@ -181,10 +187,10 @@ function createSafeArtworkCanvas(img, cacheKey = "", layout = null) {
     }
   }
   const hasInk = maxX >= minX && maxY >= minY;
-  const sourceX = hasInk ? Math.max(0, minX - 8) : 0;
-  const sourceY = hasInk ? Math.max(0, minY - 8) : 0;
-  const sourceW = hasInk ? Math.min(width - sourceX, maxX - minX + 17) : width;
-  const sourceH = hasInk ? Math.min(height - sourceY, maxY - minY + 17) : height;
+  const sourceX = hasInk ? Math.max(0, minX - inkPad) : 0;
+  const sourceY = hasInk ? Math.max(0, minY - inkPad) : 0;
+  const sourceW = hasInk ? Math.min(width - sourceX, maxX - minX + inkPad * 2 + 1) : width;
+  const sourceH = hasInk ? Math.min(height - sourceY, maxY - minY + inkPad * 2 + 1) : height;
   const innerWidth = Math.max(1, width - pad * 2);
   const innerHeight = Math.max(1, height - pad * 2);
   const layoutScale = layout && layout.scale ? layout.scale : 1;
@@ -203,8 +209,8 @@ function createSafeArtworkCanvas(img, cacheKey = "", layout = null) {
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(sourceCanvas, sourceX, sourceY, sourceW, sourceH, offsetX, offsetY, drawWidth, drawHeight);
   const frame = { canvas, width, height, scale, offsetX, offsetY, sourceX, sourceY };
-  if (cacheKey) {
-    safeArtworkFrameCache.set(cacheKey, frame);
+  if (frameKey) {
+    safeArtworkFrameCache.set(frameKey, frame);
   }
   return frame;
 }
@@ -218,7 +224,7 @@ function normalizeFillForFrame(fill, frame) {
     v: 2
   };
 }
-function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgressChange, onImageLoad, onRegionsChange }) {
+function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMode = "preview", onProgressChange, onImageLoad, onRegionsChange }) {
   const canvasRef = React.useRef(null);
   const baseCanvasRef = React.useRef(null);
   const fillsArray = Array.isArray(fills) ? fills : [];
@@ -295,7 +301,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
     setPaintPulse(null);
     const img = new Image();
     img.onload = () => {
-      const frame = createSafeArtworkCanvas(img, art.src, art.layout);
+      const frame = createSafeArtworkCanvas(img, art.src, art.layout, { mode: frameMode });
       const cw = frame.width;
       const ch = frame.height;
       frameRef.current = frame;
@@ -317,7 +323,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
       setImageReady(true);
     };
     img.src = art.src;
-  }, [art.src, shouldAnalyzeRegions]);
+  }, [art.src, frameMode, shouldAnalyzeRegions]);
   const redraw = (cw, ch) => {
     if (!canvasRef.current || !baseCanvasRef.current) return;
     canvasRef.current.width = cw;
@@ -490,7 +496,7 @@ function Thumb({ art, fills, lightweight = false, priority = false }) {
   if (lightweight && fillsArray.length === 0) {
     return /* @__PURE__ */ React.createElement(ArtworkImage, { art, priority });
   }
-  return /* @__PURE__ */ React.createElement(CanvasArt, { art, fills: fillsArray, interactive: false });
+  return /* @__PURE__ */ React.createElement(CanvasArt, { art, fills: fillsArray, interactive: false, frameMode: fillsArray.length > 0 ? "paint" : "preview" });
 }
 const SHOWCASE_PALETTE = [
   "#F6D977",
@@ -1022,6 +1028,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
           onPaint: handleCanvasPaint,
           selected,
           interactive: true,
+          frameMode: "paint",
           onProgressChange: (p) => {
             setPct(p);
           setComplete(p >= 85);
@@ -1070,7 +1077,7 @@ function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) 
       e("p", { className: "completion__eyebrow" }, e(Icon, { name: "star", size: 20, color: "var(--secondary)" }), " 작품 완성!"),
       e("h2", { className: "completion__title" }, art.title),
       e("p", { className: "completion__sub" }, saved ? "갤러리에 담아두었어요." : "오늘의 색이 멋지게 담겼어요."),
-      e("div", { className: "completion__frame completion__frame--magic" }, e(CanvasArt, { art, fills, interactive: false })),
+      e("div", { className: "completion__frame completion__frame--magic" }, e(CanvasArt, { art, fills, interactive: false, frameMode: "paint" })),
       e("div", { className: "completion__btns" },
         !saved ? e(BigButton, { icon: "check", onClick: onKeep }, "내 갤러리에 담기") : e(BigButton, { icon: "star", onClick: onNew }, "다른 그림 고르기"),
         !saved ? e("div", { className: "completion__row" },
@@ -1120,7 +1127,7 @@ function Confetti() {
     return /* @__PURE__ */ React.createElement("span", { key: i, style });
   }));
 }
-const STORAGE_VERSION = "v7";
+const STORAGE_VERSION = "v8";
 const GKEY = "sori_gallery_" + STORAGE_VERSION;
 const PKEY = "sori_progress_" + STORAGE_VERSION;
 function loadGallery() {
@@ -1155,7 +1162,7 @@ function downloadCanvasPng(art, fills) {
       const canvas = document.createElement("canvas");
       const img = new Image();
       img.onload = () => {
-        const frame = createSafeArtworkCanvas(img, art.src, art.layout);
+        const frame = createSafeArtworkCanvas(img, art.src, art.layout, { mode: "paint" });
         canvas.width = frame.width;
         canvas.height = frame.height;
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
