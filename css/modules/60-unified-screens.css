@@ -350,20 +350,6 @@ body {
   line-height:1.4;
 }
 
-.home-summary__counts {
-  display:none;
-}
-
-.home-summary__counts span {
-  min-height:30px;
-  padding:0 10px;
-  border-radius:999px;
-  background:#FFF7E5;
-  border:1px solid rgba(88,70,52,.08);
-  box-shadow:none;
-  font-size:12px;
-}
-
 .home-preview-stack {
   position:relative;
   z-index:1;
