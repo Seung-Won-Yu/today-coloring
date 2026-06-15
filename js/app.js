@@ -157,7 +157,7 @@ function createSafeArtworkCanvas(img, cacheKey = "", layout = null, options = {}
   const padRatio = 0.065;
   const minPad = 32;
   const maxPad = 72;
-  const inkPad = mode === "paint" ? 2 : 8;
+  const inkPad = mode === "paint" ? 0 : 8;
   const pad = Math.min(maxPad, Math.max(minPad, Math.round(Math.min(width, height) * padRatio)));
   const sourceCanvas = document.createElement("canvas");
   sourceCanvas.width = width;
@@ -194,12 +194,13 @@ function createSafeArtworkCanvas(img, cacheKey = "", layout = null, options = {}
   const innerWidth = Math.max(1, width - pad * 2);
   const innerHeight = Math.max(1, height - pad * 2);
   const layoutScale = layout && layout.scale ? layout.scale : 1;
-  const paintMaxSide = Math.min(940, Math.max(width, height));
-  const outputScale = mode === "paint" ? paintMaxSide / Math.max(sourceW, sourceH) : 1;
-  const outputWidth = mode === "paint" ? Math.max(1, Math.round(sourceW * outputScale)) : width;
-  const outputHeight = mode === "paint" ? Math.max(1, Math.round(sourceH * outputScale)) : height;
-  const outputInnerWidth = mode === "paint" ? outputWidth : innerWidth;
-  const outputInnerHeight = mode === "paint" ? outputHeight : innerHeight;
+  const paintPad = mode === "paint" ? Math.min(58, Math.max(28, Math.round(Math.min(sourceW, sourceH) * 0.045))) : 0;
+  const paintMaxSide = Math.min(900, Math.max(width, height));
+  const outputScale = mode === "paint" ? (paintMaxSide - paintPad * 2) / Math.max(sourceW, sourceH) : 1;
+  const outputWidth = mode === "paint" ? Math.max(1, Math.round(sourceW * outputScale) + paintPad * 2) : width;
+  const outputHeight = mode === "paint" ? Math.max(1, Math.round(sourceH * outputScale) + paintPad * 2) : height;
+  const outputInnerWidth = mode === "paint" ? Math.max(1, outputWidth - paintPad * 2) : innerWidth;
+  const outputInnerHeight = mode === "paint" ? Math.max(1, outputHeight - paintPad * 2) : innerHeight;
   const scale = Math.min(outputInnerWidth / sourceW, outputInnerHeight / sourceH) * layoutScale;
   const drawWidth = Math.round(sourceW * scale);
   const drawHeight = Math.round(sourceH * scale);
@@ -209,8 +210,12 @@ function createSafeArtworkCanvas(img, cacheKey = "", layout = null, options = {}
   canvas.width = mode === "paint" ? outputWidth : width;
   canvas.height = mode === "paint" ? outputHeight : height;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (mode === "preview") {
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(sourceCanvas, sourceX, sourceY, sourceW, sourceH, offsetX, offsetY, drawWidth, drawHeight);
@@ -1133,7 +1138,7 @@ function Confetti() {
     return /* @__PURE__ */ React.createElement("span", { key: i, style });
   }));
 }
-const STORAGE_VERSION = "v9";
+const STORAGE_VERSION = "v10";
 const GKEY = "sori_gallery_" + STORAGE_VERSION;
 const PKEY = "sori_progress_" + STORAGE_VERSION;
 function loadGallery() {
