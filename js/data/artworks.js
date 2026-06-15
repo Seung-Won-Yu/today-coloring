@@ -48,6 +48,7 @@ window.ARTWORKS = ARTWORK_CATALOG.map(function(entry) {
     title: title,
     category: category,
     src: 'assets/images/artworks/' + file + '?v=10',
+    thumbSrc: 'assets/images/thumbs/' + file + '?v=10',
     isCanvas: true,
     layout: null,
     guide: []

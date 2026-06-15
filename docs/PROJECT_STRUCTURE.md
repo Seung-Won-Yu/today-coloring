@@ -17,6 +17,7 @@ ColoringApp/
     icons/                 # App/PWA icons
     images/
       artworks/            # Coloring page PNG line art
+      thumbs/              # Lightweight artwork-list thumbnails
   css/
     styles.css             # CSS import entry
     modules/
@@ -42,6 +43,7 @@ ColoringApp/
 ## Common Edits
 
 - Add or remove a coloring page: edit `js/data/artworks.js`, then place the PNG in `assets/images/artworks/`.
+- Regenerate list thumbnails after artwork changes: run `npm run thumbs`.
 - Change palette colors: edit `js/data/palette.js`.
 - Change saved progress/gallery behavior: edit `js/utils/storage.js`.
 - Change lobby/home visual polish: edit `css/modules/90-mobile-polish.css`.

@@ -501,7 +501,7 @@ function BigButton({ children, onClick, variant = "solid", icon, style }) {
   return /* @__PURE__ */ React.createElement("button", { className: "bigbtn bigbtn--" + variant, onClick, style }, icon && /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 28 }), /* @__PURE__ */ React.createElement("span", null, children));
 }
 function ArtworkImage({ art, priority = false }) {
-  return /* @__PURE__ */ React.createElement("img", { src: art.src, alt: "", loading: priority ? "eager" : "lazy", decoding: "async", fetchpriority: priority ? "high" : "auto", draggable: "false" });
+  return /* @__PURE__ */ React.createElement("img", { src: art.thumbSrc || art.src, alt: "", loading: priority ? "eager" : "lazy", decoding: "async", fetchpriority: priority ? "high" : "auto", draggable: "false" });
 }
 function Thumb({ art, fills, lightweight = false, priority = false }) {
   const fillsArray = Array.isArray(fills) ? fills : [];
