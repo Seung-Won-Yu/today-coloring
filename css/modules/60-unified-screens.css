@@ -185,14 +185,6 @@ body {
   border-radius:24px;
 }
 
-.lobby-kicker {
-  min-height:26px;
-  margin-bottom:8px;
-  padding:0 12px;
-  background:var(--tertiary-soft);
-  color:#4D692B;
-}
-
 .lobby-title {
   font-size:36px;
   color:var(--ink);
@@ -204,63 +196,10 @@ body {
   font-size:16px;
 }
 
-.lobby-feature__ribbon {
-  display:none;
-}
-
-.lobby-feature__art {
-  width:min(64vw, 226px);
-  border:1px solid var(--line);
-  border-radius:24px;
-  box-shadow:0 14px 30px rgba(75,55,35,.1);
-}
-
-.lobby-feature__art canvas {
-  padding:12px;
-}
-
-.lobby-feature__meta {
-  color:var(--ink-soft);
-  font-size:13px;
-}
-
-.lobby-feature__meta strong {
-  color:var(--ink);
-  font-size:15px;
-}
-
 .lobby-palette span {
   width:22px;
   height:22px;
   border:3px solid #fff;
-}
-
-.lobby-stats {
-  display:flex;
-  justify-content:center;
-  gap:8px;
-}
-
-.lobby-stats div {
-  flex:0 0 auto;
-  min-width:86px;
-  padding:8px 10px;
-  border-radius:16px;
-  background:#FFF7E5;
-  border:1px solid rgba(88,70,52,.08);
-}
-
-.lobby-stats strong {
-  display:inline;
-  margin-right:4px;
-  color:var(--accent-d);
-  font-size:18px;
-}
-
-.lobby-stats span {
-  display:inline;
-  color:#745C3A;
-  font-size:12px;
 }
 
 .lobby-actions {
