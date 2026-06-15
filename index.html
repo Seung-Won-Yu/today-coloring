@@ -14,15 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script>
-  (function() {
-    var v = new Date().getTime();
-    var link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'css/styles.css?v=' + v;
-    document.head.appendChild(link);
-  })();
-</script>
+<link rel="stylesheet" href="css/styles.css?v=10">
 </head>
 <body>
 <div id="root"></div>
@@ -45,12 +37,6 @@
 <script src="js/data/palette.js"></script>
 <script src="js/utils/storage.js"></script>
 
-<!-- Dynamic Scripts for App -->
-<script>
-  (function() {
-    var v = new Date().getTime();
-    document.write('<script src="js/app.js?v=' + v + '"><\/script>');
-  })();
-</script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>
