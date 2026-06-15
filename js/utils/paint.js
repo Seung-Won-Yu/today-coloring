@@ -1,11 +1,16 @@
 (function() {
-  function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95) {
+  function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95, baseData = null) {
     const width = imageData.width;
     const height = imageData.height;
     if (startX < 0 || startX >= width || startY < 0 || startY >= height) return;
     const data = imageData.data;
     const getPixelIndex = (x, y) => (y * width + x) * 4;
+    const canUseBasePixel = (x, y) => {
+      if (!baseData) return true;
+      return isPaintableBasePixel(baseData, getPixelIndex(x, y));
+    };
     const targetIdx = getPixelIndex(startX, startY);
+    if (!canUseBasePixel(startX, startY)) return;
     const targetR = data[targetIdx];
     const targetG = data[targetIdx + 1];
     const targetB = data[targetIdx + 2];
@@ -22,7 +27,8 @@
     if (isLinePixel(targetR, targetG, targetB, targetA)) {
       return;
     }
-    const colorMatch = (r, g, b, a) => {
+    const colorMatch = (r, g, b, a, x, y) => {
+      if (!canUseBasePixel(x, y)) return false;
       if (isLinePixel(r, g, b, a)) return false;
       if (targetR > 215 && targetG > 215 && targetB > 215) {
         const isGrayscale = Math.abs(r - g) < 50 && Math.abs(g - b) < 50 && Math.abs(r - b) < 50;
@@ -52,7 +58,7 @@
           const vIdx = ny * width + nx;
           if (!visited[vIdx]) {
             const nIdx = getPixelIndex(nx, ny);
-            if (colorMatch(data[nIdx], data[nIdx + 1], data[nIdx + 2], data[nIdx + 3])) {
+            if (colorMatch(data[nIdx], data[nIdx + 1], data[nIdx + 2], data[nIdx + 3], nx, ny)) {
               visited[vIdx] = 1;
               queue.push([nx, ny]);
             }
@@ -84,7 +90,10 @@
     const b = data[idx + 2];
     const a = data[idx + 3];
     if (isLinePixelColor(r, g, b, a)) return false;
-    return r > 185 && g > 185 && b > 185;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const luminance = r * 0.299 + g * 0.587 + b * 0.114;
+    return min > 172 && luminance > 202 && max - min < 56;
   }
 
   function findNearestUnpaintedStart(baseData, progressData, width, height, x, y, radius) {
@@ -153,8 +162,8 @@
     return seed.size <= 48;
   }
 
-  function markProgressRegion(imageData, x, y) {
-    doFloodFill(imageData, x, y, PROGRESS_MARKER);
+  function markProgressRegion(imageData, x, y, baseData = null) {
+    doFloodFill(imageData, x, y, PROGRESS_MARKER, 95, baseData);
   }
 
   const safeArtworkFrameCache = new Map();

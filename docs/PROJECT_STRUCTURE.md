@@ -16,26 +16,28 @@ ColoringApp/
   assets/
     icons/                 # App/PWA icons
     images/
-      artworks/            # Coloring page PNG line art
+      artworks/            # Coloring page PNGs
       thumbs/              # Lightweight artwork-list thumbnails
   css/
     styles.css             # CSS import entry
-    modules/
-      00-base.css          # Design tokens, reset, app shell, app bar
-      10-home-gallery.css  # Theme filters, artwork cards, empty gallery
-      20-coloring-core.css # Coloring surface, completion, toast, confetti
-      30-lobby-base.css    # Early lobby styles kept for cascade compatibility
-      40-studio-design-pass.css
-      50-guide-and-navigation.css
-      60-unified-screens.css
-      70-guide-repair.css  # How-to carousel final layout repair
-      90-mobile-polish.css # Latest lobby/home/mobile polish overrides
+    foundation/            # Design tokens, reset, app shell
+    screens/               # Screen-specific styles
+      artworks/
+      coloring/
+      completion/
+      guide/
+      lobby/
+    components/            # Shared component styles
+    responsive/            # Mobile shell overrides
+    theme/                 # Visual pass and compatibility overrides
   js/
     app.js                 # Runtime app loaded by index.html
     data/
-      artworks.js          # Artwork catalog and theme labels
+      artworks.js          # Active artwork catalog and theme labels
       palette.js           # Color palette
     utils/
+      assets.js            # Image loading cache
+      paint.js             # Flood-fill, paintable pixel, progress helpers
       storage.js           # localStorage keys, persistence, progress normalization
     vendor/                # React browser builds
 ```
@@ -46,10 +48,17 @@ ColoringApp/
 - Regenerate list thumbnails after artwork changes: run `npm run thumbs`.
 - Change palette colors: edit `js/data/palette.js`.
 - Change saved progress/gallery behavior: edit `js/utils/storage.js`.
-- Change lobby/home visual polish: edit `css/modules/90-mobile-polish.css`.
-- Change how-to slides layout: edit `css/modules/70-guide-repair.css`.
+- Change lobby/home visual polish: edit `css/screens/lobby/` and `css/screens/artworks/`.
+- Change coloring screen and palette layout: edit `css/screens/coloring/` and `css/components/palette-bar.css`.
+- Change how-to slides layout: edit `css/screens/guide/modal.css` and `css/components/guide-navigation.css`.
 - Keep lobby and how-to separate: lobby state stays in `LobbyScreen`; carousel state, slide text, drag logic, and guide visuals stay in `HowToModal`.
-- Change coloring behavior: edit `js/app.js`; this project currently runs without a build step.
+- Change coloring behavior: edit `js/app.js` and `js/utils/paint.js`; this project currently runs without a build step.
+
+## Artwork Rule
+
+- Active artwork should already have a colored background.
+- Only white/light low-saturation regions are paintable; colored background taps are ignored.
+- Background-less artwork files are not kept in the active app assets.
 
 ## Notes
 
