@@ -1120,7 +1120,7 @@ function Confetti() {
     return /* @__PURE__ */ React.createElement("span", { key: i, style });
   }));
 }
-const STORAGE_VERSION = "v5";
+const STORAGE_VERSION = "v6";
 const GKEY = "sori_gallery_" + STORAGE_VERSION;
 const PKEY = "sori_progress_" + STORAGE_VERSION;
 function loadGallery() {
