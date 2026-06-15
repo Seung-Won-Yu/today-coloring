@@ -620,9 +620,10 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
         const nextScale = Math.max(1, Math.min(5, state.scale * (dist / state.distance)));
         const scaleRatio = nextScale / state.scale;
         const rect = containerRef.current.getBoundingClientRect();
-        const cw = Math.min(rect.width * 0.85, rect.height * 0.85, 480);
-        const childLeft = (rect.width - cw) / 2;
-        const childTop = (rect.height - cw) / 2;
+        const canvasRect = containerRef.current.querySelector(".canvasinner")?.getBoundingClientRect();
+        const cw = canvasRect?.width || Math.min(rect.width * 0.85, rect.height * 0.85, 760);
+        const childLeft = canvasRect ? canvasRect.left - rect.left : (rect.width - cw) / 2;
+        const childTop = canvasRect ? canvasRect.top - rect.top : (rect.height - cw) / 2;
         const mx = state.center.x - rect.left - childLeft;
         const my = state.center.y - rect.top - childTop;
         const dx = center.x - state.center.x;
@@ -691,9 +692,10 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       const newScale = Math.max(1, Math.min(5, scale * (1 + delta)));
       if (newScale !== scale) {
         const rect = container.getBoundingClientRect();
-        const cw = Math.min(rect.width * 0.85, rect.height * 0.85, 480);
-        const childLeft = (rect.width - cw) / 2;
-        const childTop = (rect.height - cw) / 2;
+        const canvasRect = container.querySelector(".canvasinner")?.getBoundingClientRect();
+        const cw = canvasRect?.width || Math.min(rect.width * 0.85, rect.height * 0.85, 760);
+        const childLeft = canvasRect ? canvasRect.left - rect.left : (rect.width - cw) / 2;
+        const childTop = canvasRect ? canvasRect.top - rect.top : (rect.height - cw) / 2;
         const mx = e.clientX - rect.left - childLeft;
         const my = e.clientY - rect.top - childTop;
         const scaleRatio = newScale / scale;

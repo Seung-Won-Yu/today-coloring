@@ -1,0 +1,196 @@
+/* Larger tablet and desktop coloring workspace */
+@media (min-width: 768px) {
+  .appbar--color {
+    min-height:72px;
+    padding-inline:28px;
+  }
+
+  .appbar--color .appbar__back {
+    width:auto;
+    min-width:96px;
+    height:50px;
+    padding-inline:18px;
+    border-radius:999px;
+  }
+
+  .appbar--color .appbar__back .hide-narrow,
+  .appbar--color .tool--pill .hide-narrow {
+    display:inline;
+  }
+
+  .appbar--color .tool--pill {
+    width:auto;
+    min-width:54px;
+    height:50px;
+    padding-inline:16px;
+    gap:8px;
+  }
+
+  .appbar__center-txt {
+    min-width:104px;
+    min-height:42px;
+    font-size:16px;
+  }
+
+  .color--bottom .colorbody {
+    width:100%;
+    max-width:none;
+    align-self:stretch;
+  }
+
+  .color--bottom .canvaswrap {
+    padding:28px 32px 148px;
+  }
+
+  .color--bottom .canvasinner {
+    width:min(92dvw, calc(100dvh - 250px), 760px) !important;
+    border-width:6px;
+    border-radius:34px;
+  }
+
+  .color--bottom .canvasinner canvas {
+    padding:10px;
+  }
+
+  .color--bottom .palettezone--bottom {
+    min-height:128px;
+    grid-template-columns:96px minmax(0, 1fr);
+    gap:18px;
+    padding:16px 28px max(18px, env(safe-area-inset-bottom));
+  }
+
+  .color--bottom .palettezone--bottom::before {
+    left:22px;
+    right:22px;
+    bottom:max(12px, env(safe-area-inset-bottom));
+    height:106px;
+    border-radius:32px;
+  }
+
+  .color--bottom .curcolor {
+    width:92px;
+    height:92px;
+    border-radius:26px;
+  }
+
+  .color--bottom .curcolor span:first-child {
+    font-size:13px;
+  }
+
+  .color--bottom .curcolor span:last-child {
+    max-width:72px;
+    font-size:15px !important;
+  }
+
+  .color--bottom .palette--bottom .palette__track {
+    min-height:86px;
+    gap:12px;
+    padding:12px 10px 12px 6px;
+  }
+
+  .color--bottom .palette--bottom .swatch {
+    width:60px !important;
+    height:60px !important;
+    min-width:60px;
+  }
+
+  .color--bottom .zoom-toggle-btn,
+  .color--bottom .finishbar {
+    bottom:132px !important;
+  }
+}
+
+@media (min-width: 1024px) and (orientation: portrait) {
+  .color--bottom .canvasinner {
+    width:min(88dvw, calc(100dvh - 260px), 860px) !important;
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .color--side .canvaswrap {
+    padding:28px 28px 28px 36px;
+  }
+
+  .color--side .canvasinner {
+    width:min(calc(100dvw - 290px), calc(100dvh - 128px), 900px) !important;
+    border-width:6px;
+    border-radius:34px;
+  }
+
+  .color--side .canvasinner canvas {
+    padding:10px;
+  }
+
+  .color--side .palettezone--side {
+    width:220px;
+    padding:24px 22px;
+    gap:18px;
+    background:rgba(255, 253, 248, 0.92);
+    border-left:1px solid rgba(88,70,52,.1);
+    box-shadow:-10px 0 28px rgba(75,55,35,.08);
+  }
+
+  .color--side .curcolor {
+    width:150px;
+    height:106px;
+    border-radius:28px;
+  }
+
+  .color--side .curcolor span:first-child {
+    font-size:13px;
+  }
+
+  .color--side .curcolor span:last-child {
+    max-width:124px;
+    font-size:17px !important;
+  }
+
+  .color--side .palette {
+    width:100%;
+  }
+
+  .color--side .palette--side .palette__track {
+    grid-template-columns:repeat(2, 72px);
+    justify-content:center;
+    gap:14px;
+    max-height:none;
+  }
+
+  .color--side .palette--side .swatch {
+    width:66px !important;
+    height:66px !important;
+    min-width:66px;
+  }
+
+  .color--side .zoom-toggle-btn {
+    right:28px !important;
+    bottom:28px !important;
+    height:48px !important;
+    padding-inline:18px !important;
+  }
+
+  .color--side .finishbar {
+    bottom:28px !important;
+  }
+}
+
+@media (min-width: 1200px) and (orientation: landscape) {
+  .color--side .canvasinner {
+    width:min(calc(100dvw - 340px), calc(100dvh - 128px), 980px) !important;
+  }
+
+  .color--side .palettezone--side {
+    width:248px;
+  }
+
+  .color--side .palette--side .palette__track {
+    grid-template-columns:repeat(2, 78px);
+    gap:16px;
+  }
+
+  .color--side .palette--side .swatch {
+    width:72px !important;
+    height:72px !important;
+    min-width:72px;
+  }
+}
