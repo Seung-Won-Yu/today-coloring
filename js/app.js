@@ -307,21 +307,36 @@ function buildShowcaseFills(seeds, limit = 80) {
     color: seed.isBackground ? "#F6D977" : SHOWCASE_PALETTE[(idx + Math.floor(seed.x / 120) + Math.floor(seed.y / 120)) % SHOWCASE_PALETTE.length]
   }));
 }
+const finishedThumbCache = new Map();
 function FinishedThumb({ art, className = "", limit = 80 }) {
-  const [fills, setFills] = React.useState([]);
+  const cacheKey = art ? `${art.id || art.src}:${limit}` : "";
+  const [ready, setReady] = React.useState(() => finishedThumbCache.has(cacheKey));
+  const [fills, setFills] = React.useState(() => finishedThumbCache.get(cacheKey) || []);
   const signatureRef = React.useRef("");
   React.useEffect(() => {
-    setFills([]);
-    signatureRef.current = "";
-  }, [art && art.src]);
+    if (!art) return;
+    const cached = finishedThumbCache.get(cacheKey);
+    setFills(cached || []);
+    signatureRef.current = cached ? cached.map((fill) => `${fill.x}:${fill.y}:${fill.color}`).join("|") : "";
+    if (cached) {
+      setReady(true);
+      return;
+    }
+    setReady(false);
+    const schedule = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : (callback) => window.setTimeout(callback, 90);
+    const cancel = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : window.clearTimeout.bind(window);
+    const taskId = schedule(() => setReady(true));
+    return () => cancel(taskId);
+  }, [art, cacheKey]);
   const handleRegionsChange = React.useCallback((seeds) => {
     const next = buildShowcaseFills(seeds, limit);
     const signature = next.map((fill) => `${fill.x}:${fill.y}:${fill.color}`).join("|");
     if (signatureRef.current === signature) return;
     signatureRef.current = signature;
+    if (cacheKey) finishedThumbCache.set(cacheKey, next);
     setFills(next);
-  }, [limit]);
-  return /* @__PURE__ */ React.createElement("div", { className: "finished-thumb " + className }, /* @__PURE__ */ React.createElement(CanvasArt, { art, fills, interactive: false, onRegionsChange: handleRegionsChange }));
+  }, [cacheKey, limit]);
+  return /* @__PURE__ */ React.createElement("div", { className: "finished-thumb " + className }, ready ? /* @__PURE__ */ React.createElement(CanvasArt, { art, fills, interactive: false, onRegionsChange: handleRegionsChange }) : /* @__PURE__ */ React.createElement(ArtworkImage, { art, priority: true }));
 }
 // Artwork data is loaded from js/data/artworks.js.
 function getArtworkById(id) {
