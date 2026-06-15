@@ -25,7 +25,7 @@ function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95) {
     if (isLinePixel(r, g, b, a)) return false;
     if (targetR > 215 && targetG > 215 && targetB > 215) {
       const isGrayscale = Math.abs(r - g) < 50 && Math.abs(g - b) < 50 && Math.abs(r - b) < 50;
-      if (isGrayscale) return true;
+      if (isGrayscale) return r > 185 && g > 185 && b > 185;
     }
     return Math.abs(r - targetR) <= tolerance && Math.abs(g - targetG) <= tolerance && Math.abs(b - targetB) <= tolerance;
   };
@@ -146,7 +146,7 @@ function markProgressRegion(imageData, x, y) {
   doFloodFill(imageData, x, y, PROGRESS_MARKER);
 }
 const safeArtworkFrameCache = /* @__PURE__ */ new Map();
-function createSafeArtworkCanvas(img, cacheKey = "") {
+function createSafeArtworkCanvas(img, cacheKey = "", layout = null) {
   if (cacheKey && safeArtworkFrameCache.has(cacheKey)) {
     return safeArtworkFrameCache.get(cacheKey);
   }
@@ -187,11 +187,12 @@ function createSafeArtworkCanvas(img, cacheKey = "") {
   const sourceH = hasInk ? Math.min(height - sourceY, maxY - minY + 17) : height;
   const innerWidth = Math.max(1, width - pad * 2);
   const innerHeight = Math.max(1, height - pad * 2);
-  const scale = Math.min(innerWidth / sourceW, innerHeight / sourceH);
+  const layoutScale = layout && layout.scale ? layout.scale : 1;
+  const scale = Math.min(innerWidth / sourceW, innerHeight / sourceH) * layoutScale;
   const drawWidth = Math.round(sourceW * scale);
   const drawHeight = Math.round(sourceH * scale);
-  const offsetX = Math.round((width - drawWidth) / 2);
-  const offsetY = Math.round((height - drawHeight) / 2);
+  const offsetX = Math.round((width - drawWidth) / 2 + ((layout && layout.x) || 0));
+  const offsetY = Math.round((height - drawHeight) / 2 + ((layout && layout.y) || 0));
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -294,7 +295,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, onProgre
     setPaintPulse(null);
     const img = new Image();
     img.onload = () => {
-      const frame = createSafeArtworkCanvas(img, art.src);
+      const frame = createSafeArtworkCanvas(img, art.src, art.layout);
       const cw = frame.width;
       const ch = frame.height;
       frameRef.current = frame;
@@ -1119,7 +1120,7 @@ function Confetti() {
     return /* @__PURE__ */ React.createElement("span", { key: i, style });
   }));
 }
-const STORAGE_VERSION = "v3";
+const STORAGE_VERSION = "v5";
 const GKEY = "sori_gallery_" + STORAGE_VERSION;
 const PKEY = "sori_progress_" + STORAGE_VERSION;
 function loadGallery() {
@@ -1154,7 +1155,7 @@ function downloadCanvasPng(art, fills) {
       const canvas = document.createElement("canvas");
       const img = new Image();
       img.onload = () => {
-        const frame = createSafeArtworkCanvas(img, art.src);
+        const frame = createSafeArtworkCanvas(img, art.src, art.layout);
         canvas.width = frame.width;
         canvas.height = frame.height;
         const ctx = canvas.getContext("2d", { willReadFrequently: true });

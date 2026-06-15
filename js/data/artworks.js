@@ -40,6 +40,13 @@ var ARTWORK_CATALOG = [
   ['flower_camellia_pot', '동백 화분', '꽃과 그릇', 'flower_camellia_pot.png']
 ];
 
+var ARTWORK_LAYOUT = {
+  'medium_pine_mountain': { y: 24 },
+  'medium_snack_plate': { x: -24 },
+  'medium_korean_lantern': { scale: 0.88 },
+  'scene_cottage': { scale: 0.92, x: -12 }
+};
+
 window.ARTWORKS = ARTWORK_CATALOG.map(function(entry) {
   var id = entry[0];
   var title = entry[1];
@@ -49,8 +56,9 @@ window.ARTWORKS = ARTWORK_CATALOG.map(function(entry) {
     id: id,
     title: title,
     category: category,
-    src: 'assets/images/artworks/' + file + '?v=3',
+    src: 'assets/images/artworks/' + file + '?v=5',
     isCanvas: true,
+    layout: ARTWORK_LAYOUT[id] || null,
     guide: []
   };
 });
