@@ -42,9 +42,7 @@ var ARTWORK_CATALOG = [
 
 var ARTWORK_LAYOUT = {
   'medium_pine_mountain': { scale: 0.9, y: 54 },
-  'medium_snack_plate': { scale: 0.94, x: -46 },
-  'medium_korean_lantern': { scale: 0.96 },
-  'scene_cottage': { scale: 0.92, x: -12 }
+  'medium_snack_plate': { scale: 0.94, x: -46 }
 };
 
 window.ARTWORKS = ARTWORK_CATALOG.map(function(entry) {
@@ -56,7 +54,7 @@ window.ARTWORKS = ARTWORK_CATALOG.map(function(entry) {
     id: id,
     title: title,
     category: category,
-    src: 'assets/images/artworks/' + file + '?v=6',
+    src: 'assets/images/artworks/' + file + '?v=7',
     isCanvas: true,
     layout: ARTWORK_LAYOUT[id] || null,
     guide: []
