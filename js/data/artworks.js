@@ -33,17 +33,10 @@ var ARTWORK_CATALOG = [
   ['easy_rabbit_clover', '토끼와 클로버', '동물', 'easy_rabbit_clover.png'],
   ['easy_sailboat_sun', '돛단배와 해', '자연 풍경', 'easy_sailboat_sun.png'],
   ['medium_korean_lantern', '전통 등', '전통 소품', 'medium_korean_lantern.png'],
-  ['medium_snack_plate', '간식 접시', '먹거리', 'medium_snack_plate.png'],
   ['medium_garden_tools', '정원 도구', '집과 정원', 'medium_garden_tools.png'],
   ['medium_koi_pond', '잉어 연못', '동물', 'medium_koi_pond.png'],
-  ['medium_pine_mountain', '소나무 산길', '자연 풍경', 'medium_pine_mountain.png'],
   ['flower_camellia_pot', '동백 화분', '꽃과 그릇', 'flower_camellia_pot.png']
 ];
-
-var ARTWORK_LAYOUT = {
-  'medium_pine_mountain': { scale: 0.9, y: 54 },
-  'medium_snack_plate': { scale: 0.94, x: -46 }
-};
 
 window.ARTWORKS = ARTWORK_CATALOG.map(function(entry) {
   var id = entry[0];
@@ -54,9 +47,9 @@ window.ARTWORKS = ARTWORK_CATALOG.map(function(entry) {
     id: id,
     title: title,
     category: category,
-    src: 'assets/images/artworks/' + file + '?v=7',
+    src: 'assets/images/artworks/' + file + '?v=9',
     isCanvas: true,
-    layout: ARTWORK_LAYOUT[id] || null,
+    layout: null,
     guide: []
   };
 });

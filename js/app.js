@@ -154,9 +154,9 @@ function createSafeArtworkCanvas(img, cacheKey = "", layout = null, options = {}
   }
   const width = img.width;
   const height = img.height;
-  const padRatio = mode === "paint" ? 0.018 : 0.065;
-  const minPad = mode === "paint" ? 14 : 32;
-  const maxPad = mode === "paint" ? 24 : 72;
+  const padRatio = 0.065;
+  const minPad = 32;
+  const maxPad = 72;
   const inkPad = mode === "paint" ? 2 : 8;
   const pad = Math.min(maxPad, Math.max(minPad, Math.round(Math.min(width, height) * padRatio)));
   const sourceCanvas = document.createElement("canvas");
@@ -194,21 +194,27 @@ function createSafeArtworkCanvas(img, cacheKey = "", layout = null, options = {}
   const innerWidth = Math.max(1, width - pad * 2);
   const innerHeight = Math.max(1, height - pad * 2);
   const layoutScale = layout && layout.scale ? layout.scale : 1;
-  const scale = Math.min(innerWidth / sourceW, innerHeight / sourceH) * layoutScale;
+  const paintMaxSide = Math.min(940, Math.max(width, height));
+  const outputScale = mode === "paint" ? paintMaxSide / Math.max(sourceW, sourceH) : 1;
+  const outputWidth = mode === "paint" ? Math.max(1, Math.round(sourceW * outputScale)) : width;
+  const outputHeight = mode === "paint" ? Math.max(1, Math.round(sourceH * outputScale)) : height;
+  const outputInnerWidth = mode === "paint" ? outputWidth : innerWidth;
+  const outputInnerHeight = mode === "paint" ? outputHeight : innerHeight;
+  const scale = Math.min(outputInnerWidth / sourceW, outputInnerHeight / sourceH) * layoutScale;
   const drawWidth = Math.round(sourceW * scale);
   const drawHeight = Math.round(sourceH * scale);
-  const offsetX = Math.round((width - drawWidth) / 2 + ((layout && layout.x) || 0));
-  const offsetY = Math.round((height - drawHeight) / 2 + ((layout && layout.y) || 0));
+  const offsetX = Math.round(((mode === "paint" ? outputWidth : width) - drawWidth) / 2 + ((layout && layout.x) || 0));
+  const offsetY = Math.round(((mode === "paint" ? outputHeight : height) - drawHeight) / 2 + ((layout && layout.y) || 0));
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = mode === "paint" ? outputWidth : width;
+  canvas.height = mode === "paint" ? outputHeight : height;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, width, height);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(sourceCanvas, sourceX, sourceY, sourceW, sourceH, offsetX, offsetY, drawWidth, drawHeight);
-  const frame = { canvas, width, height, scale, offsetX, offsetY, sourceX, sourceY };
+  const frame = { canvas, width: canvas.width, height: canvas.height, scale, offsetX, offsetY, sourceX, sourceY };
   if (frameKey) {
     safeArtworkFrameCache.set(frameKey, frame);
   }
@@ -1012,7 +1018,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       {
         className: "canvasinner",
         style: {
-          width: "min(100%, 95vh, 480px)",
+          width: layout === "side" ? "min(100%, calc(100dvh - 150px), calc(100dvw - 260px), 760px)" : "min(100%, calc(100dvh - 210px), 560px)",
           aspectRatio: aspect,
           transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
           transformOrigin: "0 0",
@@ -1127,7 +1133,7 @@ function Confetti() {
     return /* @__PURE__ */ React.createElement("span", { key: i, style });
   }));
 }
-const STORAGE_VERSION = "v8";
+const STORAGE_VERSION = "v9";
 const GKEY = "sori_gallery_" + STORAGE_VERSION;
 const PKEY = "sori_progress_" + STORAGE_VERSION;
 function loadGallery() {
