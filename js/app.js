@@ -61,6 +61,7 @@ function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95) {
   }
 }
 const PROGRESS_MARKER = { r: 18, g: 52, b: 86 };
+const AppStorage = window.AppStorage;
 function hexToRgb(hex) {
   const bigint = parseInt(hex.replace("#", ""), 16);
   return { r: bigint >> 16 & 255, g: bigint >> 8 & 255, b: bigint & 255 };
@@ -790,7 +791,7 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
   const featuredArt = artworksList[0];
   return /* @__PURE__ */ React.createElement("div", { className: "screen home" }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--home" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "오늘의 색칠")), /* @__PURE__ */ React.createElement("div", { className: "appbar__count" }, totalCount, "장")), /* @__PURE__ */ React.createElement("section", { className: "home-summary", "aria-label": "도안 선택" }, /* @__PURE__ */ React.createElement("div", { className: "home-summary__copy" }, /* @__PURE__ */ React.createElement("span", { className: "home-summary__eyebrow" }, "톡 채우기"), /* @__PURE__ */ React.createElement("h2", null, "색이 차오르는 순간"), /* @__PURE__ */ React.createElement("p", null, "그림을 고르고 빈칸을 눌러 완성해요.")), /* @__PURE__ */ React.createElement("div", { className: "home-preview-showcase", "aria-hidden": "true" }, featuredArt && /* @__PURE__ */ React.createElement(FinishedThumb, { art: featuredArt, limit: 90 }), /* @__PURE__ */ React.createElement("span", null, "완성 미리보기"))), /* @__PURE__ */ React.createElement("div", { className: "cats" }, window.CATEGORIES.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c))), /* @__PURE__ */ React.createElement("div", { className: "prompt" }, /* @__PURE__ */ React.createElement("span", null, cat === "전체" ? "전체 도안" : cat), /* @__PURE__ */ React.createElement("em", null, list.length, "장")), /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, list.map((a, idx) => {
     const pr = progress[a.id];
-    const fillsArray = Array.isArray(pr) ? pr : pr ? pr.fills : [];
+    const fillsArray = AppStorage.getSavedFills(pr);
     return /* @__PURE__ */ React.createElement("button", { key: a.id, className: "artcard", onClick: () => onPick(a.id) }, /* @__PURE__ */ React.createElement("div", { className: "artcard__thumb" }, /* @__PURE__ */ React.createElement(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })), /* @__PURE__ */ React.createElement("div", { className: "artcard__body" }, /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, a.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__hint" }, getThemeHint(a.category))));
   })));
 }
@@ -1138,35 +1139,6 @@ function Confetti() {
     return /* @__PURE__ */ React.createElement("span", { key: i, style });
   }));
 }
-const STORAGE_VERSION = "v10";
-const GKEY = "sori_gallery_" + STORAGE_VERSION;
-const PKEY = "sori_progress_" + STORAGE_VERSION;
-function loadGallery() {
-  try {
-    return JSON.parse(localStorage.getItem(GKEY)) || [];
-  } catch (_) {
-    return [];
-  }
-}
-function saveGallery(list) {
-  try {
-    localStorage.setItem(GKEY, JSON.stringify(list));
-  } catch (_) {
-  }
-}
-function loadProgress() {
-  try {
-    return JSON.parse(localStorage.getItem(PKEY)) || {};
-  } catch (_) {
-    return {};
-  }
-}
-function saveProgress(map) {
-  try {
-    localStorage.setItem(PKEY, JSON.stringify(map));
-  } catch (_) {
-  }
-}
 function downloadCanvasPng(art, fills) {
   return new Promise((resolve, reject) => {
     try {
@@ -1215,8 +1187,8 @@ function App() {
   const [fills, setFills] = React.useState([]);
   const [selected, setSelected] = React.useState(PALETTE[0].c);
   const [pct, setPct] = React.useState(0);
-  const [progress, setProgress] = React.useState(() => loadProgress());
-  const [gallery, setGallery] = React.useState(() => loadGallery());
+  const [progress, setProgress] = React.useState(() => AppStorage.loadProgress());
+  const [gallery, setGallery] = React.useState(() => AppStorage.loadGallery());
   const [viewItem, setViewItem] = React.useState(null);
   const [justSaved, setJustSaved] = React.useState(false);
   const [toast, setToast] = React.useState(null);
@@ -1236,14 +1208,14 @@ function App() {
         next[artId] = { fills: fillsArray, pct };
       }
       setProgress(next);
-      saveProgress(next);
+      AppStorage.saveProgress(next);
     }
   }, [fills, pct, screen, artId]);
   const pickArt = (id) => {
     setArtId(id);
     const saved = progress[id];
-    const fillsArray = Array.isArray(saved) ? saved : saved ? saved.fills : [];
-    const initialPct = Array.isArray(saved) ? Math.min(100, Math.round(saved.length / 25 * 100)) : saved ? saved.pct : 0;
+    const fillsArray = AppStorage.getSavedFills(saved);
+    const initialPct = AppStorage.getSavedPct(saved);
     setFills(fillsArray);
     setPct(initialPct);
     setJustSaved(false);
@@ -1260,18 +1232,19 @@ function App() {
     const item = { id: "g" + Date.now(), artId, fills, date: Date.now() };
     const next = [item, ...gallery];
     setGallery(next);
-    saveGallery(next);
+    AppStorage.saveGallery(next);
     setJustSaved(true);
     flash("\uAC24\uB7EC\uB9AC\uC5D0 \uBCF4\uAD00\uD588\uC5B4\uC694");
   };
-  const savePng = async () => {
+  const saveArtworkPng = async (targetArt, targetFills) => {
     try {
-      await downloadCanvasPng(art, fills);
+      await downloadCanvasPng(targetArt, targetFills);
       flash("\uC774\uBBF8\uC9C0\uB97C \uC800\uC7A5\uD588\uC5B4\uC694");
     } catch (_) {
       flash("\uC800\uC7A5\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694");
     }
   };
+  const savePng = () => saveArtworkPng(art, fills);
   const exitHome = () => {
     setScreen("home");
   };
@@ -1330,14 +1303,9 @@ function App() {
     {
       item: viewItem,
       onBack: () => setScreen("gallery"),
-      onSave: async () => {
+      onSave: () => {
         const a = getArtworkById(viewItem.artId);
-        try {
-          await downloadCanvasPng(a, viewItem.fills);
-          flash("\uC774\uBBF8\uC9C0\uB97C \uC800\uC7A5\uD588\uC5B4\uC694");
-        } catch (_) {
-          flash("\uC800\uC7A5\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694");
-        }
+        saveArtworkPng(a, viewItem.fills);
       },
       onRecolor: () => {
         setArtId(viewItem.artId);

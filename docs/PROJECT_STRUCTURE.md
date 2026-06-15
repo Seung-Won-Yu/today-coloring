@@ -34,6 +34,8 @@ ColoringApp/
     data/
       artworks.js          # Artwork catalog and theme labels
       palette.js           # Color palette
+    utils/
+      storage.js           # localStorage keys, persistence, progress normalization
     vendor/                # React browser builds
 ```
 
@@ -41,6 +43,7 @@ ColoringApp/
 
 - Add or remove a coloring page: edit `js/data/artworks.js`, then place the PNG in `assets/images/artworks/`.
 - Change palette colors: edit `js/data/palette.js`.
+- Change saved progress/gallery behavior: edit `js/utils/storage.js`.
 - Change lobby/home visual polish: edit `css/modules/90-mobile-polish.css`.
 - Change how-to slides layout: edit `css/modules/70-guide-repair.css`.
 - Keep lobby and how-to separate: lobby state stays in `LobbyScreen`; carousel state, slide text, drag logic, and guide visuals stay in `HowToModal`.
