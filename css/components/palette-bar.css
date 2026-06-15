@@ -1,0 +1,103 @@
+/* Palette final alignment: compact selected color + unclipped swatches */
+.color--bottom .canvaswrap {
+  padding-bottom:112px;
+}
+
+.color--bottom .palettezone--bottom {
+  min-height:96px;
+  padding:10px 14px max(12px, env(safe-area-inset-bottom));
+  display:grid;
+  grid-template-columns:58px minmax(0, 1fr);
+  align-items:center;
+  gap:8px;
+}
+
+.color--bottom .palettezone--bottom::before {
+  left:12px;
+  right:12px;
+  bottom:max(8px, env(safe-area-inset-bottom));
+  height:82px;
+  border-radius:26px;
+  background:#FFFDF8;
+  border:1px solid rgba(88,70,52,.08);
+  box-shadow:0 -8px 28px rgba(75,55,35,.1), inset 0 1px 0 rgba(255,255,255,.9);
+}
+
+.color--bottom .curcolor {
+  width:58px;
+  height:62px;
+  border-radius:19px;
+  border:4px solid #fff !important;
+  box-shadow:0 9px 18px rgba(75,55,35,.14);
+  gap:1px;
+}
+
+.color--bottom .curcolor span:first-child {
+  font-size:11px;
+  line-height:1;
+}
+
+.color--bottom .curcolor span:last-child {
+  max-width:44px;
+  font-size:11px !important;
+  line-height:1.15;
+  word-break:keep-all;
+}
+
+.color--bottom .palette {
+  min-width:0;
+  overflow:hidden;
+}
+
+.color--bottom .palette--bottom .palette__track {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:72px;
+  padding:10px 8px 10px 5px;
+  overflow-x:auto;
+  scroll-padding-inline:8px;
+}
+
+.color--bottom .palette--bottom .swatch {
+  width:46px !important;
+  height:46px !important;
+  min-width:46px;
+  border-width:4px !important;
+  box-shadow:0 7px 14px rgba(75,55,35,.12);
+}
+
+.color--bottom .palette--bottom .swatch--on {
+  transform:none;
+  box-shadow:0 0 0 4px #fff, 0 0 0 8px var(--gold), 0 10px 20px rgba(75,55,35,.16);
+}
+
+.color--bottom .palette--bottom .swatch__check {
+  font-size:20px;
+  line-height:1;
+}
+
+@media (max-width: 360px) {
+  .color--bottom .palettezone--bottom {
+    grid-template-columns:56px minmax(0, 1fr);
+    gap:8px;
+    padding-inline:12px;
+  }
+
+  .color--bottom .curcolor {
+    width:56px;
+    height:60px;
+    border-radius:19px;
+  }
+
+  .color--bottom .palette--bottom .palette__track {
+    gap:10px;
+    padding-left:8px;
+  }
+
+  .color--bottom .palette--bottom .swatch {
+    width:44px !important;
+    height:44px !important;
+    min-width:44px;
+  }
+}

@@ -1,0 +1,48 @@
+/* Mobile width guard: no page-level horizontal drift */
+html,
+body,
+#root,
+.app,
+.screen {
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+.home,
+.gallery {
+  overflow-x:hidden;
+}
+
+.appbar,
+.home-summary,
+.cats,
+.prompt,
+.cardgrid,
+.bottom-nav {
+  max-width:100%;
+}
+
+.appbar--home {
+  overflow:hidden;
+}
+
+.appbar--home .appbar__count {
+  display:none;
+}
+
+.home-summary {
+  width:auto;
+  max-width:calc(100% - 36px);
+}
+
+.cats {
+  width:auto;
+  max-width:calc(100% - 36px);
+}
+
+.cardgrid {
+  width:100%;
+  max-width:100%;
+}
+

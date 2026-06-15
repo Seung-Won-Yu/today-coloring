@@ -1,0 +1,89 @@
+/* Lobby mood pass: show the game moment, not inventory numbers */
+.lobby-screen {
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(244,201,93,.34), transparent 32%),
+    radial-gradient(circle at 88% 20%, rgba(45,143,134,.18), transparent 32%),
+    radial-gradient(circle at 82% 90%, rgba(216,91,69,.18), transparent 34%),
+    linear-gradient(180deg, #FFFDF8 0%, #F6EFE5 100%);
+}
+
+.lobby-overlay {
+  width:min(100%, 342px);
+  min-height:min(620px, calc(100dvh - 36px));
+  justify-content:center;
+  gap:16px;
+  padding:22px 18px 18px;
+  border-radius:34px;
+  background:
+    linear-gradient(180deg, rgba(255,253,248,.96), rgba(255,250,241,.9));
+  border:1px solid rgba(255,255,255,.88);
+  box-shadow:0 24px 60px rgba(75,55,35,.12);
+}
+
+.lobby-overlay::before {
+  inset:9px;
+  border-radius:26px;
+  border-color:rgba(88,70,52,.08);
+}
+
+.lobby-copy {
+  text-align:center;
+}
+
+.lobby-title {
+  font-size:38px;
+  color:var(--ink);
+  margin-bottom:6px;
+}
+
+.lobby-subtitle {
+  color:var(--ink-soft);
+  font-size:17px;
+}
+
+.lobby-palette {
+  margin:0 auto;
+  padding:0;
+  gap:9px;
+  justify-content:center;
+}
+
+.lobby-palette span {
+  width:24px;
+  height:24px;
+  border:4px solid #fff;
+  box-shadow:0 8px 16px rgba(75,55,35,.1);
+}
+
+.lobby-actions {
+  gap:10px;
+  margin-top:4px;
+}
+
+.lobby-start-btn {
+  min-height:62px;
+  font-size:21px;
+  border-radius:22px;
+}
+
+.lobby-guide-btn {
+  min-height:62px;
+  flex:0 0 92px;
+  border-radius:22px;
+}
+
+@media (max-height: 680px) {
+  .lobby-overlay {
+    min-height:auto;
+    gap:10px;
+    padding:18px 16px 16px;
+  }
+
+  .lobby-title {
+    font-size:34px;
+  }
+}
+
