@@ -13,9 +13,31 @@ const {
   normalizeFillForFrame
 } = window.PaintEngine;
 
+const artworkImageCache = new Map();
+
+function loadArtworkBitmap(src) {
+  const cached = artworkImageCache.get(src);
+  if (cached?.image) return Promise.resolve(cached.image);
+  if (cached?.promise) return cached.promise;
+
+  const image = new Image();
+  image.decoding = "async";
+  const promise = new Promise((resolve, reject) => {
+    image.onload = () => {
+      artworkImageCache.set(src, { image });
+      resolve(image);
+    };
+    image.onerror = reject;
+  });
+  artworkImageCache.set(src, { promise });
+  image.src = src;
+  return promise;
+}
+
 function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMode = "preview", onProgressChange, onImageLoad, onRegionsChange }) {
   const canvasRef = React.useRef(null);
   const baseCanvasRef = React.useRef(null);
+  const baseImageDataRef = React.useRef(null);
   const fillsArray = Array.isArray(fills) ? fills : [];
   const regionsRef = React.useRef(null);
   const frameRef = React.useRef(null);
@@ -25,11 +47,11 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   const shouldAnalyzeRegions = interactive || Boolean(onProgressChange) || Boolean(onRegionsChange);
   if (lastArtSrcRef.current !== art.src) {
     regionsRef.current = null;
+    baseImageDataRef.current = null;
     lastArtSrcRef.current = art.src;
   }
-  const analyzeRegions = (ctx, width, height) => {
+  const analyzeRegions = (imgData, width, height) => {
     try {
-      const imgData = ctx.getImageData(0, 0, width, height);
       const data = imgData.data;
       const visited = new Uint8Array(width * height);
       const seeds = [];
@@ -86,10 +108,11 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     }
   };
   React.useEffect(() => {
+    let cancelled = false;
     setImageReady(false);
     setPaintPulse(null);
-    const img = new Image();
-    img.onload = () => {
+    loadArtworkBitmap(art.src).then((img) => {
+      if (cancelled) return;
       const frame = createSafeArtworkCanvas(img, art.src, art.layout, { mode: frameMode });
       const cw = frame.width;
       const ch = frame.height;
@@ -99,8 +122,9 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         baseCanvasRef.current.height = ch;
         const ctx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
         ctx.drawImage(frame.canvas, 0, 0);
+        baseImageDataRef.current = ctx.getImageData(0, 0, cw, ch);
         if (shouldAnalyzeRegions) {
-          analyzeRegions(ctx, cw, ch);
+          analyzeRegions(baseImageDataRef.current, cw, ch);
         } else {
           regionsRef.current = null;
         }
@@ -110,8 +134,12 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         onImageLoad({ width: cw, height: ch });
       }
       setImageReady(true);
+    }).catch((error) => {
+      if (!cancelled) console.error("Error loading artwork", error);
+    });
+    return () => {
+      cancelled = true;
     };
-    img.src = art.src;
   }, [art.src, frameMode, shouldAnalyzeRegions]);
   const redraw = (cw, ch) => {
     if (!canvasRef.current || !baseCanvasRef.current) return;
@@ -121,7 +149,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     ctx.drawImage(baseCanvasRef.current, 0, 0);
     const imgData = ctx.getImageData(0, 0, cw, ch);
     const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
-    const baseImgData = baseCtx.getImageData(0, 0, cw, ch);
+    const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
     const progressData = new Uint8ClampedArray(baseImgData.data);
     const progressImgData = { data: progressData, width: cw, height: ch };
     for (let f of fillsArray) {
@@ -163,7 +191,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const ch = canvasRef.current.height;
     const ctx = canvasRef.current.getContext("2d", { willReadFrequently: true });
     const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
-    const baseImgData = baseCtx.getImageData(0, 0, cw, ch);
+    const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
     const progressData = new Uint8ClampedArray(baseImgData.data);
     const progressImgData = { data: progressData, width: cw, height: ch };
     for (let f of fillsArray) {
@@ -932,38 +960,33 @@ function Confetti() {
   }));
 }
 function downloadCanvasPng(art, fills) {
-  return new Promise((resolve, reject) => {
+  return loadArtworkBitmap(art.src).then((img) => new Promise((resolve, reject) => {
     try {
       const canvas = document.createElement("canvas");
-      const img = new Image();
-      img.onload = () => {
-        const frame = createSafeArtworkCanvas(img, art.src, art.layout, { mode: "paint" });
-        canvas.width = frame.width;
-        canvas.height = frame.height;
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        ctx.drawImage(frame.canvas, 0, 0);
-        const imgData = ctx.getImageData(0, 0, frame.width, frame.height);
-        const fillsArray = Array.isArray(fills) ? fills : [];
-        for (let f of fillsArray) {
-          const normalizedFill = normalizeFillForFrame(f, frame);
-          doFloodFill(imgData, normalizedFill.x, normalizedFill.y, hexToRgb(normalizedFill.color));
-        }
-        ctx.putImageData(imgData, 0, 0);
-        const url = canvas.toDataURL("image/png");
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${art.title}_\uC644\uC131.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        resolve();
-      };
-      img.onerror = reject;
-      img.src = art.src;
+      const frame = createSafeArtworkCanvas(img, art.src, art.layout, { mode: "paint" });
+      canvas.width = frame.width;
+      canvas.height = frame.height;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(frame.canvas, 0, 0);
+      const imgData = ctx.getImageData(0, 0, frame.width, frame.height);
+      const fillsArray = Array.isArray(fills) ? fills : [];
+      for (let f of fillsArray) {
+        const normalizedFill = normalizeFillForFrame(f, frame);
+        doFloodFill(imgData, normalizedFill.x, normalizedFill.y, hexToRgb(normalizedFill.color));
+      }
+      ctx.putImageData(imgData, 0, 0);
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${art.title}_\uC644\uC131.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      resolve();
     } catch (e) {
       reject(e);
     }
-  });
+  }));
 }
 const TWEAK_DEFAULTS = {
   "palettePos": "\uC790\uB3D9",
