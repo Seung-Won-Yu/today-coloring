@@ -42,9 +42,6 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
           const vIdx = y * width + x;
           if (visited[vIdx]) continue;
           const pIdx = getPixelIndex(x, y);
-          const r = data[pIdx];
-          const g = data[pIdx + 1];
-          const b = data[pIdx + 2];
           if (isPaintableBasePixel(data, pIdx)) {
             let regionSize = 0;
             let isBackground = false;
@@ -140,15 +137,17 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     }
     ctx.putImageData(imgData, 0, 0);
     if (regionsRef.current && onProgressChange) {
-      let coloredCount = 0;
+      let coloredSize = 0;
+      let totalSize = 0;
       const seeds = regionsRef.current;
       for (let s of seeds) {
+        totalSize += s.size;
         const idx = (s.y * cw + s.x) * 4;
         if (isProgressMarked(progressData, idx)) {
-          coloredCount++;
+          coloredSize += s.size;
         }
       }
-      const pct = seeds.length > 0 ? Math.min(100, Math.round(coloredCount / seeds.length * 100)) : 0;
+      const pct = totalSize > 0 ? Math.min(100, Math.round(coloredSize / totalSize * 100)) : 0;
       setTimeout(() => {
         onProgressChange(pct);
       }, 0);
@@ -212,19 +211,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     }
     const newFill = { x: paintX, y: paintY, color: selected, v: 2 };
     let nextFills = [...fillsArray, newFill];
-    const progressDataBeforeClick = new Uint8ClampedArray(progressData);
     markProgressRegion(progressImgData, paintX, paintY, baseImgData.data);
-    const clickedSeeds = [];
-    if (regionsRef.current) {
-      for (let s of regionsRef.current) {
-        const idx = (s.y * cw + s.x) * 4;
-        const wasColoredBefore = isProgressMarked(progressDataBeforeClick, idx);
-        const isColoredNow = isProgressMarked(progressData, idx);
-        if (isColoredNow && !wasColoredBefore) {
-          clickedSeeds.push(s);
-        }
-      }
-    }
     if (regionsRef.current) {
       const uncoloredSeeds = regionsRef.current.filter((s) => {
         const idx = (s.y * cw + s.x) * 4;
