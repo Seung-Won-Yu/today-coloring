@@ -482,7 +482,7 @@
 }
 
 .color--bottom .canvaswrap {
-  padding:8px 5px 186px;
+  padding:8px 5px 174px;
 }
 
 .color--side .canvaswrap {
@@ -499,7 +499,7 @@
   position:absolute;
   left:50%;
   right:auto;
-  bottom:170px;
+  bottom:158px;
   width:min(78%, 520px);
   height:26px;
   border-radius:999px;
@@ -575,9 +575,9 @@
   grid-column:2;
   grid-row:1;
   transform:none;
-  width:max-content;
-  min-width:168px;
-  justify-self:center;
+  width:154px;
+  min-width:154px;
+  justify-self:end;
   align-self:center;
   display:flex;
   justify-content:center;
@@ -596,10 +596,10 @@
 }
 
 .color-toolbelt__btn {
-  width:42px;
-  height:42px;
-  min-width:42px;
-  border-radius:14px;
+  width:40px;
+  height:40px;
+  min-width:40px;
+  border-radius:13px;
   background:transparent;
   color:#4D4634;
   box-shadow:none;
@@ -627,11 +627,11 @@
   right:0;
   bottom:0;
   display:grid;
-  min-height:176px;
-  grid-template-columns:84px minmax(0, 1fr);
-  grid-template-rows:46px minmax(0, 98px);
+  min-height:164px;
+  grid-template-columns:minmax(0, 1fr) auto;
+  grid-template-rows:44px minmax(0, 92px);
   align-items:center;
-  gap:8px 12px;
+  gap:8px 10px;
   padding:12px 14px max(12px, env(safe-area-inset-bottom));
   background:
     linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,253,248,.98)),
@@ -646,12 +646,15 @@
 
 .color--bottom .curcolor {
   grid-column:1;
-  grid-row:1 / span 2;
-  width:84px;
-  height:122px;
-  border-radius:18px;
+  grid-row:1;
+  width:min(132px, 100%);
+  height:44px;
+  border-radius:999px;
+  flex-direction:row;
+  gap:6px;
+  justify-self:start;
   border:1px solid rgba(25, 28, 29, .08) !important;
-  box-shadow:0 7px 18px rgba(25, 28, 29, .08), inset 0 0 0 10px rgba(255,255,255,.2);
+  box-shadow:0 7px 18px rgba(25, 28, 29, .08), inset 0 0 0 6px rgba(255,255,255,.18);
 }
 
 .curcolor__label,
@@ -659,8 +662,18 @@
   white-space:nowrap;
 }
 
+.color--bottom .curcolor__label {
+  font-size:11px !important;
+  opacity:.86;
+}
+
+.color--bottom .curcolor__name {
+  margin-top:0 !important;
+  font-size:14px !important;
+}
+
 .color--bottom .palette {
-  grid-column:2;
+  grid-column:1 / -1;
   grid-row:2;
   width:100%;
   min-width:0;
@@ -672,11 +685,11 @@
   grid-auto-flow:column;
   width:100%;
   min-width:0;
-  min-height:98px;
-  grid-template-rows:repeat(2, 43px);
-  grid-auto-columns:48px;
-  gap:8px 12px;
-  padding:5px 14px 5px 5px;
+  min-height:92px;
+  grid-template-rows:repeat(2, 40px);
+  grid-auto-columns:46px;
+  gap:8px 10px;
+  padding:5px 14px 5px 6px;
   border-radius:18px;
   background:#FFFFFF;
   border:1px solid rgba(63,52,39,.08);
@@ -690,9 +703,9 @@
 }
 
 .color--bottom .palette--bottom .swatch {
-  width:42px;
-  height:42px;
-  min-width:42px;
+  width:40px;
+  height:40px;
+  min-width:40px;
   border:4px solid #fff;
   box-shadow:0 7px 16px rgba(25, 28, 29, .12);
   touch-action:pan-x;
@@ -713,11 +726,11 @@
   transform:none;
   grid-column:2;
   grid-row:1;
-  justify-self:center;
+  justify-self:end;
   align-self:center;
   min-height:42px;
   gap:8px;
-  padding:0 18px;
+  padding:0 16px;
   border-radius:18px;
   background:var(--gold);
   color:#241A00;
@@ -1213,12 +1226,12 @@
   }
 
   .color--bottom .palettezone--bottom {
-    grid-template-columns:74px minmax(0, 1fr);
+    grid-template-columns:minmax(0, 1fr) auto;
   }
 
   .color--bottom .curcolor {
-    width:74px;
-    height:118px;
+    width:min(118px, 100%);
+    height:42px;
   }
 }
 
@@ -1328,7 +1341,7 @@
   }
 
   .color--bottom .canvaswrap {
-    padding:10px 8px 188px;
+    padding:10px 8px 174px;
   }
 
   .color--bottom .canvasinner {
@@ -1340,31 +1353,31 @@
   }
 
   .color--bottom .palettezone--bottom {
-    min-height:176px;
-    grid-template-columns:84px minmax(0, 1fr);
-    grid-template-rows:46px minmax(0, 98px);
-    gap:8px 12px;
+    min-height:164px;
+    grid-template-columns:minmax(0, 1fr) auto;
+    grid-template-rows:44px minmax(0, 92px);
+    gap:8px 10px;
   }
 
   .color--bottom .curcolor {
-    width:84px;
-    height:122px;
+    width:min(132px, 100%);
+    height:44px;
   }
 
   .color--bottom .palette--bottom .palette__track {
-    grid-template-rows:repeat(2, 43px);
-    grid-auto-columns:48px;
-    min-height:98px;
+    grid-template-rows:repeat(2, 40px);
+    grid-auto-columns:46px;
+    min-height:92px;
   }
 
   .color--bottom .palette--bottom .swatch {
-    width:42px;
-    height:42px;
-    min-width:42px;
+    width:40px;
+    height:40px;
+    min-width:40px;
   }
 
   .color--bottom .finishbar {
-    bottom:186px;
+    bottom:174px;
   }
 }
 
