@@ -16,51 +16,6 @@
   object-fit:contain;
 }
 
-.lobby-brand {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:9px;
-  margin:0 auto 16px;
-  padding:7px 14px 7px 8px;
-  border-radius:999px;
-  background:#fff;
-  color:var(--ink);
-  border:1px solid rgba(88,70,52,.08);
-  box-shadow:0 12px 28px rgba(75,55,35,.08);
-}
-
-.lobby-brand__mark {
-  width:34px;
-  height:34px;
-  border-radius:13px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,.55), transparent 26%),
-    linear-gradient(135deg, #E0584F 0%, #2FA39A 100%);
-  box-shadow:0 8px 16px rgba(47,163,154,.2);
-}
-
-.lobby-brand__name {
-  font-size:17px;
-  line-height:1;
-  font-weight:900;
-  letter-spacing:0;
-}
-
-.lobby-title {
-  max-width:260px;
-  margin-inline:auto;
-  font-size:34px;
-  line-height:1.12;
-}
-
-.lobby-subtitle {
-  margin-top:8px;
-}
-
 .home {
   width:100%;
   max-width:100vw;
