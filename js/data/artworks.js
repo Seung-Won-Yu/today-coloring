@@ -2,7 +2,7 @@ var ARTWORK_VERSION = '14';
 var ARTWORK_COUNT = 60;
 
 var THEME_HINTS = {
-  '세로 도안': '새 세로형 도안'
+  '컬러링': '오늘의 추천 작품'
 };
 
 function padArtworkNumber(num) {
@@ -14,8 +14,8 @@ function createVerticalArtwork(num) {
   var file = 'vertical-' + label + '.png';
   return {
     id: 'vertical-' + label,
-    title: '세로 도안 ' + label,
-    category: '세로 도안',
+    title: '오늘의 그림 ' + label,
+    category: '컬러링',
     src: 'assets/images/artworks/' + file + '?v=' + ARTWORK_VERSION,
     thumbSrc: 'assets/images/thumbs/' + file + '?v=' + ARTWORK_VERSION,
     isCanvas: true,

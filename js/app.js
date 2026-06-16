@@ -324,7 +324,7 @@ function getArtworkById(id) {
   return window.ARTWORKS.find((art) => art.id === id) || null;
 }
 function getThemeHint(category) {
-  return THEME_HINTS[category] || "오늘의 도안";
+  return THEME_HINTS[category] || "오늘의 작품";
 }
 // Palette data is loaded from js/data/palette.js.
 function HowToModal({ featuredArt, onClose }) {
@@ -335,10 +335,10 @@ function HowToModal({ featuredArt, onClose }) {
   const guideSlides = [
     {
       tag: "01",
-      title: "세로 도안 고르기",
-      text: "긴 페이지로 보기 좋은 도안을 천천히 살펴보고 골라요.",
+      title: "그림 고르기",
+      text: "오늘 칠하고 싶은 그림을 천천히 살펴보고 골라요.",
       kind: "art",
-      points: ["세로 페이지가 잘 보이는 카드", "도안을 누르면 이젤 화면으로 이동"]
+      points: ["큰 미리보기로 확인", "그림을 누르면 색칠 화면으로 이동"]
     },
     {
       tag: "02",
@@ -349,8 +349,8 @@ function HowToModal({ featuredArt, onClose }) {
     },
     {
       tag: "03",
-      title: "이젤에서 색칠",
-      text: "세로 도안을 크게 보고 빈칸을 눌러 차분하게 채워요.",
+      title: "천천히 색칠",
+      text: "그림을 크게 보고 빈칸을 눌러 차분하게 채워요.",
       kind: "fill",
       points: ["돋보기로 작은 칸 확대", "완성 후 갤러리 보관"]
     }
@@ -497,7 +497,7 @@ function LobbyScreen({ onStart }) {
           e("span", { className: "lobby-brand__name" }, "오늘의 색칠")
         ),
         e("h1", { className: "lobby-title" }, "오늘의 한 장을 칠해볼까요?"),
-        e("p", { className: "lobby-subtitle" }, "세로 도안을 이젤에 올리고 천천히 색을 채워보세요.")
+        e("p", { className: "lobby-subtitle" }, "오늘 칠할 그림을 고르고 천천히 색을 채워보세요.")
       ),
       e("div", { className: "lobby-showcase", "aria-hidden": "true" },
         e("div", { className: "lobby-showcase__glow" }),
@@ -506,15 +506,15 @@ function LobbyScreen({ onStart }) {
         )),
         e("div", { className: "lobby-showcase__badge" },
           e(Icon, { name: "star", size: 16, color: "#fff" }),
-          e("span", null, "세로 도안 60장")
+          e("span", null, "작품 60장")
         )
       ),
       e("div", { className: "lobby-theme-row", "aria-label": "특징" },
-        ["세로 페이지", "큰 도안", "쉬운 색칠"].map((theme) => e("span", { key: theme }, theme))
+        ["큰 그림", "쉬운 색칠", "갤러리 저장"].map((theme) => e("span", { key: theme }, theme))
       ),
       e("div", { className: "lobby-palette", "aria-hidden": "true" }, PALETTE.slice(0, 6).map((p) => e("span", { key: p.c, style: { background: p.c } }))),
       e("div", { className: "lobby-actions" },
-        e("button", { className: "lobby-start-btn", onClick: onStart }, "도안 고르기"),
+        e("button", { className: "lobby-start-btn", onClick: onStart }, "그림 고르기"),
         e("button", { className: "lobby-guide-btn", onClick: openGuide }, e(Icon, { name: "pencil", size: 18, color: "#7C695E" }), "방법")
       )
     ),
@@ -540,15 +540,15 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
       ),
       e("div", { className: "appbar__count" }, totalCount, "장")
     ),
-    e("section", { className: "home-summary", "aria-label": "도안 선택" },
+    e("section", { className: "home-summary", "aria-label": "그림 선택" },
       e("div", { className: "home-preview-showcase", "aria-hidden": "true" },
         featuredArt && e(FinishedThumb, { art: featuredArt, limit: 90 }),
         e("span", null, "3:4")
       ),
       e("div", { className: "home-summary__copy" },
-        e("span", { className: "home-summary__eyebrow" }, "새 세로 도안"),
-        e("h2", null, "길게 펼쳐 색칠해요"),
-        e("p", null, "세로 페이지를 고르고 이젤 화면에서 편안하게 완성해요."),
+        e("span", { className: "home-summary__eyebrow" }, "오늘의 추천"),
+        e("h2", null, "천천히 채우는 색"),
+        e("p", null, "그림을 고르고 편안하게 색을 채워 완성해요."),
         e("div", { className: "home-summary__actions" },
           featuredArt && e("button", { className: "home-summary__start", type: "button", onClick: () => onPick(featuredArt.id) },
             e(Icon, { name: "pencil", size: 18 }),
@@ -566,7 +566,7 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
         ))
       )
     ),
-    e("section", { className: "home-library-strip", "aria-label": "도안 현황" },
+    e("section", { className: "home-library-strip", "aria-label": "작품 현황" },
       e("div", null, e("span", null, "컬렉션"), e("strong", null, totalCount, "장")),
       e("div", null, e("span", null, "진행 중"), e("strong", null, startedCount, "장")),
       e("div", null, e("span", null, "보관함"), e("strong", null, galleryCount, "점"))
@@ -575,7 +575,7 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
       window.CATEGORIES.map((c) => e("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c === "전체" ? "전체" : c))
     ),
     e("div", { className: "prompt" },
-      e("span", null, cat === "전체" ? "전체 세로 도안" : cat),
+      e("span", null, cat === "전체" ? "전체 작품" : cat),
       e("em", null, list.length, "장")
     ),
     e("div", { className: "cardgrid" }, list.map((a, idx) => {
@@ -607,7 +607,7 @@ function GalleryScreen({ items, onBack, onView, onDelete }) {
       ),
       e("button", { className: "appbar__action", onClick: onBack },
         e(Icon, { name: "grid", size: 22 }),
-        e("span", null, "도안")
+        e("span", null, "그림")
       )
     ),
     e("section", { className: "gallery-summary", "aria-label": "갤러리 요약" },
@@ -617,15 +617,15 @@ function GalleryScreen({ items, onBack, onView, onDelete }) {
       e("div", { className: "gallery-summary__copy" },
         e("span", { className: "gallery-summary__eyebrow" }, items.length > 0 ? "완성 보관함" : "첫 작품 준비"),
         e("h2", null, items.length > 0 ? "오늘의 색을 모아두었어요" : "완성하면 이곳에 걸려요"),
-        e("p", null, items.length > 0 ? "저장한 작품을 다시 보고, 저장하거나 이어서 색칠할 수 있어요." : "마음에 드는 도안을 골라 천천히 완성해보세요.")
+        e("p", null, items.length > 0 ? "저장한 작품을 다시 보고, 저장하거나 이어서 색칠할 수 있어요." : "마음에 드는 그림을 골라 천천히 완성해보세요.")
       ),
       e("div", { className: "gallery-summary__count" }, items.length, "점")
     ),
     items.length === 0 ? e("div", { className: "empty empty--gallery" },
       e("div", { className: "empty__art" }, e(Thumb, { art: window.ARTWORKS[0] })),
       e("p", { className: "empty__title" }, "아직 완성한 그림이 없어요"),
-      e("p", { className: "empty__sub" }, "도안을 고르고 완성하면 보관함에 차곡차곡 모아둘 수 있어요."),
-      e(BigButton, { icon: "plus", onClick: onBack }, "도안 고르러 가기")
+      e("p", { className: "empty__sub" }, "그림을 고르고 완성하면 보관함에 차곡차곡 모아둘 수 있어요."),
+      e(BigButton, { icon: "plus", onClick: onBack }, "그림 고르러 가기")
     ) : e("div", { className: "cardgrid" }, items.map((it) => {
     const art = getArtworkById(it.artId);
     if (!art) return null;
@@ -702,7 +702,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
     onPaint(prevFills);
   };
   const handleReset = () => {
-    if (window.confirm("\uB3C4\uC548\uC758 \uC0C9\uC0C1\uC744 \uBAA8\uB450 \uCD08\uAE30\uD654\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?")) {
+    if (window.confirm("\uADF8\uB9BC\uC758 \uC0C9\uC0C1\uC744 \uBAA8\uB450 \uCD08\uAE30\uD654\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?")) {
       onPaint([]);
       setHistory([]);
     }
@@ -942,7 +942,7 @@ function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) 
     e("div", { className: "completion__inner" },
       e("p", { className: "completion__eyebrow" }, e(Icon, { name: saved ? "check" : "star", size: 20, color: "var(--ok)" }), saved ? " 보관 완료" : " 작품 완성"),
       e("h2", { className: "completion__title" }, saved ? "갤러리에 담았어요" : "오늘의 작품이 완성됐어요"),
-      e("p", { className: "completion__sub" }, saved ? "기기에 저장하거나 다른 도안을 이어서 골라보세요." : "원하면 갤러리에 보관하고, 바로 이미지로 저장할 수 있어요."),
+      e("p", { className: "completion__sub" }, saved ? "기기에 저장하거나 다른 그림을 이어서 골라보세요." : "원하면 갤러리에 보관하고, 바로 이미지로 저장할 수 있어요."),
       e("div", { className: "completion__certificate", "aria-label": "완성 작품 정보" },
         e("span", null, saved ? "보관된 작품" : "완성 미리보기"),
         e("strong", null, art.title),
@@ -992,7 +992,7 @@ function ViewScreen({ item, onBack, onSave, onRecolor, onDelete }) {
 }
 function BottomNav({ active, galleryCount, onHome, onGallery }) {
   const items = [
-    { key: "home", label: "\uB3C4\uC548", icon: "grid", onClick: onHome },
+    { key: "home", label: "\uC791\uD488", icon: "grid", onClick: onHome },
     { key: "gallery", label: "\uAC24\uB7EC\uB9AC", icon: "star", onClick: onGallery, count: galleryCount }
   ];
   return /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "\uD558\uB2E8 \uC774\uB3D9" }, items.map((item) => /* @__PURE__ */ React.createElement(
