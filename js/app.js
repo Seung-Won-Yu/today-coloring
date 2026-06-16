@@ -662,6 +662,7 @@ function ColorToolbelt({ hasHistory, onUndo, onReset, onZoom }) {
 }
 function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFinish, tweaks, onProgressChange }) {
   const orient = useOrientation();
+  const layout = orient === "landscape" ? "side" : "bottom";
   const containerRef = React.useRef(null);
   const [scale, setScale] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
@@ -674,6 +675,43 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       setOffset({ x: 0, y: 0 });
     }
   }, [scale]);
+  const getPanBounds = (nextScale) => {
+    const container = containerRef.current;
+    const inner = container?.querySelector(".canvasinner");
+    if (!container || !inner) return null;
+    const rect = container.getBoundingClientRect();
+    const style = window.getComputedStyle(container);
+    const padLeft = parseFloat(style.paddingLeft) || 0;
+    const padRight = parseFloat(style.paddingRight) || 0;
+    const padTop = parseFloat(style.paddingTop) || 0;
+    const padBottom = parseFloat(style.paddingBottom) || 0;
+    const viewportW = Math.max(1, rect.width - padLeft - padRight);
+    const viewportH = Math.max(1, rect.height - padTop - padBottom);
+    const baseLeft = inner.offsetLeft;
+    const baseTop = inner.offsetTop;
+    const scaledW = inner.offsetWidth * nextScale;
+    const scaledH = inner.offsetHeight * nextScale;
+    const centerX = padLeft + (viewportW - scaledW) / 2 - baseLeft;
+    const centerY = padTop + (viewportH - scaledH) / 2 - baseTop;
+    const minX = scaledW <= viewportW ? centerX : padLeft + viewportW - baseLeft - scaledW;
+    const maxX = scaledW <= viewportW ? centerX : padLeft - baseLeft;
+    const minY = scaledH <= viewportH ? centerY : padTop + viewportH - baseTop - scaledH;
+    const maxY = scaledH <= viewportH ? centerY : padTop - baseTop;
+    return { minX, maxX, minY, maxY, centerX: (minX + maxX) / 2, centerY: (minY + maxY) / 2 };
+  };
+  const clampPan = (nextOffset, nextScale = scale) => {
+    if (nextScale <= 1) return { x: 0, y: 0 };
+    const bounds = getPanBounds(nextScale);
+    if (!bounds) return nextOffset;
+    return {
+      x: Math.min(bounds.maxX, Math.max(bounds.minX, nextOffset.x)),
+      y: Math.min(bounds.maxY, Math.max(bounds.minY, nextOffset.y))
+    };
+  };
+  const centeredPan = (nextScale) => {
+    const bounds = getPanBounds(nextScale);
+    return bounds ? { x: bounds.centerX, y: bounds.centerY } : { x: -180, y: -180 };
+  };
   const touchStartRef = React.useRef({
     distance: 0,
     scale: 1,
@@ -695,8 +733,9 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       setScale(1);
       setOffset({ x: 0, y: 0 });
     } else {
-      setScale(2.2);
-      setOffset({ x: -180, y: -180 });
+      const nextScale = 2.2;
+      setScale(nextScale);
+      setOffset(clampPan(centeredPan(nextScale), nextScale));
     }
     lastDragTimeRef.current = Date.now();
   };
@@ -765,10 +804,10 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
         const dx = center.x - state.center.x;
         const dy = center.y - state.center.y;
         setScale(nextScale);
-        setOffset({
+        setOffset(clampPan({
           x: mx - (mx - state.offset.x) * scaleRatio + dx,
           y: my - (my - state.offset.y) * scaleRatio + dy
-        });
+        }, nextScale));
         lastDragTimeRef.current = Date.now();
       } else if (e.touches.length === 1 && !state.isPinching) {
         const dx = e.touches[0].clientX - state.startPos.x;
@@ -780,10 +819,10 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
             e.preventDefault();
             const curDx = e.touches[0].clientX - state.pos.x;
             const curDy = e.touches[0].clientY - state.pos.y;
-            setOffset((prev) => ({
+            setOffset((prev) => clampPan({
               x: prev.x + curDx,
               y: prev.y + curDy
-            }));
+            }, scale));
             state.pos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
           }
           lastDragTimeRef.current = Date.now();
@@ -810,10 +849,10 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
         const dx = e.clientX - startMousePos.x;
         const dy = e.clientY - startMousePos.y;
         if (Math.hypot(dx, dy) > 5) {
-          setOffset({
+          setOffset(clampPan({
             x: startMouseOffset.x + dx,
             y: startMouseOffset.y + dy
-          });
+          }, scale));
           lastDragTimeRef.current = Date.now();
         }
       }
@@ -835,10 +874,10 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
         const mx = e.clientX - rect.left - childLeft;
         const my = e.clientY - rect.top - childTop;
         const scaleRatio = newScale / scale;
-        setOffset({
+        setOffset(clampPan({
           x: mx - (mx - offset.x) * scaleRatio,
           y: my - (my - offset.y) * scaleRatio
-        });
+        }, newScale));
         setScale(newScale);
       }
     };
@@ -861,7 +900,14 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       container.removeEventListener("wheel", handleWheel);
     };
   }, [scale, offset]);
-  const layout = orient === "landscape" ? "side" : "bottom";
+  React.useEffect(() => {
+    const keepInBounds = () => {
+      setOffset((prev) => clampPan(prev, scale));
+    };
+    keepInBounds();
+    window.addEventListener("resize", keepInBounds);
+    return () => window.removeEventListener("resize", keepInBounds);
+  }, [scale, aspect, layout]);
   const hasHistory = history.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
   const bottomChrome = window.innerWidth >= 768 ? 302 : 220;
