@@ -913,21 +913,29 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
 }
 function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) {
   const e = React.createElement;
+  const fillCount = Array.isArray(fills) ? fills.length : 0;
   return e("div", { className: "screen completion" },
     e(Confetti, null),
     e("div", { className: "completion__inner" },
-      e("p", { className: "completion__eyebrow" }, e(Icon, { name: "star", size: 20, color: "var(--ok)" }), " 작품 완성!"),
-      e("h2", { className: "completion__title" }, art.title),
-      e("p", { className: "completion__sub" }, saved ? "갤러리에 담아두었어요." : "오늘의 색이 멋지게 담겼어요."),
+      e("p", { className: "completion__eyebrow" }, e(Icon, { name: saved ? "check" : "star", size: 20, color: "var(--ok)" }), saved ? " 보관 완료" : " 작품 완성"),
+      e("h2", { className: "completion__title" }, saved ? "갤러리에 담았어요" : "오늘의 작품이 완성됐어요"),
+      e("p", { className: "completion__sub" }, saved ? "기기에 저장하거나 다른 도안을 이어서 골라보세요." : "원하면 갤러리에 보관하고, 바로 이미지로 저장할 수 있어요."),
+      e("div", { className: "completion__certificate", "aria-label": "완성 작품 정보" },
+        e("span", null, saved ? "보관된 작품" : "완성 미리보기"),
+        e("strong", null, art.title),
+        e("small", null, fillCount, "번의 색칠 기록")
+      ),
       e("div", { className: "completion__frame completion__frame--magic" }, e(CanvasArt, { art, fills, interactive: false, frameMode: "paint" })),
       e("div", { className: "completion__btns" },
-        !saved ? e(BigButton, { icon: "check", onClick: onKeep }, "내 갤러리에 담기") : e(BigButton, { icon: "star", onClick: onNew }, "다른 그림 고르기"),
+        !saved ? e(BigButton, { icon: "check", onClick: onKeep }, "내 갤러리에 담기") : e(BigButton, { icon: "save", onClick: onSave }, "기기에 저장"),
         !saved ? e("div", { className: "completion__row" },
-          e(BigButton, { icon: "plus", onClick: onNew, variant: "soft" }, "새 그림"),
+          e(BigButton, { icon: "save", onClick: onSave, variant: "soft" }, "기기에 저장"),
+          e(BigButton, { icon: "plus", onClick: onNew, variant: "ghost" }, "새 그림")
+        ) : e("div", { className: "completion__row" },
+          e(BigButton, { icon: "star", onClick: onNew, variant: "soft" }, "다른 그림"),
           e(BigButton, { onClick: onBack, variant: "ghost" }, "조금 더 칠하기")
-        ) : e("div", { className: "completion__row completion__row--single" },
-          e(BigButton, { onClick: onBack, variant: "ghost" }, "조금 더 칠하기")
-        )
+        ),
+        !saved && e("button", { className: "completion__textbtn", type: "button", onClick: onBack }, "조금 더 칠하기")
       )
     )
   );
@@ -940,6 +948,11 @@ function ViewScreen({ item, onBack, onSave, onRecolor, onDelete }) {
     e("div", { className: "completion__inner" },
       e("p", { className: "completion__eyebrow" }, art.title),
       e("h2", { className: "completion__title" }, new Date(item.date).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" }), " 완성"),
+      e("div", { className: "completion__certificate completion__certificate--view", "aria-label": "갤러리 작품 정보" },
+        e("span", null, "갤러리 보관 작품"),
+        e("strong", null, art.title),
+        e("small", null, (item.fills || []).length, "번의 색칠 기록")
+      ),
       e("div", { className: "completion__frame" }, e(CanvasArt, { art, fills: item.fills, interactive: false, frameMode: "paint" })),
       e("div", { className: "completion__btns" },
         e("div", { className: "completion__row" },
