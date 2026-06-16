@@ -336,8 +336,8 @@ function HowToModal({ featuredArt, onClose }) {
     },
     {
       tag: "03",
-      title: "톡 채우기",
-      text: "빈 영역을 한 번 톡 누르면 같은 공간이 한 번에 채워져요.",
+      title: "색 채우기",
+      text: "빈 영역을 한 번 누르면 같은 공간이 차분하게 채워져요.",
       kind: "fill",
       points: ["작은 칸은 크게 보기로 확대", "완성 후 저장하거나 보관"]
     }
@@ -481,8 +481,8 @@ function LobbyScreen({ onStart }) {
           e("span", { className: "lobby-brand__mark" }, e(Icon, { name: "fill", size: 22, color: "#fff" })),
           e("span", { className: "lobby-brand__name" }, "오늘의 색칠")
         ),
-        e("h1", { className: "lobby-title" }, "오늘은 어떤 그림을 칠할까요?"),
-        e("p", { className: "lobby-subtitle" }, "마음에 드는 그림을 고르고 색을 채워보세요.")
+        e("h1", { className: "lobby-title" }, "오늘의 한 장을 칠해볼까요?"),
+        e("p", { className: "lobby-subtitle" }, "도안을 고르고 천천히 색을 채워보세요.")
       ),
       e("div", { className: "lobby-showcase", "aria-hidden": "true" },
         e("div", { className: "lobby-showcase__glow" }),
@@ -511,7 +511,7 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
   const list = artworksList.filter((a) => cat === "전체" || a.category === cat);
   const totalCount = artworksList.length;
   const featuredArt = artworksList[0];
-  return /* @__PURE__ */ React.createElement("div", { className: "screen home" }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--home" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "오늘의 색칠")), /* @__PURE__ */ React.createElement("div", { className: "appbar__count" }, totalCount, "장")), /* @__PURE__ */ React.createElement("section", { className: "home-summary", "aria-label": "도안 선택" }, /* @__PURE__ */ React.createElement("div", { className: "home-summary__copy" }, /* @__PURE__ */ React.createElement("span", { className: "home-summary__eyebrow" }, "톡 채우기"), /* @__PURE__ */ React.createElement("h2", null, "색이 차오르는 순간"), /* @__PURE__ */ React.createElement("p", null, "그림을 고르고 빈칸을 눌러 완성해요.")), /* @__PURE__ */ React.createElement("div", { className: "home-preview-showcase", "aria-hidden": "true" }, featuredArt && /* @__PURE__ */ React.createElement(FinishedThumb, { art: featuredArt, limit: 90 }), /* @__PURE__ */ React.createElement("span", null, "완성 미리보기"))), /* @__PURE__ */ React.createElement("div", { className: "cats" }, window.CATEGORIES.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c))), /* @__PURE__ */ React.createElement("div", { className: "prompt" }, /* @__PURE__ */ React.createElement("span", null, cat === "전체" ? "전체 도안" : cat), /* @__PURE__ */ React.createElement("em", null, list.length, "장")), /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, list.map((a, idx) => {
+  return /* @__PURE__ */ React.createElement("div", { className: "screen home" }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--home" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "오늘의 색칠")), /* @__PURE__ */ React.createElement("div", { className: "appbar__count" }, totalCount, "장")), /* @__PURE__ */ React.createElement("section", { className: "home-summary", "aria-label": "도안 선택" }, /* @__PURE__ */ React.createElement("div", { className: "home-summary__copy" }, /* @__PURE__ */ React.createElement("span", { className: "home-summary__eyebrow" }, "오늘의 한 장"), /* @__PURE__ */ React.createElement("h2", null, "천천히 채우는 색"), /* @__PURE__ */ React.createElement("p", null, "도안을 고르고 빈칸을 눌러 편안하게 완성해요.")), /* @__PURE__ */ React.createElement("div", { className: "home-preview-showcase", "aria-hidden": "true" }, featuredArt && /* @__PURE__ */ React.createElement(FinishedThumb, { art: featuredArt, limit: 90 }), /* @__PURE__ */ React.createElement("span", null, "완성 미리보기"))), /* @__PURE__ */ React.createElement("div", { className: "cats" }, window.CATEGORIES.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c))), /* @__PURE__ */ React.createElement("div", { className: "prompt" }, /* @__PURE__ */ React.createElement("span", null, cat === "전체" ? "전체 도안" : cat), /* @__PURE__ */ React.createElement("em", null, list.length, "장")), /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, list.map((a, idx) => {
     const pr = progress[a.id];
     const fillsArray = AppStorage.getSavedFills(pr);
     return /* @__PURE__ */ React.createElement("button", { key: a.id, className: "artcard", onClick: () => onPick(a.id) }, /* @__PURE__ */ React.createElement("div", { className: "artcard__thumb" }, /* @__PURE__ */ React.createElement(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })), /* @__PURE__ */ React.createElement("div", { className: "artcard__body" }, /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, a.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__hint" }, getThemeHint(a.category))));
@@ -735,6 +735,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   }, [scale, offset]);
   const layout = orient === "landscape" ? "side" : "bottom";
   const hasHistory = history.length > 0;
+  const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
   return /* @__PURE__ */ React.createElement("div", { className: "screen color color--" + layout }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--color", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "appbar__back", onClick: onExit }, /* @__PURE__ */ React.createElement(Icon, { name: "back", size: 28 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uBAA9\uB85D")), /* @__PURE__ */ React.createElement("div", { className: "appbar__center-txt" }, pct, "% \uC644\uB8CC"), layout === "side" && /* @__PURE__ */ React.createElement("div", { className: "appbar__tools" }, /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement(Icon, { name: "undo", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uB418\uB3CC\uB9AC\uAE30")), /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleReset, "aria-label": "\uCD08\uAE30\uD654" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uCC98\uC74C\uBD80\uD130"))), /* @__PURE__ */ React.createElement("div", { className: "appbar__progress-line", style: { width: pct + "%" } })), /* @__PURE__ */ React.createElement("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
     "div",
     {
@@ -756,8 +757,8 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       {
         className: "canvasinner",
         style: {
-          width: layout === "side" ? `min(100%, calc((100dvh - 150px) * ${aspect}), calc(100dvw - 260px), 760px)` : `min(100%, calc((100dvh - 232px) * ${aspect}), 620px)`,
-          aspectRatio: aspect,
+          width: layout === "side" ? `min(100%, calc((100dvh - 128px) * ${pageAspect}), calc(100dvw - 286px), 760px)` : `min(100%, calc((100dvh - 238px) * ${pageAspect}), 620px)`,
+          aspectRatio: pageAspect,
           transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
           transformOrigin: "0 0",
           transition: touchStartRef.current.isPinching || touchStartRef.current.isDragging ? "none" : "transform 0.15s ease-out",
