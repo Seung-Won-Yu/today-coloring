@@ -29,7 +29,7 @@ ColoringApp/
       lobby/
     components/            # Shared component styles
     responsive/            # Mobile shell overrides
-    theme/                 # Visual pass and compatibility overrides
+    theme/                 # Final visual theme
   js/
     app.js                 # Runtime app loaded by index.html
     data/
@@ -44,7 +44,7 @@ ColoringApp/
 
 ## Common Edits
 
-- Add or remove a coloring page: edit `js/data/artworks.js`, then place the PNG in `assets/images/artworks/`.
+- Add or remove a coloring page: place `vertical-XX.png` in `assets/images/artworks/`, then update `ARTWORK_COUNT` in `js/data/artworks.js`.
 - Regenerate list thumbnails after artwork changes: run `npm run thumbs`.
 - Change palette colors: edit `js/data/palette.js`.
 - Change saved progress/gallery behavior: edit `js/utils/storage.js`.
@@ -62,5 +62,5 @@ ColoringApp/
 
 ## Notes
 
-- CSS modules are imported in order from `css/styles.css`; later modules intentionally override earlier ones.
+- CSS modules are imported in order from `css/styles.css`; the current coloring workspace theme lives in `css/theme/premium-book.css`.
 - This folder now keeps only the runtime app, styling, data, vendor files, artwork images, and docs needed for the final prototype.

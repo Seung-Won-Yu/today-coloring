@@ -774,7 +774,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
           frameMode: "paint",
           onProgressChange: (p) => {
             setPct(p);
-          setComplete(p >= 85);
+            setComplete(p >= 85);
             if (onProgressChange) onProgressChange(p);
           },
           onImageLoad: ({ width, height }) => setAspect(width / height)

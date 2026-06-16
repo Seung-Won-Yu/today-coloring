@@ -93,7 +93,7 @@
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     const luminance = r * 0.299 + g * 0.587 + b * 0.114;
-    return min > 172 && luminance > 202 && max - min < 56;
+    return min > 238 && luminance > 247 && max - min < 28;
   }
 
   function findNearestUnpaintedStart(baseData, progressData, width, height, x, y, radius) {
