@@ -40,7 +40,7 @@
 .finishbar { position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
   display:flex; align-items:center; gap:10px; padding:15px 30px; border-radius:999px;
   background:linear-gradient(135deg,var(--ok),#448f2b); color:#fff; font-size:calc(18px * var(--fs)); font-weight:900;
-  box-shadow:var(--shadow-lg); animation:pop .35s cubic-bezier(0.34, 1.56, 0.64, 1); white-space:nowrap; }
+  box-shadow:var(--shadow-lg); animation:pop .35s cubic-bezier(0.34, 1.56, 0.64, 1); white-space:nowrap; z-index:16; }
 @keyframes pop { from{transform:translateX(-50%) scale(.8); opacity:0;} to{transform:translateX(-50%) scale(1); opacity:1;} }
 .finish-fab { position:absolute; right:16px; bottom:calc(118px + env(safe-area-inset-bottom)); z-index:6;
   padding:13px 24px; border-radius:999px; background:var(--ink); color:var(--paper);
