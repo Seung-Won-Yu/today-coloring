@@ -1052,19 +1052,34 @@ function isAppDisplayMode() {
     window.matchMedia("(display-mode: standalone)").matches
   );
 }
+function lockPortraitOrientation() {
+  const orientation = window.screen && window.screen.orientation;
+  if (!orientation || !orientation.lock) {
+    return Promise.resolve(false);
+  }
+  try {
+    return Promise.resolve(orientation.lock("portrait-primary"))
+      .then(() => true)
+      .catch(() => Promise.resolve(orientation.lock("portrait")).then(() => true).catch(() => false));
+  } catch (_) {
+    return Promise.resolve(false);
+  }
+}
 function requestAppFullscreen() {
   if (isAppDisplayMode() || document.fullscreenElement) {
-    return Promise.resolve(false);
+    return lockPortraitOrientation();
   }
   const target = document.documentElement;
   const request = target.requestFullscreen || target.webkitRequestFullscreen || target.msRequestFullscreen;
   if (!request) {
-    return Promise.resolve(false);
+    return lockPortraitOrientation();
   }
   try {
-    return Promise.resolve(request.call(target)).then(() => true).catch(() => false);
+    return Promise.resolve(request.call(target))
+      .then(() => lockPortraitOrientation().then(() => true))
+      .catch(() => lockPortraitOrientation().then(() => false));
   } catch (_) {
-    return Promise.resolve(false);
+    return lockPortraitOrientation();
   }
 }
 function App() {
