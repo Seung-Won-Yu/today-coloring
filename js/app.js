@@ -566,11 +566,56 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
   );
 }
 function GalleryScreen({ items, onBack, onView, onDelete }) {
-  return /* @__PURE__ */ React.createElement("div", { className: "screen gallery" }, /* @__PURE__ */ React.createElement("header", { className: "appbar" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "\uB0B4 \uAC24\uB7EC\uB9AC")), /* @__PURE__ */ React.createElement("button", { className: "appbar__action", onClick: onBack }, /* @__PURE__ */ React.createElement(Icon, { name: "grid", size: 22 }), /* @__PURE__ */ React.createElement("span", null, "\uB3C4\uC548"))), items.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("div", { className: "empty__art" }, /* @__PURE__ */ React.createElement(Thumb, { art: window.ARTWORKS[0] })), /* @__PURE__ */ React.createElement("p", { className: "empty__title" }, "\uC544\uC9C1 \uC644\uC131\uD55C \uADF8\uB9BC\uC774 \uC5C6\uC5B4\uC694"), /* @__PURE__ */ React.createElement("p", { className: "empty__sub" }, "\uADF8\uB9BC\uC744 \uACE8\uB77C \uC0C9\uCE60\uD558\uACE0 \uC644\uC131\uD558\uBA74", /* @__PURE__ */ React.createElement("br", null), "\uC774\uACF3\uC5D0 \uBAA8\uC544 \uB4DC\uB824\uC694"), /* @__PURE__ */ React.createElement(BigButton, { icon: "plus", onClick: onBack }, "\uADF8\uB9BC \uACE0\uB974\uB7EC \uAC00\uAE30")) : /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, items.map((it) => {
+  const e = React.createElement;
+  const latest = items[0];
+  const latestArt = latest ? getArtworkById(latest.artId) : window.ARTWORKS[0];
+  return e("div", { className: "screen gallery " + (items.length === 0 ? "gallery--empty" : "gallery--filled") },
+    e("header", { className: "appbar" },
+      e("div", { className: "appbar__brand" },
+        e("span", { className: "appbar__logo" }, e(Icon, { name: "star", size: 24, color: "#fff" })),
+        e("h1", { style: { whiteSpace: "nowrap" } }, "내 갤러리")
+      ),
+      e("button", { className: "appbar__action", onClick: onBack },
+        e(Icon, { name: "grid", size: 22 }),
+        e("span", null, "도안")
+      )
+    ),
+    e("section", { className: "gallery-summary", "aria-label": "갤러리 요약" },
+      e("div", { className: "gallery-summary__thumb", "aria-hidden": "true" },
+        latestArt && latest ? e(Thumb, { art: latestArt, fills: latest.fills }) : e(Thumb, { art: latestArt })
+      ),
+      e("div", { className: "gallery-summary__copy" },
+        e("span", { className: "gallery-summary__eyebrow" }, items.length > 0 ? "완성 보관함" : "첫 작품 준비"),
+        e("h2", null, items.length > 0 ? "오늘의 색을 모아두었어요" : "완성하면 이곳에 걸려요"),
+        e("p", null, items.length > 0 ? "저장한 작품을 다시 보고, 저장하거나 이어서 색칠할 수 있어요." : "마음에 드는 도안을 골라 천천히 완성해보세요.")
+      ),
+      e("div", { className: "gallery-summary__count" }, items.length, "점")
+    ),
+    items.length === 0 ? e("div", { className: "empty empty--gallery" },
+      e("div", { className: "empty__art" }, e(Thumb, { art: window.ARTWORKS[0] })),
+      e("p", { className: "empty__title" }, "아직 완성한 그림이 없어요"),
+      e("p", { className: "empty__sub" }, "도안을 고르고 완성하면 보관함에 차곡차곡 모아둘 수 있어요."),
+      e(BigButton, { icon: "plus", onClick: onBack }, "도안 고르러 가기")
+    ) : e("div", { className: "cardgrid" }, items.map((it) => {
     const art = getArtworkById(it.artId);
     if (!art) return null;
-    return /* @__PURE__ */ React.createElement("div", { key: it.id, className: "artcard gallery-card" }, /* @__PURE__ */ React.createElement("button", { className: "artcard__thumb", onClick: () => onView(it), "aria-label": art.title + " 보기" }, /* @__PURE__ */ React.createElement(Thumb, { art, fills: it.fills })), /* @__PURE__ */ React.createElement("div", { className: "artcard__body gallery-card__body" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, art.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__date" }, new Date(it.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" }))), /* @__PURE__ */ React.createElement("button", { className: "gallery-card__delete", type: "button", onClick: () => onDelete(it.id), "aria-label": art.title + " 삭제" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 18 }), /* @__PURE__ */ React.createElement("span", null, "\uC0AD\uC81C"))));
-  })));
+    return e("div", { key: it.id, className: "artcard gallery-card" },
+      e("button", { className: "artcard__thumb", onClick: () => onView(it), "aria-label": art.title + " 보기" },
+        e(Thumb, { art, fills: it.fills })
+      ),
+      e("div", { className: "artcard__body gallery-card__body" },
+        e("div", null,
+          e("div", { className: "artcard__label" }, art.title),
+          e("div", { className: "artcard__date" }, new Date(it.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" }))
+        ),
+        e("button", { className: "gallery-card__delete", type: "button", onClick: () => onDelete(it.id), "aria-label": art.title + " 삭제" },
+          e(Icon, { name: "trash", size: 18 }),
+          e("span", null, "삭제")
+        )
+      )
+    );
+    }))
+  );
 }
 function ColorToolbelt({ hasHistory, onUndo, onReset, onZoom }) {
   const e = React.createElement;
@@ -883,7 +928,24 @@ function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) 
 function ViewScreen({ item, onBack, onSave, onRecolor, onDelete }) {
   const art = getArtworkById(item.artId);
   if (!art) return null;
-  return /* @__PURE__ */ React.createElement("div", { className: "screen completion" }, /* @__PURE__ */ React.createElement("div", { className: "completion__inner" }, /* @__PURE__ */ React.createElement("p", { className: "completion__eyebrow" }, art.title), /* @__PURE__ */ React.createElement("h2", { className: "completion__title", style: { fontSize: "calc(26px * var(--fs))" } }, new Date(item.date).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" }), " \uC644\uC131"), /* @__PURE__ */ React.createElement("div", { className: "completion__frame" }, /* @__PURE__ */ React.createElement(CanvasArt, { art, fills: item.fills, interactive: false, frameMode: "paint" })), /* @__PURE__ */ React.createElement("div", { className: "completion__btns" }, /* @__PURE__ */ React.createElement("div", { className: "completion__row" }, /* @__PURE__ */ React.createElement(BigButton, { icon: "save", onClick: onSave }, "\uAE30\uAE30\uC5D0 \uC800\uC7A5"), /* @__PURE__ */ React.createElement(BigButton, { icon: "trash", onClick: () => onDelete(item.id), variant: "danger" }, "\uC0AD\uC81C")), /* @__PURE__ */ React.createElement("div", { className: "completion__row" }, /* @__PURE__ */ React.createElement(BigButton, { onClick: onBack, variant: "ghost" }, "\uAC24\uB7EC\uB9AC\uB85C"), /* @__PURE__ */ React.createElement(BigButton, { onClick: onRecolor, variant: "soft" }, "\uB2E4\uC2DC \uC0C9\uCE60")))));
+  const e = React.createElement;
+  return e("div", { className: "screen completion completion--view" },
+    e("div", { className: "completion__inner" },
+      e("p", { className: "completion__eyebrow" }, art.title),
+      e("h2", { className: "completion__title" }, new Date(item.date).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" }), " 완성"),
+      e("div", { className: "completion__frame" }, e(CanvasArt, { art, fills: item.fills, interactive: false, frameMode: "paint" })),
+      e("div", { className: "completion__btns" },
+        e("div", { className: "completion__row" },
+          e(BigButton, { icon: "save", onClick: onSave }, "기기에 저장"),
+          e(BigButton, { icon: "trash", onClick: () => onDelete(item.id), variant: "danger" }, "삭제")
+        ),
+        e("div", { className: "completion__row" },
+          e(BigButton, { onClick: onBack, variant: "ghost" }, "갤러리로"),
+          e(BigButton, { onClick: onRecolor, variant: "soft" }, "다시 색칠")
+        )
+      )
+    )
+  );
 }
 function BottomNav({ active, galleryCount, onHome, onGallery }) {
   const items = [

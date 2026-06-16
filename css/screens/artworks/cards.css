@@ -79,6 +79,10 @@
   background:linear-gradient(180deg, rgba(250,246,238,0) 0%, rgba(250,246,238,.96) 28%, #FAF6EE 100%);
 }
 
+.gallery--empty::after {
+  display:none;
+}
+
 .home .cardgrid,
 .gallery .cardgrid {
   padding-bottom:calc(158px + env(safe-area-inset-bottom));

@@ -7,8 +7,8 @@
   padding:0;
   overflow:hidden;
   background:
-    radial-gradient(circle at 16% 8%, rgba(244,201,93,.32), transparent 34%),
-    radial-gradient(circle at 88% 16%, rgba(45,143,134,.22), transparent 32%),
+    radial-gradient(circle at 16% 8%, rgba(255,255,255,.5), transparent 30%),
+    radial-gradient(circle at 88% 16%, rgba(220,232,220,.24), transparent 32%),
     rgba(35,31,27,.5);
 }
 
@@ -21,7 +21,7 @@
   padding:0;
   border:0;
   border-radius:0;
-  background:#FCF9F2;
+  background:#F6F1E8;
   overflow:hidden;
   box-shadow:none;
 }
@@ -85,25 +85,28 @@
   display:block;
   padding:0;
   background:
-    linear-gradient(180deg, rgba(252,249,242,.08) 0%, rgba(252,249,242,.86) 62%, #FCF9F2 100%),
-    radial-gradient(circle at 18% 14%, rgba(244,201,93,.24), transparent 34%),
-    radial-gradient(circle at 86% 18%, rgba(45,143,134,.18), transparent 32%),
+    linear-gradient(180deg, rgba(252,249,242,.08) 0%, rgba(252,249,242,.86) 62%, #F6F1E8 100%),
+    radial-gradient(circle at 18% 14%, rgba(255,255,255,.52), transparent 34%),
+    radial-gradient(circle at 86% 18%, rgba(220,232,220,.32), transparent 32%),
+    repeating-linear-gradient(0deg, rgba(51,40,26,.024) 0 1px, transparent 1px 18px),
     #EEF1E7;
 }
 
 .guide-slide--palette {
   background:
-    linear-gradient(180deg, rgba(252,249,242,.08) 0%, rgba(252,249,242,.88) 62%, #FCF9F2 100%),
-    radial-gradient(circle at 20% 18%, rgba(216,91,69,.2), transparent 34%),
-    radial-gradient(circle at 88% 18%, rgba(244,201,93,.22), transparent 32%),
+    linear-gradient(180deg, rgba(252,249,242,.08) 0%, rgba(252,249,242,.88) 62%, #F6F1E8 100%),
+    radial-gradient(circle at 20% 18%, rgba(216,91,69,.14), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(220,232,220,.26), transparent 32%),
+    repeating-linear-gradient(0deg, rgba(51,40,26,.024) 0 1px, transparent 1px 18px),
     #F4ECE4;
 }
 
 .guide-slide--fill {
   background:
-    linear-gradient(180deg, rgba(252,249,242,.08) 0%, rgba(252,249,242,.9) 62%, #FCF9F2 100%),
-    radial-gradient(circle at 20% 14%, rgba(45,143,134,.2), transparent 34%),
-    radial-gradient(circle at 86% 18%, rgba(94,216,255,.18), transparent 32%),
+    linear-gradient(180deg, rgba(252,249,242,.08) 0%, rgba(252,249,242,.9) 62%, #F6F1E8 100%),
+    radial-gradient(circle at 20% 14%, rgba(45,143,134,.16), transparent 34%),
+    radial-gradient(circle at 86% 18%, rgba(220,232,220,.28), transparent 32%),
+    repeating-linear-gradient(0deg, rgba(51,40,26,.024) 0 1px, transparent 1px 18px),
     #EAF1F0;
 }
 
@@ -415,8 +418,8 @@
   padding:20px 20px 18px;
   border-radius:30px;
   overflow:auto;
-  background:rgba(255,255,255,.9);
-  border:1px solid rgba(255,255,255,.9);
+  background:rgba(255,253,248,.94);
+  border:1px solid rgba(88,70,52,.08);
   box-shadow:0 18px 46px rgba(25,28,29,.14);
   -webkit-backdrop-filter:blur(16px);
   backdrop-filter:blur(16px);
@@ -435,15 +438,16 @@
   min-height:32px;
   padding:0 16px;
   border-radius:999px;
-  background:var(--accent);
-  color:#fff;
+  background:#DCE8DC;
+  color:#2F5E4D;
+  border:1px solid rgba(47,94,77,.12);
   font-size:15px;
   font-weight:900;
 }
 
 .guide-info-card h2 {
   margin:14px 0 8px;
-  color:var(--accent-d);
+  color:var(--ink);
   font-size:32px;
   line-height:1.05;
   font-weight:900;
@@ -552,9 +556,9 @@
 }
 
 .guide-modal__next {
-  background:var(--accent);
+  background:#2F5E4D;
   color:#fff;
-  box-shadow:0 10px 22px rgba(216,91,69,.18);
+  box-shadow:0 10px 22px rgba(47,94,77,.18);
 }
 
 @media (max-height: 680px) {
