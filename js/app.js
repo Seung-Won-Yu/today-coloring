@@ -1044,6 +1044,28 @@ const TWEAK_DEFAULTS = {
   "fontScale": 1,
   "theme": "\uB530\uB73B"
 };
+function isAppDisplayMode() {
+  return Boolean(
+    window.navigator.standalone ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.matchMedia("(display-mode: standalone)").matches
+  );
+}
+function requestAppFullscreen() {
+  if (isAppDisplayMode() || document.fullscreenElement) {
+    return Promise.resolve(false);
+  }
+  const target = document.documentElement;
+  const request = target.requestFullscreen || target.webkitRequestFullscreen || target.msRequestFullscreen;
+  if (!request) {
+    return Promise.resolve(false);
+  }
+  try {
+    return Promise.resolve(request.call(target)).then(() => true).catch(() => false);
+  } catch (_) {
+    return Promise.resolve(false);
+  }
+}
 function App() {
   const t = TWEAK_DEFAULTS;
   const [screen, setScreen] = React.useState("lobby");
@@ -1075,7 +1097,11 @@ function App() {
       AppStorage.saveProgress(next);
     }
   }, [fills, pct, screen, artId]);
+  const startApp = () => {
+    requestAppFullscreen().finally(() => setScreen("home"));
+  };
   const pickArt = (id) => {
+    requestAppFullscreen();
     setArtId(id);
     const saved = progress[id];
     const fillsArray = AppStorage.getSavedFills(saved);
@@ -1129,7 +1155,7 @@ function App() {
   const themeAttr = t.theme === "\uCC28\uBD84" ? "cool" : t.theme === "\uACE0\uB300\uBE44" ? "contrast" : "warm";
   const showBottomNav = ["home", "gallery"].includes(screen);
   const activeNav = screen;
-  return /* @__PURE__ */ React.createElement("div", { className: "app", "data-theme": themeAttr, style: { "--fs": t.fontScale } }, screen === "lobby" && /* @__PURE__ */ React.createElement(LobbyScreen, { onStart: () => setScreen("home") }), screen === "home" && /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement("div", { className: "app", "data-theme": themeAttr, style: { "--fs": t.fontScale } }, screen === "lobby" && /* @__PURE__ */ React.createElement(LobbyScreen, { onStart: startApp }), screen === "home" && /* @__PURE__ */ React.createElement(
     HomeScreen,
     {
       onPick: pickArt,
