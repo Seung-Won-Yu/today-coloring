@@ -154,12 +154,12 @@
 
   function shouldMergeTinyRegion(seed) {
     if (!seed || seed.isBackground) return false;
-    return seed.size <= 36;
+    return seed.size <= 72;
   }
 
   function shouldMergeLastSmallRegion(seed) {
     if (!seed || seed.isBackground) return false;
-    return seed.size <= 96;
+    return seed.size <= 160;
   }
 
   function markProgressRegion(imageData, x, y, baseData = null) {

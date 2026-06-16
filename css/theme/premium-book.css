@@ -445,11 +445,11 @@
 }
 
 .color--bottom .canvaswrap {
-  padding:12px 6px 186px;
+  padding:8px 5px 162px;
 }
 
 .color--side .canvaswrap {
-  padding:22px 270px 30px 32px;
+  padding:18px 258px 24px 24px;
 }
 
 .color--bottom .canvaswrap::before,
@@ -462,7 +462,7 @@
   position:absolute;
   left:50%;
   right:auto;
-  bottom:166px;
+  bottom:146px;
   width:min(78%, 520px);
   height:26px;
   border-radius:999px;
@@ -481,13 +481,13 @@
   position:relative;
   z-index:1;
   overflow:visible;
-  padding:4px;
+  padding:2px;
   background:
     linear-gradient(90deg, rgba(255,255,255,.08), transparent 18%, rgba(0,0,0,.16) 58%, rgba(255,255,255,.06)),
     repeating-linear-gradient(90deg, rgba(255,255,255,.045) 0 2px, transparent 2px 8px),
     linear-gradient(180deg, #5A3A32 0%, var(--wood) 48%, var(--wood-dark) 100%);
   border:1px solid rgba(45, 32, 24, .38);
-  border-radius:10px;
+  border-radius:8px;
   box-shadow:
     0 28px 54px rgba(25, 28, 29, .24),
     inset 0 2px 3px rgba(255,255,255,.18),
@@ -497,9 +497,9 @@
 .canvasinner::before {
   content:"";
   position:absolute;
-  inset:4px;
+  inset:2px;
   border-radius:4px;
-  box-shadow:inset 0 0 0 2px rgba(255,255,255,.55), inset 0 0 18px rgba(0,0,0,.08);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.38), inset 0 0 10px rgba(0,0,0,.06);
   pointer-events:none;
   z-index:4;
 }
@@ -508,9 +508,9 @@
   content:"";
   position:absolute;
   left:50%;
-  bottom:-10px;
-  width:calc(100% + 28px);
-  height:14px;
+  bottom:-8px;
+  width:calc(100% + 18px);
+  height:11px;
   border-radius:5px;
   transform:translateX(-50%);
   background:
@@ -593,12 +593,12 @@
   right:0;
   bottom:0;
   display:grid;
-  min-height:178px;
+  min-height:158px;
   grid-template-columns:92px minmax(0, 1fr);
-  grid-template-rows:minmax(0, 126px);
+  grid-template-rows:minmax(0, 108px);
   align-items:center;
   gap:14px;
-  padding:18px 16px max(18px, env(safe-area-inset-bottom));
+  padding:14px 14px max(14px, env(safe-area-inset-bottom));
   background:
     linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,253,248,.98)),
     #FFFDF8;
@@ -614,7 +614,7 @@
   grid-column:1;
   grid-row:1;
   width:92px;
-  height:118px;
+  height:106px;
   border-radius:20px;
   border:1px solid rgba(25, 28, 29, .08) !important;
   box-shadow:0 7px 18px rgba(25, 28, 29, .08), inset 0 0 0 10px rgba(255,255,255,.2);
@@ -638,11 +638,11 @@
   grid-auto-flow:column;
   width:100%;
   min-width:0;
-  min-height:124px;
-  grid-template-rows:repeat(2, 54px);
+  min-height:108px;
+  grid-template-rows:repeat(2, 48px);
   grid-auto-columns:54px;
-  gap:12px 14px;
-  padding:8px 16px 8px 6px;
+  gap:10px 14px;
+  padding:6px 16px 6px 6px;
   border-radius:20px;
   background:#FFFFFF;
   border:1px solid rgba(63,52,39,.08);
@@ -656,9 +656,9 @@
 }
 
 .color--bottom .palette--bottom .swatch {
-  width:50px;
-  height:50px;
-  min-width:50px;
+  width:46px;
+  height:46px;
+  min-width:46px;
   border:4px solid #fff;
   box-shadow:0 7px 16px rgba(25, 28, 29, .12);
   touch-action:pan-x;
@@ -670,7 +670,7 @@
 }
 
 .color--bottom .finishbar {
-  bottom:188px;
+  bottom:168px;
   background:var(--gold);
   color:#241A00;
 }
@@ -1037,7 +1037,7 @@
   }
 
   .color--bottom .canvaswrap {
-    padding:18px 18px 188px;
+    padding:12px 12px 168px;
   }
 
   .color--bottom .canvasinner {
@@ -1049,31 +1049,31 @@
   }
 
   .color--bottom .palettezone--bottom {
-    min-height:184px;
+    min-height:164px;
     grid-template-columns:112px minmax(0, 1fr);
-    grid-template-rows:56px minmax(0, 110px);
+    grid-template-rows:50px minmax(0, 104px);
     gap:10px 18px;
   }
 
   .color--bottom .curcolor {
     width:104px;
-    height:108px;
+    height:102px;
   }
 
   .color--bottom .palette--bottom .palette__track {
-    grid-template-rows:repeat(2, 48px);
+    grid-template-rows:repeat(2, 46px);
     grid-auto-columns:48px;
-    min-height:110px;
+    min-height:104px;
   }
 
   .color--bottom .palette--bottom .swatch {
-    width:44px;
-    height:44px;
-    min-width:44px;
+    width:42px;
+    height:42px;
+    min-width:42px;
   }
 
   .color--bottom .finishbar {
-    bottom:190px;
+    bottom:170px;
   }
 }
 

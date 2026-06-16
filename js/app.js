@@ -178,7 +178,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       const normalizedFill = normalizeFillForFrame(f, frameRef.current);
       markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseImgData.data);
     }
-    const snapRadius = Math.max(18, Math.round(Math.max(scaleX, scaleY) * 18));
+    const snapRadius = Math.max(26, Math.round(Math.max(scaleX, scaleY) * 22));
     const clickedIdx = (y * cw + x) * 4;
     const clickedIsPaintable = isPaintableBasePixel(baseImgData.data, clickedIdx);
     const clickedIsColored = isProgressMarked(progressData, clickedIdx);
@@ -190,8 +190,8 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     let start = { x, y };
     if (!clickedIsPaintable) {
       if (!clickedIsLine) return;
-      const lineSnapRadius = Math.max(5, Math.round(Math.max(scaleX, scaleY) * 7));
-      start = findNearestPaintedStart(baseImgData.data, progressData, cw, ch, x, y, Math.round(lineSnapRadius * 0.7)) || findNearestUnpaintedStart(baseImgData.data, progressData, cw, ch, x, y, lineSnapRadius) || null;
+      const lineSnapRadius = Math.max(12, Math.round(Math.max(scaleX, scaleY) * 12));
+      start = findNearestPaintedStart(baseImgData.data, progressData, cw, ch, x, y, Math.round(lineSnapRadius * 0.8)) || findNearestUnpaintedStart(baseImgData.data, progressData, cw, ch, x, y, lineSnapRadius) || null;
       if (!start) return;
     } else if (!clickedIsColored) {
       start = findNearestUnpaintedStart(baseImgData.data, progressData, cw, ch, x, y, snapRadius) || start;
@@ -217,8 +217,15 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         const idx = (s.y * cw + s.x) * 4;
         return !isProgressMarked(progressData, idx);
       });
-      const tinySeeds = uncoloredSeeds.filter(shouldMergeTinyRegion);
-      const lastSmallSeeds = uncoloredSeeds.length <= 2 && uncoloredSeeds.every(shouldMergeLastSmallRegion) ? uncoloredSeeds : [];
+      const nearbyMergeRadius = Math.max(54, Math.min(cw, ch) * 0.13);
+      const nearbyMergeRadiusSq = nearbyMergeRadius * nearbyMergeRadius;
+      const isNearPaintPoint = (s) => {
+        const dx = s.x - paintX;
+        const dy = s.y - paintY;
+        return dx * dx + dy * dy <= nearbyMergeRadiusSq;
+      };
+      const tinySeeds = uncoloredSeeds.filter((s) => shouldMergeTinyRegion(s) && isNearPaintPoint(s));
+      const lastSmallSeeds = uncoloredSeeds.length <= 3 && uncoloredSeeds.every(shouldMergeLastSmallRegion) ? uncoloredSeeds : [];
       const mergeSeeds = [...tinySeeds, ...lastSmallSeeds].filter((seed, index, all) => {
         return all.findIndex((item) => item.x === seed.x && item.y === seed.y) === index;
       }).sort((a, b) => {
@@ -227,7 +234,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         const bdx = b.x - paintX;
         const bdy = b.y - paintY;
         return adx * adx + ady * ady - (bdx * bdx + bdy * bdy);
-      }).slice(0, 12);
+      }).slice(0, 18);
       if (mergeSeeds.length > 0) {
         mergeSeeds.forEach((s) => {
           markProgressRegion(progressImgData, s.x, s.y, baseImgData.data);
@@ -829,7 +836,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   const layout = orient === "landscape" ? "side" : "bottom";
   const hasHistory = history.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
-  const bottomChrome = window.innerWidth >= 768 ? 382 : 286;
+  const bottomChrome = window.innerWidth >= 768 ? 302 : 220;
   return /* @__PURE__ */ React.createElement("div", { className: "screen color color--" + layout }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--color", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "appbar__back", onClick: onExit }, /* @__PURE__ */ React.createElement(Icon, { name: "back", size: 28 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uBAA9\uB85D")), /* @__PURE__ */ React.createElement("div", { className: "appbar__center-txt" }, pct, "% \uC644\uB8CC"), layout === "side" && /* @__PURE__ */ React.createElement("div", { className: "appbar__tools" }, /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement(Icon, { name: "undo", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uB418\uB3CC\uB9AC\uAE30")), /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleReset, "aria-label": "\uCD08\uAE30\uD654" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uCC98\uC74C\uBD80\uD130"))), /* @__PURE__ */ React.createElement("div", { className: "appbar__progress-line", style: { width: pct + "%" } })), /* @__PURE__ */ React.createElement("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
     "div",
     {
@@ -848,7 +855,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       {
         className: "canvasinner",
         style: {
-          width: layout === "side" ? `min(100%, calc((100dvh - 128px) * ${pageAspect}), calc(100dvw - 286px), 760px)` : `min(100%, calc((100dvh - ${bottomChrome}px) * ${pageAspect}), 620px)`,
+          width: layout === "side" ? `min(100%, calc((100dvh - 116px) * ${pageAspect}), calc(100dvw - 266px), 840px)` : `min(calc(100dvw - 10px), calc((100dvh - ${bottomChrome}px) * ${pageAspect}), 680px)`,
           aspectRatio: pageAspect,
           transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
           transformOrigin: "0 0",
