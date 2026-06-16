@@ -2,7 +2,7 @@
 .home .cardgrid,
 .gallery .cardgrid {
   grid-template-columns:repeat(2, minmax(0, 1fr));
-  gap:18px 12px;
+  gap:16px 12px;
   padding:8px 14px calc(112px + env(safe-area-inset-bottom));
 }
 
@@ -16,6 +16,7 @@
 }
 
 .artcard__thumb {
+  aspect-ratio:3 / 4;
   border-radius:19px;
   border:1px solid rgba(88,70,52,.1);
   box-shadow:none;
@@ -39,7 +40,7 @@
   object-fit:contain;
   display:block;
   box-sizing:border-box;
-  padding:5px;
+  padding:7px;
 }
 
 
@@ -146,4 +147,3 @@
     min-height:48px;
   }
 }
-

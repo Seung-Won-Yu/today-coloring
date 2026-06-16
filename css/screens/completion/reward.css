@@ -43,9 +43,10 @@
 }
 
 .completion__frame {
-  width:min(88vw, 390px, 54vh);
+  width:min(76vw, 350px, 42vh);
+  aspect-ratio:3 / 4;
   border:8px solid rgba(255,255,255,.94);
-  border-radius:30px;
+  border-radius:22px;
   background:#fff;
   box-shadow:0 24px 54px rgba(75,55,35,.17);
 }
@@ -107,7 +108,7 @@
   }
 
   .completion__frame {
-    width:min(84vw, 360px, 48vh);
+    width:min(72vw, 330px, 40vh);
     border-width:7px;
   }
 
@@ -119,4 +120,3 @@
     min-height:50px;
   }
 }
-

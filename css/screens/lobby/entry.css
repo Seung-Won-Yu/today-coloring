@@ -58,15 +58,15 @@
 .lobby-showcase {
   position:relative;
   width:min(100%, 322px);
-  height:252px;
+  height:318px;
   margin:0 auto;
 }
 
 .lobby-showcase__glow {
   position:absolute;
-  left:22px;
-  right:22px;
-  bottom:20px;
+  left:42px;
+  right:42px;
+  bottom:18px;
   height:28px;
   border-radius:50%;
   background:rgba(75,55,35,.12);
@@ -78,56 +78,57 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  aspect-ratio:1;
+  aspect-ratio:3 / 4;
   overflow:hidden;
   background:#fff;
-  border:7px solid rgba(255,255,255,.92);
-  border-radius:24px;
+  border:7px solid rgba(255,255,255,.94);
+  border-radius:18px;
   box-shadow:0 18px 42px rgba(75,55,35,.16);
 }
 
 .lobby-showcase__card .finished-thumb {
-  border-radius:16px;
+  border-radius:10px;
   overflow:hidden;
 }
 
 .lobby-showcase__card canvas,
 .lobby-showcase__card img {
-  padding:7px;
+  padding:6px;
   filter:drop-shadow(0 6px 8px rgba(38,30,24,.12));
 }
 
 .lobby-showcase__card--0 {
   z-index:3;
-  left:55px;
-  top:18px;
-  width:202px;
-  transform:rotate(-2deg);
+  left:83px;
+  top:10px;
+  width:154px;
+  transform:rotate(-1.5deg);
+  box-shadow:0 22px 48px rgba(75,55,35,.18), 0 0 0 9px rgba(255, 210, 63, .28);
 }
 
 .lobby-showcase__card--1 {
   z-index:2;
-  left:6px;
-  top:76px;
-  width:138px;
-  transform:rotate(-10deg);
-  opacity:.96;
+  left:22px;
+  top:72px;
+  width:120px;
+  transform:rotate(-9deg);
+  opacity:.9;
 }
 
 .lobby-showcase__card--2 {
   z-index:1;
-  right:2px;
-  top:78px;
-  width:144px;
-  transform:rotate(9deg);
-  opacity:.96;
+  right:18px;
+  top:76px;
+  width:122px;
+  transform:rotate(8deg);
+  opacity:.9;
 }
 
 .lobby-showcase__badge {
   position:absolute;
   z-index:4;
   left:50%;
-  bottom:4px;
+  bottom:8px;
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -221,22 +222,23 @@
   }
 
   .lobby-showcase {
-    height:226px;
+    height:272px;
   }
 
   .lobby-showcase__card--0 {
-    left:60px;
-    width:184px;
+    left:91px;
+    top:8px;
+    width:138px;
   }
 
   .lobby-showcase__card--1 {
-    top:72px;
-    width:126px;
+    top:68px;
+    width:108px;
   }
 
   .lobby-showcase__card--2 {
-    top:72px;
-    width:130px;
+    top:70px;
+    width:110px;
   }
 
   .lobby-theme-row span {
@@ -250,4 +252,3 @@
     min-height:58px;
   }
 }
-

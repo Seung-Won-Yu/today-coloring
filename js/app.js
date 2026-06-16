@@ -221,8 +221,14 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       const lastSmallSeeds = uncoloredSeeds.length <= 2 && uncoloredSeeds.every(shouldMergeLastSmallRegion) ? uncoloredSeeds : [];
       const mergeSeeds = [...tinySeeds, ...lastSmallSeeds].filter((seed, index, all) => {
         return all.findIndex((item) => item.x === seed.x && item.y === seed.y) === index;
-      });
-      if (mergeSeeds.length > 0 && mergeSeeds.length <= 8) {
+      }).sort((a, b) => {
+        const adx = a.x - paintX;
+        const ady = a.y - paintY;
+        const bdx = b.x - paintX;
+        const bdy = b.y - paintY;
+        return adx * adx + ady * ady - (bdx * bdx + bdy * bdy);
+      }).slice(0, 12);
+      if (mergeSeeds.length > 0) {
         mergeSeeds.forEach((s) => {
           markProgressRegion(progressImgData, s.x, s.y, baseImgData.data);
           nextFills.push({ x: s.x, y: s.y, color: selected, v: 2 });
@@ -322,24 +328,24 @@ function HowToModal({ featuredArt, onClose }) {
   const guideSlides = [
     {
       tag: "01",
-      title: "그림 고르기",
-      text: "테마를 넘겨보고 오늘 칠하고 싶은 그림을 골라요.",
+      title: "세로 도안 고르기",
+      text: "긴 페이지로 보기 좋은 도안을 천천히 살펴보고 골라요.",
       kind: "art",
-      points: ["테마 칩으로 그림 모아보기", "도안을 누르면 바로 시작"]
+      points: ["세로 페이지가 잘 보이는 카드", "도안을 누르면 이젤 화면으로 이동"]
     },
     {
       tag: "02",
       title: "색 고르기",
-      text: "하단 물감에서 색을 고르면 왼쪽에 크게 표시돼요.",
+      text: "하단 물감 팔레트에서 원하는 색을 고르면 크게 표시돼요.",
       kind: "palette",
       points: ["색은 좌우로 밀어서 더 보기", "고른 색은 언제든 바꾸기"]
     },
     {
       tag: "03",
-      title: "색 채우기",
-      text: "빈 영역을 한 번 누르면 같은 공간이 차분하게 채워져요.",
+      title: "이젤에서 색칠",
+      text: "세로 도안을 크게 보고 빈칸을 눌러 차분하게 채워요.",
       kind: "fill",
-      points: ["작은 칸은 크게 보기로 확대", "완성 후 저장하거나 보관"]
+      points: ["돋보기로 작은 칸 확대", "완성 후 갤러리 보관"]
     }
   ];
   const guideDemoFills = [
@@ -411,8 +417,10 @@ function HowToModal({ featuredArt, onClose }) {
     }
     if (slide.kind === "fill") {
       return e("div", { className: "guide-visual guide-visual--fill" },
-        e("div", { className: "guide-split guide-split--plain" }, e(Thumb, { art: featuredArt })),
-        e("div", { className: "guide-split guide-split--colored" }, e(Thumb, { art: featuredArt, fills: guideDemoFills })),
+        e("div", { className: "guide-easel-demo" },
+          e("div", { className: "guide-split guide-split--plain" }, e(Thumb, { art: featuredArt })),
+          e("div", { className: "guide-split guide-split--colored" }, e(Thumb, { art: featuredArt, fills: guideDemoFills }))
+        ),
         e("div", { className: "guide-paint-burst" }, e(Icon, { name: "fill", size: 44, color: "#fff" })),
         e("div", { className: "guide-pointer guide-pointer--fill", "aria-hidden": "true" },
           e("span", { className: "guide-pointer__halo" }),
@@ -482,7 +490,7 @@ function LobbyScreen({ onStart }) {
           e("span", { className: "lobby-brand__name" }, "오늘의 색칠")
         ),
         e("h1", { className: "lobby-title" }, "오늘의 한 장을 칠해볼까요?"),
-        e("p", { className: "lobby-subtitle" }, "도안을 고르고 천천히 색을 채워보세요.")
+        e("p", { className: "lobby-subtitle" }, "세로 도안을 이젤에 올리고 천천히 색을 채워보세요.")
       ),
       e("div", { className: "lobby-showcase", "aria-hidden": "true" },
         e("div", { className: "lobby-showcase__glow" }),
@@ -491,15 +499,15 @@ function LobbyScreen({ onStart }) {
         )),
         e("div", { className: "lobby-showcase__badge" },
           e(Icon, { name: "star", size: 16, color: "#fff" }),
-          e("span", null, "완성 미리보기")
+          e("span", null, "세로 도안 60장")
         )
       ),
-      e("div", { className: "lobby-theme-row", "aria-label": "테마 예시" },
-        ["집과 정원", "꽃과 그릇", "동물"].map((theme) => e("span", { key: theme }, theme))
+      e("div", { className: "lobby-theme-row", "aria-label": "특징" },
+        ["세로 페이지", "큰 도안", "쉬운 색칠"].map((theme) => e("span", { key: theme }, theme))
       ),
       e("div", { className: "lobby-palette", "aria-hidden": "true" }, PALETTE.slice(0, 6).map((p) => e("span", { key: p.c, style: { background: p.c } }))),
       e("div", { className: "lobby-actions" },
-        e("button", { className: "lobby-start-btn", onClick: onStart }, "그림 고르기"),
+        e("button", { className: "lobby-start-btn", onClick: onStart }, "도안 고르기"),
         e("button", { className: "lobby-guide-btn", onClick: openGuide }, e(Icon, { name: "pencil", size: 18, color: "#7C695E" }), "방법")
       )
     ),
@@ -511,7 +519,7 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
   const list = artworksList.filter((a) => cat === "전체" || a.category === cat);
   const totalCount = artworksList.length;
   const featuredArt = artworksList[0];
-  return /* @__PURE__ */ React.createElement("div", { className: "screen home" }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--home" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "오늘의 색칠")), /* @__PURE__ */ React.createElement("div", { className: "appbar__count" }, totalCount, "장")), /* @__PURE__ */ React.createElement("section", { className: "home-summary", "aria-label": "도안 선택" }, /* @__PURE__ */ React.createElement("div", { className: "home-summary__copy" }, /* @__PURE__ */ React.createElement("span", { className: "home-summary__eyebrow" }, "오늘의 한 장"), /* @__PURE__ */ React.createElement("h2", null, "천천히 채우는 색"), /* @__PURE__ */ React.createElement("p", null, "도안을 고르고 빈칸을 눌러 편안하게 완성해요.")), /* @__PURE__ */ React.createElement("div", { className: "home-preview-showcase", "aria-hidden": "true" }, featuredArt && /* @__PURE__ */ React.createElement(FinishedThumb, { art: featuredArt, limit: 90 }), /* @__PURE__ */ React.createElement("span", null, "완성 미리보기"))), /* @__PURE__ */ React.createElement("div", { className: "cats" }, window.CATEGORIES.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c))), /* @__PURE__ */ React.createElement("div", { className: "prompt" }, /* @__PURE__ */ React.createElement("span", null, cat === "전체" ? "전체 도안" : cat), /* @__PURE__ */ React.createElement("em", null, list.length, "장")), /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, list.map((a, idx) => {
+  return /* @__PURE__ */ React.createElement("div", { className: "screen home" }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--home" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "오늘의 색칠")), /* @__PURE__ */ React.createElement("div", { className: "appbar__count" }, totalCount, "장")), /* @__PURE__ */ React.createElement("section", { className: "home-summary", "aria-label": "도안 선택" }, /* @__PURE__ */ React.createElement("div", { className: "home-summary__copy" }, /* @__PURE__ */ React.createElement("span", { className: "home-summary__eyebrow" }, "새 세로 도안"), /* @__PURE__ */ React.createElement("h2", null, "길게 펼쳐 색칠해요"), /* @__PURE__ */ React.createElement("p", null, "세로 페이지를 고르고 이젤 화면에서 편안하게 완성해요.")), /* @__PURE__ */ React.createElement("div", { className: "home-preview-showcase", "aria-hidden": "true" }, featuredArt && /* @__PURE__ */ React.createElement(FinishedThumb, { art: featuredArt, limit: 90 }), /* @__PURE__ */ React.createElement("span", null, "3:4"))), /* @__PURE__ */ React.createElement("div", { className: "cats" }, window.CATEGORIES.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c === "전체" ? "전체" : c))), /* @__PURE__ */ React.createElement("div", { className: "prompt" }, /* @__PURE__ */ React.createElement("span", null, cat === "전체" ? "전체 세로 도안" : cat), /* @__PURE__ */ React.createElement("em", null, list.length, "장")), /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, list.map((a, idx) => {
     const pr = progress[a.id];
     const fillsArray = AppStorage.getSavedFills(pr);
     return /* @__PURE__ */ React.createElement("button", { key: a.id, className: "artcard", onClick: () => onPick(a.id) }, /* @__PURE__ */ React.createElement("div", { className: "artcard__thumb" }, /* @__PURE__ */ React.createElement(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })), /* @__PURE__ */ React.createElement("div", { className: "artcard__body" }, /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, a.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__hint" }, getThemeHint(a.category))));
@@ -736,7 +744,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   const layout = orient === "landscape" ? "side" : "bottom";
   const hasHistory = history.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
-  const bottomChrome = window.innerWidth >= 768 ? 420 : 330;
+  const bottomChrome = window.innerWidth >= 768 ? 382 : 286;
   return /* @__PURE__ */ React.createElement("div", { className: "screen color color--" + layout }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--color", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "appbar__back", onClick: onExit }, /* @__PURE__ */ React.createElement(Icon, { name: "back", size: 28 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uBAA9\uB85D")), /* @__PURE__ */ React.createElement("div", { className: "appbar__center-txt" }, pct, "% \uC644\uB8CC"), layout === "side" && /* @__PURE__ */ React.createElement("div", { className: "appbar__tools" }, /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement(Icon, { name: "undo", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uB418\uB3CC\uB9AC\uAE30")), /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleReset, "aria-label": "\uCD08\uAE30\uD654" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uCC98\uC74C\uBD80\uD130"))), /* @__PURE__ */ React.createElement("div", { className: "appbar__progress-line", style: { width: pct + "%" } })), /* @__PURE__ */ React.createElement("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
     "div",
     {

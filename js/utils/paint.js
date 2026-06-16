@@ -154,12 +154,12 @@
 
   function shouldMergeTinyRegion(seed) {
     if (!seed || seed.isBackground) return false;
-    return seed.size <= 18;
+    return seed.size <= 36;
   }
 
   function shouldMergeLastSmallRegion(seed) {
     if (!seed || seed.isBackground) return false;
-    return seed.size <= 48;
+    return seed.size <= 96;
   }
 
   function markProgressRegion(imageData, x, y, baseData = null) {
@@ -209,14 +209,15 @@
       }
     }
     const hasInk = maxX >= minX && maxY >= minY;
-    const sourceX = hasInk ? Math.max(0, minX - inkPad) : 0;
-    const sourceY = hasInk ? Math.max(0, minY - inkPad) : 0;
-    const sourceW = hasInk ? Math.min(width - sourceX, maxX - minX + inkPad * 2 + 1) : width;
-    const sourceH = hasInk ? Math.min(height - sourceY, maxY - minY + inkPad * 2 + 1) : height;
+    const useFullPaintPage = mode === "paint";
+    const sourceX = useFullPaintPage ? 0 : hasInk ? Math.max(0, minX - inkPad) : 0;
+    const sourceY = useFullPaintPage ? 0 : hasInk ? Math.max(0, minY - inkPad) : 0;
+    const sourceW = useFullPaintPage ? width : hasInk ? Math.min(width - sourceX, maxX - minX + inkPad * 2 + 1) : width;
+    const sourceH = useFullPaintPage ? height : hasInk ? Math.min(height - sourceY, maxY - minY + inkPad * 2 + 1) : height;
     const innerWidth = Math.max(1, width - pad * 2);
     const innerHeight = Math.max(1, height - pad * 2);
     const layoutScale = layout && layout.scale ? layout.scale : 1;
-    const paintPad = mode === "paint" ? Math.min(58, Math.max(28, Math.round(Math.min(sourceW, sourceH) * 0.045))) : 0;
+    const paintPad = mode === "paint" ? 0 : 0;
     const paintMaxSide = Math.min(900, Math.max(width, height));
     const outputScale = mode === "paint" ? (paintMaxSide - paintPad * 2) / Math.max(sourceW, sourceH) : 1;
     const outputWidth = mode === "paint" ? Math.max(1, Math.round(sourceW * outputScale) + paintPad * 2) : width;

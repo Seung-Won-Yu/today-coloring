@@ -130,9 +130,9 @@
 
 .guide-art-card {
   position:relative;
-  width:min(68vw, 260px);
-  aspect-ratio:1;
-  border-radius:30px;
+  width:min(54vw, 210px);
+  aspect-ratio:3 / 4;
+  border-radius:22px;
   background:#fff;
   border:8px solid rgba(255,255,255,.9);
   box-shadow:0 20px 54px rgba(75,55,35,.14);
@@ -142,7 +142,7 @@
 
 .guide-art-card canvas,
 .guide-art-card img {
-  padding:8px;
+  padding:7px;
 }
 
 .guide-pointer {
@@ -233,7 +233,7 @@
 
 .guide-pointer--fill {
   left:50%;
-  top:42%;
+  top:38%;
   width:96px;
   height:96px;
 }
@@ -337,11 +337,29 @@
 }
 
 .guide-visual--fill {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:64px 24px 22px;
+  background:transparent;
+}
+
+.guide-easel-demo {
+  position:relative;
+  z-index:2;
+  width:min(76vw, 294px);
+  aspect-ratio:3 / 4;
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:0;
-  padding:0;
-  background:#fff;
+  overflow:hidden;
+  padding:8px;
+  border-radius:18px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.08), transparent 18%, rgba(0,0,0,.16) 58%, rgba(255,255,255,.06)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.045) 0 2px, transparent 2px 8px),
+    linear-gradient(180deg, #5A3A32 0%, #4B2F28 48%, #2F211D 100%);
+  box-shadow:0 24px 54px rgba(25,28,29,.18), inset 0 2px 3px rgba(255,255,255,.18);
 }
 
 .guide-split {
@@ -350,12 +368,13 @@
   align-items:center;
   justify-content:center;
   overflow:hidden;
+  background:#fff;
 }
 
 .guide-split > div {
-  width:178%;
-  height:58%;
-  transform:translateY(-20px);
+  width:100%;
+  height:100%;
+  transform:none;
 }
 
 .guide-split--plain {
@@ -370,7 +389,7 @@
 .guide-paint-burst {
   position:absolute;
   left:50%;
-  top:42%;
+  top:38%;
   z-index:3;
   width:88px;
   height:88px;
