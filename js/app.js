@@ -517,11 +517,11 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
     return /* @__PURE__ */ React.createElement("button", { key: a.id, className: "artcard", onClick: () => onPick(a.id) }, /* @__PURE__ */ React.createElement("div", { className: "artcard__thumb" }, /* @__PURE__ */ React.createElement(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })), /* @__PURE__ */ React.createElement("div", { className: "artcard__body" }, /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, a.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__hint" }, getThemeHint(a.category))));
   })));
 }
-function GalleryScreen({ items, onBack, onView }) {
+function GalleryScreen({ items, onBack, onView, onDelete }) {
   return /* @__PURE__ */ React.createElement("div", { className: "screen gallery" }, /* @__PURE__ */ React.createElement("header", { className: "appbar" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "\uB0B4 \uAC24\uB7EC\uB9AC")), /* @__PURE__ */ React.createElement("button", { className: "appbar__action", onClick: onBack }, /* @__PURE__ */ React.createElement(Icon, { name: "grid", size: 22 }), /* @__PURE__ */ React.createElement("span", null, "\uB3C4\uC548"))), items.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("div", { className: "empty__art" }, /* @__PURE__ */ React.createElement(Thumb, { art: window.ARTWORKS[0] })), /* @__PURE__ */ React.createElement("p", { className: "empty__title" }, "\uC544\uC9C1 \uC644\uC131\uD55C \uADF8\uB9BC\uC774 \uC5C6\uC5B4\uC694"), /* @__PURE__ */ React.createElement("p", { className: "empty__sub" }, "\uADF8\uB9BC\uC744 \uACE8\uB77C \uC0C9\uCE60\uD558\uACE0 \uC644\uC131\uD558\uBA74", /* @__PURE__ */ React.createElement("br", null), "\uC774\uACF3\uC5D0 \uBAA8\uC544 \uB4DC\uB824\uC694"), /* @__PURE__ */ React.createElement(BigButton, { icon: "plus", onClick: onBack }, "\uADF8\uB9BC \uACE0\uB974\uB7EC \uAC00\uAE30")) : /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, items.map((it) => {
     const art = getArtworkById(it.artId);
     if (!art) return null;
-    return /* @__PURE__ */ React.createElement("div", { key: it.id, className: "artcard" }, /* @__PURE__ */ React.createElement("button", { className: "artcard__thumb", onClick: () => onView(it) }, /* @__PURE__ */ React.createElement(Thumb, { art, fills: it.fills })), /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, art.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__date" }, new Date(it.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })));
+    return /* @__PURE__ */ React.createElement("div", { key: it.id, className: "artcard gallery-card" }, /* @__PURE__ */ React.createElement("button", { className: "artcard__thumb", onClick: () => onView(it), "aria-label": art.title + " 보기" }, /* @__PURE__ */ React.createElement(Thumb, { art, fills: it.fills })), /* @__PURE__ */ React.createElement("div", { className: "artcard__body gallery-card__body" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, art.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__date" }, new Date(it.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" }))), /* @__PURE__ */ React.createElement("button", { className: "gallery-card__delete", type: "button", onClick: () => onDelete(it.id), "aria-label": art.title + " 삭제" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 18 }), /* @__PURE__ */ React.createElement("span", null, "\uC0AD\uC81C"))));
   })));
 }
 function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFinish, tweaks, onProgressChange }) {
@@ -803,7 +803,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "6px", fontSize: "15px", fontWeight: "bold", color: "var(--ink)" } }, scale > 1 ? "\uCD95\uC18C\uD558\uAE30 (1x)" : "\uD06C\uAC8C \uBCF4\uAE30 (2x)")
     ),
     complete && /* @__PURE__ */ React.createElement("button", { className: "finishbar", onClick: onFinish, style: { zIndex: 15 } }, /* @__PURE__ */ React.createElement(Icon, { name: "check", size: 26, color: "#fff" }), " \uB2E4 \uCE60\uD588\uC5B4\uC694 \xB7 \uC644\uC131\uD558\uAE30")
-  ), /* @__PURE__ */ React.createElement("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } }, /* @__PURE__ */ React.createElement("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } }, /* @__PURE__ */ React.createElement("span", { style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "\uACE0\uB978 \uC0C9"), /* @__PURE__ */ React.createElement("span", { style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")), /* @__PURE__ */ React.createElement(Palette, { selected, onSelect, layout, swatchSize: tweaks.swatchSize || 60 }))));
+  ), /* @__PURE__ */ React.createElement("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } }, /* @__PURE__ */ React.createElement("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } }, /* @__PURE__ */ React.createElement("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "\uD604\uC7AC \uC0C9"), /* @__PURE__ */ React.createElement("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")), /* @__PURE__ */ React.createElement(Palette, { selected, onSelect, layout, swatchSize: tweaks.swatchSize || 60 }))));
 }
 function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) {
   const e = React.createElement;
@@ -826,10 +826,10 @@ function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) 
     )
   );
 }
-function ViewScreen({ item, onBack, onSave, onRecolor }) {
+function ViewScreen({ item, onBack, onSave, onRecolor, onDelete }) {
   const art = getArtworkById(item.artId);
   if (!art) return null;
-  return /* @__PURE__ */ React.createElement("div", { className: "screen completion" }, /* @__PURE__ */ React.createElement("div", { className: "completion__inner" }, /* @__PURE__ */ React.createElement("p", { className: "completion__eyebrow" }, art.title), /* @__PURE__ */ React.createElement("h2", { className: "completion__title", style: { fontSize: "calc(26px * var(--fs))" } }, new Date(item.date).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" }), " \uC644\uC131"), /* @__PURE__ */ React.createElement("div", { className: "completion__frame" }, /* @__PURE__ */ React.createElement(CanvasArt, { art, fills: item.fills, interactive: false, frameMode: "paint" })), /* @__PURE__ */ React.createElement("div", { className: "completion__btns" }, /* @__PURE__ */ React.createElement(BigButton, { icon: "save", onClick: onSave }, "\uAE30\uAE30\uC5D0 \uC800\uC7A5"), /* @__PURE__ */ React.createElement("div", { className: "completion__row" }, /* @__PURE__ */ React.createElement(BigButton, { onClick: onBack, variant: "ghost" }, "\uAC24\uB7EC\uB9AC\uB85C"), /* @__PURE__ */ React.createElement(BigButton, { onClick: onRecolor, variant: "soft" }, "\uB2E4\uC2DC \uC0C9\uCE60")))));
+  return /* @__PURE__ */ React.createElement("div", { className: "screen completion" }, /* @__PURE__ */ React.createElement("div", { className: "completion__inner" }, /* @__PURE__ */ React.createElement("p", { className: "completion__eyebrow" }, art.title), /* @__PURE__ */ React.createElement("h2", { className: "completion__title", style: { fontSize: "calc(26px * var(--fs))" } }, new Date(item.date).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" }), " \uC644\uC131"), /* @__PURE__ */ React.createElement("div", { className: "completion__frame" }, /* @__PURE__ */ React.createElement(CanvasArt, { art, fills: item.fills, interactive: false, frameMode: "paint" })), /* @__PURE__ */ React.createElement("div", { className: "completion__btns" }, /* @__PURE__ */ React.createElement("div", { className: "completion__row" }, /* @__PURE__ */ React.createElement(BigButton, { icon: "save", onClick: onSave }, "\uAE30\uAE30\uC5D0 \uC800\uC7A5"), /* @__PURE__ */ React.createElement(BigButton, { icon: "trash", onClick: () => onDelete(item.id), variant: "danger" }, "\uC0AD\uC81C")), /* @__PURE__ */ React.createElement("div", { className: "completion__row" }, /* @__PURE__ */ React.createElement(BigButton, { onClick: onBack, variant: "ghost" }, "\uAC24\uB7EC\uB9AC\uB85C"), /* @__PURE__ */ React.createElement(BigButton, { onClick: onRecolor, variant: "soft" }, "\uB2E4\uC2DC \uC0C9\uCE60")))));
 }
 function BottomNav({ active, galleryCount, onHome, onGallery }) {
   const items = [
@@ -942,6 +942,17 @@ function App() {
     setJustSaved(true);
     flash("\uAC24\uB7EC\uB9AC\uC5D0 \uBCF4\uAD00\uD588\uC5B4\uC694");
   };
+  const deleteGalleryItem = (itemId) => {
+    if (!window.confirm("\uC774 \uC791\uD488\uC744 \uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?")) return;
+    const next = gallery.filter((item) => item.id !== itemId);
+    setGallery(next);
+    AppStorage.saveGallery(next);
+    if (viewItem && viewItem.id === itemId) {
+      setViewItem(null);
+      setScreen("gallery");
+    }
+    flash("\uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD588\uC5B4\uC694");
+  };
   const saveArtworkPng = async (targetArt, targetFills) => {
     try {
       await downloadCanvasPng(targetArt, targetFills);
@@ -1002,7 +1013,8 @@ function App() {
       onView: (it) => {
         setViewItem(it);
         setScreen("view");
-      }
+      },
+      onDelete: deleteGalleryItem
     }
   ), screen === "view" && viewItem && /* @__PURE__ */ React.createElement(
     ViewScreen,
@@ -1018,7 +1030,8 @@ function App() {
         setFills(viewItem.fills);
         setJustSaved(false);
         setScreen("color");
-      }
+      },
+      onDelete: deleteGalleryItem
     }
   ), toast && /* @__PURE__ */ React.createElement("div", { className: "toast" }, toast), showBottomNav && /* @__PURE__ */ React.createElement(
     BottomNav,
