@@ -548,12 +548,12 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
         ),
         e("div", { className: "home-summary__copy" },
           e("span", { className: "home-summary__eyebrow" }, "오늘의 추천"),
-          e("h2", null, "천천히 색을 채우세요"),
-          e("p", null, "그림을 고르고 편안하게 색을 채워 완성해요."),
+          e("h2", null, "오늘의 한 장"),
+          e("p", null, "편안하게 색을 채워보세요."),
           e("div", { className: "home-summary__actions" },
             featuredArt && e("button", { className: "home-summary__start", type: "button", onClick: () => onPick(featuredArt.id) },
               e(Icon, { name: "pencil", size: 18 }),
-              e("span", null, "오늘의 한 장 시작")
+              e("span", null, "시작하기")
             ),
             e("button", { className: "home-summary__gallery", type: "button", onClick: onGallery },
               e(Icon, { name: "star", size: 18 }),

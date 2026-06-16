@@ -125,6 +125,17 @@
   border:1px solid rgba(47, 94, 77, .12);
 }
 
+.home-summary__eyebrow {
+  min-height:24px;
+  display:inline-flex;
+  align-items:center;
+  padding:0 8px;
+  border-radius:999px;
+  font-size:12px;
+  line-height:1;
+  font-weight:900;
+}
+
 .bigbtn--solid {
   background:#2F5E4D;
   color:#fff;
@@ -142,11 +153,16 @@
 .home-summary {
   width:100%;
   margin:0;
-  padding:16px;
-  border-radius:22px;
+  min-height:144px;
+  padding:14px;
+  display:grid;
+  grid-template-columns:86px minmax(0, 1fr);
+  align-items:center;
+  gap:14px;
+  border-radius:20px;
   position:relative;
   background:
-    linear-gradient(90deg, rgba(220,232,220,.78), transparent 36%),
+    linear-gradient(90deg, rgba(220,232,220,.56), transparent 42%),
     linear-gradient(180deg, #FFFDF8 0%, #F9F2E7 100%);
   border:1px solid rgba(63,52,39,.08);
   box-shadow:none;
@@ -157,14 +173,7 @@
 }
 
 .home-summary::before {
-  content:"";
-  position:absolute;
-  left:0;
-  top:18px;
-  bottom:18px;
-  width:4px;
-  border-radius:0 999px 999px 0;
-  background:#426F5C;
+  display:none;
 }
 
 .home-summary__stack {
@@ -209,12 +218,18 @@
 }
 
 .home-summary h2 {
-  font-size:24px;
+  margin-top:5px;
+  font-size:23px;
+  line-height:1.08;
   color:var(--ink);
+  white-space:nowrap;
 }
 
 .home-summary p {
+  margin-top:5px;
   color:var(--ink-soft);
+  font-size:13px;
+  line-height:1.35;
   font-weight:700;
 }
 
@@ -222,17 +237,17 @@
   display:flex;
   flex-wrap:wrap;
   gap:8px;
-  margin-top:12px;
+  margin-top:10px;
 }
 
 .home-summary__start,
 .home-summary__gallery {
-  min-height:42px;
+  min-height:40px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:7px;
-  padding:0 13px;
+  padding:0 14px;
   border-radius:15px;
   font-size:13px;
   font-weight:900;
@@ -297,13 +312,20 @@
 }
 
 .home-preview-showcase {
+  width:86px;
+  min-width:86px;
   aspect-ratio:3 / 4;
-  border-radius:12px;
+  padding:6px;
+  border-radius:16px;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.7), transparent 45%),
+    linear-gradient(180deg, rgba(255,255,255,.78), transparent 45%),
     #F8F3EA;
   border:1px solid rgba(63, 52, 39, .1);
-  box-shadow:0 10px 24px rgba(75,55,35,.12), inset 0 0 0 8px #FFFDF8;
+  box-shadow:0 10px 22px rgba(75,55,35,.1), inset 0 0 0 6px #FFFDF8;
+}
+
+.home-preview-showcase span {
+  display:none;
 }
 
 .cats {
