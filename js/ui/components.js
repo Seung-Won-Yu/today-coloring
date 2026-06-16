@@ -30,20 +30,58 @@ function isLight(hex) {
   const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
   return r * 0.299 + g * 0.587 + b * 0.114 > 165;
 }
-function Palette({ selected, onSelect, layout, swatchSize }) {
+function Palette({ selected, onSelect, layout }) {
   const side = layout === "side";
-  return /* @__PURE__ */ React.createElement("div", { className: "palette " + (side ? "palette--side" : "palette--bottom") }, /* @__PURE__ */ React.createElement("div", { className: "palette__track" }, PALETTE.map((p) => {
+  const isDraggingRef = React.useRef(false);
+  const lastSelectedRef = React.useRef(null);
+  const selectColor = React.useCallback((color) => {
+    if (!color || lastSelectedRef.current === color) return;
+    lastSelectedRef.current = color;
+    onSelect(color);
+  }, [onSelect]);
+  const selectColorAtPoint = React.useCallback((x, y) => {
+    const target = document.elementFromPoint(x, y);
+    const swatch = target && target.closest ? target.closest("[data-palette-color]") : null;
+    if (swatch) selectColor(swatch.dataset.paletteColor);
+  }, [selectColor]);
+  const stopDragging = () => {
+    isDraggingRef.current = false;
+    lastSelectedRef.current = null;
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "palette " + (side ? "palette--side" : "palette--bottom") }, /* @__PURE__ */ React.createElement("div", {
+    className: "palette__track",
+    onPointerMove: (ev) => {
+      if (!isDraggingRef.current || ev.pointerType === "touch") return;
+      selectColorAtPoint(ev.clientX, ev.clientY);
+    },
+    onPointerUp: stopDragging,
+    onPointerCancel: stopDragging,
+    onPointerLeave: stopDragging,
+    onTouchMove: (ev) => {
+      const touch = ev.touches && ev.touches[0];
+      if (touch) selectColorAtPoint(touch.clientX, touch.clientY);
+    },
+    onTouchEnd: stopDragging,
+    onTouchCancel: stopDragging
+  }, PALETTE.map((p) => {
     const on = selected === p.c;
     return /* @__PURE__ */ React.createElement(
       "button",
       {
         key: p.c,
+        type: "button",
+        "data-palette-color": p.c,
         className: "swatch" + (on ? " swatch--on" : ""),
         style: {
           background: p.c,
-          width: swatchSize,
-          height: swatchSize,
           borderColor: isLight(p.c) ? "rgba(74,64,54,.35)" : "transparent"
+        },
+        onPointerDown: () => {
+          isDraggingRef.current = true;
+          selectColor(p.c);
+        },
+        onPointerEnter: () => {
+          if (isDraggingRef.current) selectColor(p.c);
         },
         onClick: () => onSelect(p.c),
         "aria-label": p.name

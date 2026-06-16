@@ -49,7 +49,7 @@ ColoringApp/
 - Change palette colors: edit `js/data/palette.js`.
 - Change saved progress/gallery behavior: edit `js/utils/storage.js`.
 - Change lobby/home visual polish: edit `css/screens/lobby/` and `css/screens/artworks/`.
-- Change coloring screen and palette layout: edit `css/screens/coloring/` and `css/components/palette-bar.css`.
+- Change coloring screen, book surface, and palette layout: edit `css/theme/premium-book.css`.
 - Change how-to slides layout: edit `css/screens/guide/modal.css` and `css/components/guide-navigation.css`.
 - Keep lobby and how-to separate: lobby state stays in `LobbyScreen`; carousel state, slide text, drag logic, and guide visuals stay in `HowToModal`.
 - Change coloring behavior: edit `js/app.js` and `js/utils/paint.js`; this project currently runs without a build step.

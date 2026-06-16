@@ -736,6 +736,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   const layout = orient === "landscape" ? "side" : "bottom";
   const hasHistory = history.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
+  const bottomChrome = window.innerWidth >= 768 ? 320 : 238;
   return /* @__PURE__ */ React.createElement("div", { className: "screen color color--" + layout }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--color", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "appbar__back", onClick: onExit }, /* @__PURE__ */ React.createElement(Icon, { name: "back", size: 28 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uBAA9\uB85D")), /* @__PURE__ */ React.createElement("div", { className: "appbar__center-txt" }, pct, "% \uC644\uB8CC"), layout === "side" && /* @__PURE__ */ React.createElement("div", { className: "appbar__tools" }, /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement(Icon, { name: "undo", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uB418\uB3CC\uB9AC\uAE30")), /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleReset, "aria-label": "\uCD08\uAE30\uD654" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uCC98\uC74C\uBD80\uD130"))), /* @__PURE__ */ React.createElement("div", { className: "appbar__progress-line", style: { width: pct + "%" } })), /* @__PURE__ */ React.createElement("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
     "div",
     {
@@ -744,9 +745,6 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       style: {
         width: "100%",
         height: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         touchAction: "none",
         overflow: "hidden",
         cursor: scale > 1 ? "grab" : "default"
@@ -757,7 +755,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       {
         className: "canvasinner",
         style: {
-          width: layout === "side" ? `min(100%, calc((100dvh - 128px) * ${pageAspect}), calc(100dvw - 286px), 760px)` : `min(100%, calc((100dvh - 238px) * ${pageAspect}), 620px)`,
+          width: layout === "side" ? `min(100%, calc((100dvh - 128px) * ${pageAspect}), calc(100dvw - 286px), 760px)` : `min(100%, calc((100dvh - ${bottomChrome}px) * ${pageAspect}), 620px)`,
           aspectRatio: pageAspect,
           transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
           transformOrigin: "0 0",
@@ -811,14 +809,14 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "6px", fontSize: "15px", fontWeight: "bold", color: "var(--ink)" } }, scale > 1 ? "\uCD95\uC18C\uD558\uAE30 (1x)" : "\uD06C\uAC8C \uBCF4\uAE30 (2x)")
     ),
     complete && /* @__PURE__ */ React.createElement("button", { className: "finishbar", onClick: onFinish, style: { zIndex: 15 } }, /* @__PURE__ */ React.createElement(Icon, { name: "check", size: 26, color: "#fff" }), " \uB2E4 \uCE60\uD588\uC5B4\uC694 \xB7 \uC644\uC131\uD558\uAE30")
-  ), /* @__PURE__ */ React.createElement("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } }, layout === "bottom" && /* @__PURE__ */ React.createElement(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }), /* @__PURE__ */ React.createElement("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } }, /* @__PURE__ */ React.createElement("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "\uD604\uC7AC \uC0C9"), /* @__PURE__ */ React.createElement("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")), /* @__PURE__ */ React.createElement(Palette, { selected, onSelect, layout, swatchSize: tweaks.swatchSize || 60 }))));
+  ), /* @__PURE__ */ React.createElement("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } }, layout === "bottom" && /* @__PURE__ */ React.createElement(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }), /* @__PURE__ */ React.createElement("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } }, /* @__PURE__ */ React.createElement("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "\uD604\uC7AC \uC0C9"), /* @__PURE__ */ React.createElement("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")), /* @__PURE__ */ React.createElement(Palette, { selected, onSelect, layout }))));
 }
 function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) {
   const e = React.createElement;
   return e("div", { className: "screen completion" },
     e(Confetti, null),
     e("div", { className: "completion__inner" },
-      e("p", { className: "completion__eyebrow" }, e(Icon, { name: "star", size: 20, color: "var(--secondary)" }), " 작품 완성!"),
+      e("p", { className: "completion__eyebrow" }, e(Icon, { name: "star", size: 20, color: "var(--ok)" }), " 작품 완성!"),
       e("h2", { className: "completion__title" }, art.title),
       e("p", { className: "completion__sub" }, saved ? "갤러리에 담아두었어요." : "오늘의 색이 멋지게 담겼어요."),
       e("div", { className: "completion__frame completion__frame--magic" }, e(CanvasArt, { art, fills, interactive: false, frameMode: "paint" })),
@@ -890,7 +888,6 @@ function downloadCanvasPng(art, fills) {
 const TWEAK_DEFAULTS = {
   "palettePos": "\uC790\uB3D9",
   "paintMode": "\uD0ED",
-  "swatchSize": 52,
   "fontScale": 1,
   "theme": "\uB530\uB73B"
 };
@@ -974,8 +971,7 @@ function App() {
     setScreen("home");
   };
   const normTweaks = {
-    palettePos: t.palettePos === "\uCE21\uBA74" ? "side" : t.palettePos === "\uD558\uB2E8" ? "bottom" : "auto",
-    swatchSize: t.swatchSize
+    palettePos: t.palettePos === "\uCE21\uBA74" ? "side" : t.palettePos === "\uD558\uB2E8" ? "bottom" : "auto"
   };
   const themeAttr = t.theme === "\uCC28\uBD84" ? "cool" : t.theme === "\uACE0\uB300\uBE44" ? "contrast" : "warm";
   const showBottomNav = ["home", "gallery"].includes(screen);
