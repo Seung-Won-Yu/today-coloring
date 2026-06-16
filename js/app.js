@@ -515,15 +515,55 @@ function LobbyScreen({ onStart }) {
   );
 }
 function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount }) {
+  const e = React.createElement;
   const [cat, setCat] = React.useState("전체");
   const list = artworksList.filter((a) => cat === "전체" || a.category === cat);
   const totalCount = artworksList.length;
   const featuredArt = artworksList[0];
-  return /* @__PURE__ */ React.createElement("div", { className: "screen home" }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--home" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "오늘의 색칠")), /* @__PURE__ */ React.createElement("div", { className: "appbar__count" }, totalCount, "장")), /* @__PURE__ */ React.createElement("section", { className: "home-summary", "aria-label": "도안 선택" }, /* @__PURE__ */ React.createElement("div", { className: "home-summary__copy" }, /* @__PURE__ */ React.createElement("span", { className: "home-summary__eyebrow" }, "새 세로 도안"), /* @__PURE__ */ React.createElement("h2", null, "길게 펼쳐 색칠해요"), /* @__PURE__ */ React.createElement("p", null, "세로 페이지를 고르고 이젤 화면에서 편안하게 완성해요.")), /* @__PURE__ */ React.createElement("div", { className: "home-preview-showcase", "aria-hidden": "true" }, featuredArt && /* @__PURE__ */ React.createElement(FinishedThumb, { art: featuredArt, limit: 90 }), /* @__PURE__ */ React.createElement("span", null, "3:4"))), /* @__PURE__ */ React.createElement("div", { className: "cats" }, window.CATEGORIES.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c === "전체" ? "전체" : c))), /* @__PURE__ */ React.createElement("div", { className: "prompt" }, /* @__PURE__ */ React.createElement("span", null, cat === "전체" ? "전체 세로 도안" : cat), /* @__PURE__ */ React.createElement("em", null, list.length, "장")), /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, list.map((a, idx) => {
+  const summaryArts = artworksList.slice(1, 3);
+  return e("div", { className: "screen home" },
+    e("header", { className: "appbar appbar--home" },
+      e("div", { className: "appbar__brand" },
+        e("span", { className: "appbar__logo" }, e(Icon, { name: "star", size: 24, color: "#fff" })),
+        e("h1", { style: { whiteSpace: "nowrap" } }, "오늘의 색칠")
+      ),
+      e("div", { className: "appbar__count" }, totalCount, "장")
+    ),
+    e("section", { className: "home-summary", "aria-label": "도안 선택" },
+      e("div", { className: "home-preview-showcase", "aria-hidden": "true" },
+        featuredArt && e(FinishedThumb, { art: featuredArt, limit: 90 }),
+        e("span", null, "3:4")
+      ),
+      e("div", { className: "home-summary__copy" },
+        e("span", { className: "home-summary__eyebrow" }, "새 세로 도안"),
+        e("h2", null, "길게 펼쳐 색칠해요"),
+        e("p", null, "세로 페이지를 고르고 이젤 화면에서 편안하게 완성해요.")
+      ),
+      e("div", { className: "home-summary__stack", "aria-hidden": "true" },
+        summaryArts.map((art) => e("div", { key: art.id, className: "home-summary__mini" },
+          e(ArtworkImage, { art })
+        ))
+      )
+    ),
+    e("div", { className: "cats" },
+      window.CATEGORIES.map((c) => e("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c === "전체" ? "전체" : c))
+    ),
+    e("div", { className: "prompt" },
+      e("span", null, cat === "전체" ? "전체 세로 도안" : cat),
+      e("em", null, list.length, "장")
+    ),
+    e("div", { className: "cardgrid" }, list.map((a, idx) => {
     const pr = progress[a.id];
     const fillsArray = AppStorage.getSavedFills(pr);
-    return /* @__PURE__ */ React.createElement("button", { key: a.id, className: "artcard", onClick: () => onPick(a.id) }, /* @__PURE__ */ React.createElement("div", { className: "artcard__thumb" }, /* @__PURE__ */ React.createElement(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })), /* @__PURE__ */ React.createElement("div", { className: "artcard__body" }, /* @__PURE__ */ React.createElement("div", { className: "artcard__label" }, a.title), /* @__PURE__ */ React.createElement("div", { className: "artcard__hint" }, getThemeHint(a.category))));
-  })));
+    return e("button", { key: a.id, className: "artcard", onClick: () => onPick(a.id) },
+      e("div", { className: "artcard__thumb" }, e(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })),
+      e("div", { className: "artcard__body" },
+        e("div", { className: "artcard__label" }, a.title),
+        e("div", { className: "artcard__hint" }, getThemeHint(a.category))
+      )
+    );
+    }))
+  );
 }
 function GalleryScreen({ items, onBack, onView, onDelete }) {
   return /* @__PURE__ */ React.createElement("div", { className: "screen gallery" }, /* @__PURE__ */ React.createElement("header", { className: "appbar" }, /* @__PURE__ */ React.createElement("div", { className: "appbar__brand" }, /* @__PURE__ */ React.createElement("span", { className: "appbar__logo" }, /* @__PURE__ */ React.createElement(Icon, { name: "star", size: 24, color: "#fff" })), /* @__PURE__ */ React.createElement("h1", { style: { whiteSpace: "nowrap" } }, "\uB0B4 \uAC24\uB7EC\uB9AC")), /* @__PURE__ */ React.createElement("button", { className: "appbar__action", onClick: onBack }, /* @__PURE__ */ React.createElement(Icon, { name: "grid", size: 22 }), /* @__PURE__ */ React.createElement("span", null, "\uB3C4\uC548"))), items.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("div", { className: "empty__art" }, /* @__PURE__ */ React.createElement(Thumb, { art: window.ARTWORKS[0] })), /* @__PURE__ */ React.createElement("p", { className: "empty__title" }, "\uC544\uC9C1 \uC644\uC131\uD55C \uADF8\uB9BC\uC774 \uC5C6\uC5B4\uC694"), /* @__PURE__ */ React.createElement("p", { className: "empty__sub" }, "\uADF8\uB9BC\uC744 \uACE8\uB77C \uC0C9\uCE60\uD558\uACE0 \uC644\uC131\uD558\uBA74", /* @__PURE__ */ React.createElement("br", null), "\uC774\uACF3\uC5D0 \uBAA8\uC544 \uB4DC\uB824\uC694"), /* @__PURE__ */ React.createElement(BigButton, { icon: "plus", onClick: onBack }, "\uADF8\uB9BC \uACE0\uB974\uB7EC \uAC00\uAE30")) : /* @__PURE__ */ React.createElement("div", { className: "cardgrid" }, items.map((it) => {

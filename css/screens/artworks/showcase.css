@@ -153,6 +153,10 @@
   box-shadow:0 7px 14px rgba(216,91,69,.2);
 }
 
+.home-summary__stack {
+  display:none;
+}
+
 .cats {
   width:calc(100% - 28px);
   max-width:none;

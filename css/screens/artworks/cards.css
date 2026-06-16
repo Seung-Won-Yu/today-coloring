@@ -147,3 +147,15 @@
     min-height:48px;
   }
 }
+
+@media (min-width: 768px) {
+  .home::after,
+  .gallery::after {
+    display:none;
+  }
+
+  .home .cardgrid,
+  .gallery .cardgrid {
+    padding-bottom:calc(126px + env(safe-area-inset-bottom));
+  }
+}
