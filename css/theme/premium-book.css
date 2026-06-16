@@ -95,6 +95,27 @@
     linear-gradient(180deg, #FBF8F0 0%, #EFE7D8 100%);
 }
 
+.home {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,.86), transparent 34%),
+    radial-gradient(circle at 84% 14%, rgba(220,232,220,.62), transparent 34%),
+    linear-gradient(180deg, #FBF8F0 0%, #EFE7D8 100%);
+}
+
+.home-panel {
+  width:calc(100% - 28px);
+  max-width:860px;
+  margin:14px auto 0;
+  padding:0 0 calc(150px + env(safe-area-inset-bottom));
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  flex:0 0 auto;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+
 .home-summary__eyebrow,
 .appbar__center-txt,
 .prompt em,
@@ -119,15 +140,16 @@
 }
 
 .home-summary {
-  margin:14px 18px 8px;
-  padding:18px;
-  border-radius:18px;
+  width:100%;
+  margin:0;
+  padding:16px;
+  border-radius:22px;
   position:relative;
   background:
     linear-gradient(90deg, rgba(220,232,220,.78), transparent 36%),
     linear-gradient(180deg, #FFFDF8 0%, #F9F2E7 100%);
-  border:1px solid var(--line);
-  box-shadow:0 14px 34px rgba(51, 40, 26, .08);
+  border:1px solid rgba(63,52,39,.08);
+  box-shadow:none;
 }
 
 .home-summary__copy {
@@ -187,7 +209,7 @@
 }
 
 .home-summary h2 {
-  font-size:25px;
+  font-size:24px;
   color:var(--ink);
 }
 
@@ -230,21 +252,29 @@
 }
 
 .home-library-strip {
-  width:calc(100% - 36px);
-  max-width:860px;
-  margin:0 auto 4px;
+  width:100%;
+  max-width:none;
+  margin:0;
   display:grid;
   grid-template-columns:repeat(3, minmax(0, 1fr));
-  gap:8px;
+  gap:0;
+  overflow:hidden;
+  border-radius:20px;
+  background:rgba(255,253,248,.54);
+  border:1px solid rgba(63,52,39,.07);
 }
 
 .home-library-strip div {
   min-width:0;
   padding:10px 12px;
-  border-radius:16px;
-  background:rgba(255,253,248,.82);
-  border:1px solid rgba(63,52,39,.08);
-  box-shadow:0 8px 18px rgba(51,40,26,.05);
+  border-radius:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+
+.home-library-strip div + div {
+  border-left:1px solid rgba(63,52,39,.07);
 }
 
 .home-library-strip span,
@@ -277,11 +307,18 @@
 }
 
 .cats {
-  padding:12px 18px 10px;
+  width:100%;
+  padding:0;
   gap:8px;
+  overflow-x:visible;
 }
 
 .cat {
+  flex:1 1 0;
+  min-height:52px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   background:#FFFDF8;
   color:var(--ink-soft);
   border:1px solid var(--line);
@@ -300,8 +337,8 @@
   justify-content:space-between;
   max-width:860px;
   width:100%;
-  margin:0 auto;
-  padding:8px 22px 10px;
+  margin:0;
+  padding:2px 4px 0;
   color:var(--ink);
   font-weight:900;
 }
@@ -320,6 +357,14 @@
   padding-top:6px;
 }
 
+.home .cardgrid {
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:0;
+  gap:12px;
+}
+
 .artcard {
   position:relative;
   padding:7px;
@@ -328,7 +373,7 @@
     linear-gradient(180deg, rgba(255,255,255,.74), transparent 42%),
     #FFFDF8;
   border:1px solid rgba(63, 52, 39, .12);
-  box-shadow:0 12px 28px rgba(51, 40, 26, .09);
+  box-shadow:0 8px 18px rgba(51, 40, 26, .06);
 }
 
 .artcard--started {

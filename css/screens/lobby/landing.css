@@ -33,7 +33,7 @@
   align-items:center;
   justify-content:center;
   gap:18px;
-  padding:10px 0 0;
+  padding:12px 2px 14px;
   text-align:center;
   background:transparent;
   border:0;
@@ -55,7 +55,7 @@
   border-radius:999px;
   background:rgba(255,253,248,.92);
   color:var(--ink);
-  box-shadow:0 10px 24px rgba(51,40,26,.07);
+  box-shadow:0 8px 18px rgba(51,40,26,.06);
 }
 
 .lobby-brand__mark {
@@ -95,7 +95,7 @@
 .lobby-showcase {
   position:relative;
   width:min(100%, 334px);
-  height:308px;
+  height:286px;
   margin:0 auto;
 }
 
@@ -137,25 +137,25 @@
 .lobby-showcase__card--0 {
   z-index:3;
   left:50%;
-  top:4px;
-  width:154px;
+  top:0;
+  width:148px;
   transform:translateX(-50%) rotate(-1deg);
 }
 
 .lobby-showcase__card--1 {
   z-index:2;
-  left:30px;
-  top:80px;
-  width:116px;
+  left:24px;
+  top:74px;
+  width:108px;
   transform:rotate(-7deg);
   opacity:.86;
 }
 
 .lobby-showcase__card--2 {
   z-index:2;
-  right:30px;
-  top:80px;
-  width:116px;
+  right:24px;
+  top:74px;
+  width:108px;
   transform:rotate(7deg);
   opacity:.86;
 }
@@ -195,12 +195,12 @@
   min-height:32px;
   padding:0 12px;
   border-radius:999px;
-  background:rgba(255,253,248,.9);
+  background:rgba(255,253,248,.72);
   color:var(--ink-soft);
   font-size:13px;
   font-weight:900;
   white-space:nowrap;
-  box-shadow:0 8px 18px rgba(51,40,26,.05);
+  box-shadow:none;
 }
 
 .lobby-palette {
@@ -215,7 +215,7 @@
   height:25px;
   border-radius:50%;
   border:4px solid rgba(255,253,248,.92);
-  box-shadow:0 8px 16px rgba(51,40,26,.12);
+  box-shadow:0 6px 12px rgba(51,40,26,.1);
 }
 
 .lobby-actions {

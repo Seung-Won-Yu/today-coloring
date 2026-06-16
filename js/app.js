@@ -540,59 +540,61 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
       ),
       e("div", { className: "appbar__count" }, totalCount, "장")
     ),
-    e("section", { className: "home-summary", "aria-label": "그림 선택" },
-      e("div", { className: "home-preview-showcase", "aria-hidden": "true" },
-        featuredArt && e(FinishedThumb, { art: featuredArt, limit: 90 }),
-        e("span", null, "3:4")
-      ),
-      e("div", { className: "home-summary__copy" },
-        e("span", { className: "home-summary__eyebrow" }, "오늘의 추천"),
-        e("h2", null, "천천히 채우는 색"),
-        e("p", null, "그림을 고르고 편안하게 색을 채워 완성해요."),
-        e("div", { className: "home-summary__actions" },
-          featuredArt && e("button", { className: "home-summary__start", type: "button", onClick: () => onPick(featuredArt.id) },
-            e(Icon, { name: "pencil", size: 18 }),
-            e("span", null, "오늘의 한 장 시작")
-          ),
-          e("button", { className: "home-summary__gallery", type: "button", onClick: onGallery },
-            e(Icon, { name: "star", size: 18 }),
-            e("span", null, "보관함 ", galleryCount, "점")
+    e("main", { className: "home-panel" },
+      e("section", { className: "home-summary", "aria-label": "그림 선택" },
+        e("div", { className: "home-preview-showcase", "aria-hidden": "true" },
+          featuredArt && e(FinishedThumb, { art: featuredArt, limit: 90 }),
+          e("span", null, "추천")
+        ),
+        e("div", { className: "home-summary__copy" },
+          e("span", { className: "home-summary__eyebrow" }, "오늘의 추천"),
+          e("h2", null, "천천히 색을 채우세요"),
+          e("p", null, "그림을 고르고 편안하게 색을 채워 완성해요."),
+          e("div", { className: "home-summary__actions" },
+            featuredArt && e("button", { className: "home-summary__start", type: "button", onClick: () => onPick(featuredArt.id) },
+              e(Icon, { name: "pencil", size: 18 }),
+              e("span", null, "오늘의 한 장 시작")
+            ),
+            e("button", { className: "home-summary__gallery", type: "button", onClick: onGallery },
+              e(Icon, { name: "star", size: 18 }),
+              e("span", null, "보관함 ", galleryCount, "점")
+            )
           )
+        ),
+        e("div", { className: "home-summary__stack", "aria-hidden": "true" },
+          summaryArts.map((art) => e("div", { key: art.id, className: "home-summary__mini" },
+            e(ArtworkImage, { art })
+          ))
         )
       ),
-      e("div", { className: "home-summary__stack", "aria-hidden": "true" },
-        summaryArts.map((art) => e("div", { key: art.id, className: "home-summary__mini" },
-          e(ArtworkImage, { art })
-        ))
-      )
-    ),
-    e("section", { className: "home-library-strip", "aria-label": "작품 현황" },
-      e("div", null, e("span", null, "컬렉션"), e("strong", null, totalCount, "장")),
-      e("div", null, e("span", null, "진행 중"), e("strong", null, startedCount, "장")),
-      e("div", null, e("span", null, "보관함"), e("strong", null, galleryCount, "점"))
-    ),
-    e("div", { className: "cats" },
-      window.CATEGORIES.map((c) => e("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c === "전체" ? "전체" : c))
-    ),
-    e("div", { className: "prompt" },
-      e("span", null, cat === "전체" ? "전체 작품" : cat),
-      e("em", null, list.length, "장")
-    ),
-    e("div", { className: "cardgrid" }, list.map((a, idx) => {
-    const pr = progress[a.id];
-    const fillsArray = AppStorage.getSavedFills(pr);
-    const savedPct = AppStorage.getSavedPct(pr);
-    return e("button", { key: a.id, className: "artcard" + (savedPct > 0 ? " artcard--started" : ""), onClick: () => onPick(a.id) },
-      e("div", { className: "artcard__thumb" },
-        savedPct > 0 && e("span", { className: "artcard__progress" }, savedPct, "%"),
-        e(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })
+      e("section", { className: "home-library-strip", "aria-label": "작품 현황" },
+        e("div", null, e("span", null, "컬렉션"), e("strong", null, totalCount, "장")),
+        e("div", null, e("span", null, "진행 중"), e("strong", null, startedCount, "장")),
+        e("div", null, e("span", null, "보관함"), e("strong", null, galleryCount, "점"))
       ),
-      e("div", { className: "artcard__body" },
-        e("div", { className: "artcard__label" }, a.title),
-        e("div", { className: "artcard__hint" }, savedPct > 0 ? "이어 색칠하기" : getThemeHint(a.category))
-      )
-    );
-    }))
+      e("div", { className: "cats" },
+        window.CATEGORIES.map((c) => e("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c === "전체" ? "전체" : c))
+      ),
+      e("div", { className: "prompt" },
+        e("span", null, cat === "전체" ? "전체 작품" : cat),
+        e("em", null, list.length, "장")
+      ),
+      e("div", { className: "cardgrid" }, list.map((a, idx) => {
+        const pr = progress[a.id];
+        const fillsArray = AppStorage.getSavedFills(pr);
+        const savedPct = AppStorage.getSavedPct(pr);
+        return e("button", { key: a.id, className: "artcard" + (savedPct > 0 ? " artcard--started" : ""), onClick: () => onPick(a.id) },
+          e("div", { className: "artcard__thumb" },
+            savedPct > 0 && e("span", { className: "artcard__progress" }, savedPct, "%"),
+            e(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })
+          ),
+          e("div", { className: "artcard__body" },
+            e("div", { className: "artcard__label" }, a.title),
+            e("div", { className: "artcard__hint" }, savedPct > 0 ? "이어 색칠하기" : getThemeHint(a.category))
+          )
+        );
+      }))
+    )
   );
 }
 function GalleryScreen({ items, onBack, onView, onDelete }) {
