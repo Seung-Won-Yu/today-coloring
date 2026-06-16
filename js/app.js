@@ -9,6 +9,7 @@ const {
   shouldMergeTinyRegion,
   shouldMergeLastSmallRegion,
   markProgressRegion,
+  smoothFillEdges,
   createSafeArtworkCanvas,
   normalizeFillForFrame
 } = window.PaintEngine;
@@ -132,7 +133,9 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const progressImgData = { data: progressData, width: cw, height: ch };
     for (let f of fillsArray) {
       const normalizedFill = normalizeFillForFrame(f, frameRef.current);
-      doFloodFill(imgData, normalizedFill.x, normalizedFill.y, hexToRgb(normalizedFill.color), 95, baseImgData.data);
+      const fillRgb = hexToRgb(normalizedFill.color);
+      doFloodFill(imgData, normalizedFill.x, normalizedFill.y, fillRgb, 95, baseImgData.data);
+      smoothFillEdges(imgData, baseImgData.data, fillRgb);
       markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseImgData.data);
     }
     ctx.putImageData(imgData, 0, 0);
@@ -1023,7 +1026,9 @@ function downloadCanvasPng(art, fills) {
       const fillsArray = Array.isArray(fills) ? fills : [];
       for (let f of fillsArray) {
         const normalizedFill = normalizeFillForFrame(f, frame);
-        doFloodFill(imgData, normalizedFill.x, normalizedFill.y, hexToRgb(normalizedFill.color), 95, baseData);
+        const fillRgb = hexToRgb(normalizedFill.color);
+        doFloodFill(imgData, normalizedFill.x, normalizedFill.y, fillRgb, 95, baseData);
+        smoothFillEdges(imgData, baseData, fillRgb);
       }
       ctx.putImageData(imgData, 0, 0);
       const url = canvas.toDataURL("image/png");

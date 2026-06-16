@@ -68,6 +68,57 @@
     }
   }
 
+  function smoothFillEdges(imageData, baseData, fillColor, passes = 2) {
+    if (!imageData || !baseData || !fillColor) return;
+    const width = imageData.width;
+    const height = imageData.height;
+    const data = imageData.data;
+    const getPixelIndex = (x, y) => (y * width + x) * 4;
+    const isFillPixel = (idx) => {
+      return Math.abs(data[idx] - fillColor.r) + Math.abs(data[idx + 1] - fillColor.g) + Math.abs(data[idx + 2] - fillColor.b) <= 22;
+    };
+    const isSoftWhiteEdge = (idx) => {
+      const r = baseData[idx];
+      const g = baseData[idx + 1];
+      const b = baseData[idx + 2];
+      const a = baseData[idx + 3];
+      if (isLinePixelColor(r, g, b, a)) return false;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const luminance = r * 0.299 + g * 0.587 + b * 0.114;
+      return min >= 226 && luminance >= 232 && max - min <= 34;
+    };
+    const neighborOffsets = [
+      [-1, -1], [0, -1], [1, -1],
+      [-1, 0],           [1, 0],
+      [-1, 1],  [0, 1],  [1, 1]
+    ];
+    for (let pass = 0; pass < passes; pass++) {
+      const candidates = [];
+      for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+          const idx = getPixelIndex(x, y);
+          if (isFillPixel(idx) || !isSoftWhiteEdge(idx)) continue;
+          let touchesFill = false;
+          for (const [dx, dy] of neighborOffsets) {
+            if (isFillPixel(getPixelIndex(x + dx, y + dy))) {
+              touchesFill = true;
+              break;
+            }
+          }
+          if (touchesFill) candidates.push(idx);
+        }
+      }
+      if (candidates.length === 0) break;
+      for (const idx of candidates) {
+        data[idx] = fillColor.r;
+        data[idx + 1] = fillColor.g;
+        data[idx + 2] = fillColor.b;
+        data[idx + 3] = 255;
+      }
+    }
+  }
+
   const PROGRESS_MARKER = { r: 18, g: 52, b: 86 };
 
   function hexToRgb(hex) {
@@ -262,6 +313,7 @@
 
   window.PaintEngine = {
     doFloodFill,
+    smoothFillEdges,
     hexToRgb,
     isProgressMarked,
     isPaintableBasePixel,
