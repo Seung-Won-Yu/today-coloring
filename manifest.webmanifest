@@ -1,13 +1,16 @@
 {
+  "id": "./index.html",
   "name": "오늘의 색칠",
   "short_name": "오늘의 색칠",
-  "description": "그림을 고르고 색을 채우는 모바일 색칠 게임",
-  "start_url": "./",
+  "description": "세로 도안을 고르고 천천히 색을 채우는 모바일 컬러링 게임",
+  "start_url": "./index.html",
   "scope": "./",
-  "display": "standalone",
-  "background_color": "#FFF6DE",
-  "theme_color": "#FFF6DE",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "background_color": "#FAF8F5",
+  "theme_color": "#FAF8F5",
   "orientation": "portrait",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "assets/icons/app-icon.png",
