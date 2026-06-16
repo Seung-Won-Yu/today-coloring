@@ -756,7 +756,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       {
         className: "canvasinner",
         style: {
-          width: layout === "side" ? "min(100%, calc(100dvh - 150px), calc(100dvw - 260px), 760px)" : "min(100%, calc(100dvh - 210px), 560px)",
+          width: layout === "side" ? `min(100%, calc((100dvh - 150px) * ${aspect}), calc(100dvw - 260px), 760px)` : `min(100%, calc((100dvh - 232px) * ${aspect}), 620px)`,
           aspectRatio: aspect,
           transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
           transformOrigin: "0 0",
