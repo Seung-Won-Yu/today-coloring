@@ -44,11 +44,6 @@
   padding:16px 12px 154px;
 }
 
-.color--bottom .appbar--color .appbar__tools {
-  visibility:hidden;
-  pointer-events:none;
-}
-
 .color-toolbelt {
   position:absolute;
   left:50%;
@@ -149,19 +144,6 @@
 .color--bottom .palette--bottom .swatch--on {
   transform:scale(1.05);
   box-shadow:0 0 0 4px #fff, 0 0 0 8px var(--gold), 0 7px 12px rgba(75,55,35,.2);
-}
-
-.color--bottom .zoom-toggle-btn {
-  bottom:166px !important;
-  width:50px !important;
-  height:50px !important;
-  padding:0 !important;
-  border-radius:50% !important;
-  display:none !important;
-}
-
-.color--bottom .zoom-toggle-btn span {
-  display:none;
 }
 
 .color--bottom .finishbar {
@@ -269,10 +251,6 @@
     padding:28px 32px 180px;
   }
 
-  .color--bottom .appbar--color .appbar__tools {
-    visibility:hidden;
-  }
-
   .color-toolbelt {
     bottom:178px;
     gap:12px;
@@ -308,23 +286,7 @@
     min-width:54px;
   }
 
-  .color--bottom .zoom-toggle-btn,
-  .color--bottom .finishbar {
-    bottom:178px !important;
-  }
-
   .color--bottom .finishbar {
     bottom:238px !important;
-  }
-
-  .color--bottom .zoom-toggle-btn {
-    width:auto !important;
-    height:48px !important;
-    padding-inline:18px !important;
-    border-radius:999px !important;
-  }
-
-  .color--bottom .zoom-toggle-btn span {
-    display:inline;
   }
 }
