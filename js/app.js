@@ -981,29 +981,11 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       "button",
       {
         onClick: toggleZoom,
-        style: {
-          position: "absolute",
-          right: "20px",
-          bottom: "20px",
-          height: "46px",
-          borderRadius: "23px",
-          background: "rgba(255, 255, 255, 0.9)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          border: "1.5px solid var(--line)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "0 16px",
-          boxShadow: "var(--shadow)",
-          zIndex: 10,
-          cursor: "pointer"
-        },
         className: "zoom-toggle-btn",
         "aria-label": "\uB3CB\uBCF4\uAE30 \uD1A0\uAE00"
       },
       /* @__PURE__ */ React.createElement(Icon, { name: "zoom", size: 22, color: "var(--ink)" }),
-      /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "6px", fontSize: "15px", fontWeight: "bold", color: "var(--ink)" } }, scale > 1 ? "\uCD95\uC18C\uD558\uAE30 (1x)" : "\uD06C\uAC8C \uBCF4\uAE30 (2x)")
+      /* @__PURE__ */ React.createElement("span", { className: "zoom-toggle-btn__label" }, scale > 1 ? "\uCD95\uC18C\uD558\uAE30 (1x)" : "\uD06C\uAC8C \uBCF4\uAE30 (2x)")
     )
   ), /* @__PURE__ */ React.createElement("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } }, layout === "bottom" && /* @__PURE__ */ React.createElement(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }), /* @__PURE__ */ React.createElement("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } }, /* @__PURE__ */ React.createElement("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "\uD604\uC7AC \uC0C9"), /* @__PURE__ */ React.createElement("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")), /* @__PURE__ */ React.createElement(Palette, { selected, onSelect, layout }))));
 }
