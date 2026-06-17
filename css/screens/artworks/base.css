@@ -20,9 +20,9 @@
 .artcard:hover .artcard__thumb { transform:translateY(-5px) scale(1.02); box-shadow:var(--shadow-lg); border-color:rgba(74, 56, 30, 0.15); }
 .artcard:active .artcard__thumb { transform:scale(.97); }
 .artcard__body { padding:0 4px; display:flex; flex-direction:column; gap:3px; }
-.artcard__label { font-size:calc(17px * var(--fs)); font-weight:900; letter-spacing:0; line-height:1.2; }
-.artcard__hint { color:var(--ink-soft); font-size:calc(12px * var(--fs)); font-weight:800; line-height:1.2; }
-.artcard__date { font-size:calc(14px * var(--fs)); color:var(--ink-soft); padding-left:4px; margin-top:-4px; }
+.artcard__label { font-size:calc(17px * var(--fs)); letter-spacing:0; line-height:1.2; }
+.artcard__hint { font-size:calc(12px * var(--fs)); font-weight:800; line-height:1.2; }
+.artcard__date { font-size:calc(14px * var(--fs)); padding-left:4px; margin-top:-4px; }
 
 /* ── 빈 갤러리 ── */
 .empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:30px; text-align:center; }
