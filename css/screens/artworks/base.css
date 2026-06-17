@@ -1,5 +1,4 @@
 /* ── 카테고리 ── */
-.cats { flex:0 0 auto; }
 .cat {
   font-size:calc(15px * var(--fs)); font-weight:800;
   transition:transform 0.15s ease, background-color 0.15s, color 0.15s; }
