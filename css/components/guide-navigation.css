@@ -119,14 +119,6 @@
   box-shadow:0 14px 32px rgba(217,79,111,.24);
 }
 
-.guide-visual--fill {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:0;
-  padding-inline:0;
-  background:#fff;
-}
-
 .guide-step-pill {
   display:inline-flex;
   align-items:center;
@@ -139,10 +131,6 @@
   font-size:16px;
   font-weight:900;
   box-shadow:0 8px 18px rgba(116,92,0,.2);
-}
-
-.guide-info-card .guide-short__points {
-  gap:8px;
 }
 
 .guide-modal__dots {
@@ -166,11 +154,6 @@
   border-radius:999px;
   background:rgba(116,92,0,.22);
   transition:width .2s ease, background-color .2s ease;
-}
-
-.guide-modal__dots button.is-on {
-  width:34px;
-  background:var(--accent);
 }
 
 /* ── WebView bottom navigation ── */
