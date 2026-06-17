@@ -91,23 +91,6 @@
   filter:drop-shadow(0 4px 7px rgba(38,30,24,.14));
 }
 
-.home-preview-showcase span {
-  position:absolute;
-  right:-7px;
-  top:9px;
-  display:inline-flex;
-  align-items:center;
-  min-height:22px;
-  padding:0 7px;
-  border-radius:999px;
-  background:var(--accent);
-  color:#fff;
-  font-size:10px;
-  font-weight:900;
-  white-space:nowrap;
-  box-shadow:0 7px 14px rgba(216,91,69,.2);
-}
-
 .home-summary__stack {
   display:none;
 }
@@ -211,13 +194,6 @@
     min-width:98px;
     padding:7px;
     border-width:5px;
-  }
-
-  .home-preview-showcase span {
-    right:3px;
-    top:4px;
-    font-size:9px;
-    padding-inline:7px;
   }
 
   .cats {
