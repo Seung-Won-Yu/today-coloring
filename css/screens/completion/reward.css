@@ -98,10 +98,6 @@
   gap:12px;
 }
 
-.completion__row--single {
-  grid-template-columns:1fr;
-}
-
 .completion__row .bigbtn {
   min-height:54px;
   font-size:15px;

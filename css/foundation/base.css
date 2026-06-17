@@ -78,11 +78,3 @@ h1,h2,h3,p { margin:0; }
   }
 }
 .appbar__tools { display:flex; gap:10px; }
-.tool { position:relative; width:48px; height:48px; border-radius:16px; background:var(--surface);
-  border:1.5px solid var(--line); color:var(--ink); display:flex; align-items:center; justify-content:center;
-  box-shadow:var(--shadow); transition:transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s, box-shadow 0.15s; }
-.tool:hover { border-color:rgba(74, 56, 30, 0.15); }
-.tool:active { transform:scale(0.94); }
-.tool:disabled { opacity:.35; box-shadow:none; transform:none; }
-.tool--on { background:var(--accent); color:#fff; border-color:var(--accent); }
-.tool__lvl { position:absolute; bottom:2px; right:4px; font-size:10px; font-weight:900; }
