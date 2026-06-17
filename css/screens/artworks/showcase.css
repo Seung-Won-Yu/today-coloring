@@ -101,11 +101,9 @@
   margin:10px 14px 6px;
   flex-wrap:wrap;
   overflow-x:visible;
-  overscroll-behavior-x:auto;
 }
 
 .cat {
-  flex:1 0 auto;
   justify-content:center;
 }
 
@@ -151,7 +149,6 @@
   }
 
   .cat {
-    flex:0 0 auto;
     min-height:40px;
     padding-inline:18px;
   }
