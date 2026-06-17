@@ -3,7 +3,7 @@
 .cats::-webkit-scrollbar { display:none; }
 .cat { flex:0 0 auto;
   font-size:calc(15px * var(--fs)); font-weight:800;
-  white-space:nowrap; transition:transform 0.15s ease, background-color 0.15s, color 0.15s; }
+  transition:transform 0.15s ease, background-color 0.15s, color 0.15s; }
 .cat:active { transform:scale(0.95); }
 [data-theme="warm"] .cat--on { background:var(--accent); border-color:var(--accent); color:#fff; }
 
