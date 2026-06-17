@@ -127,15 +127,9 @@
 
   .cats {
     flex-wrap:nowrap;
-    overflow-x:auto;
     margin-top:8px;
     margin-bottom:4px;
     padding:8px 0 8px;
-    scrollbar-width:none;
-  }
-
-  .cats::-webkit-scrollbar {
-    display:none;
   }
 
   .cat {
