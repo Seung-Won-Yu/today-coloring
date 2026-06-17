@@ -44,6 +44,7 @@
 
 .appbar__action,
 .appbar__back,
+.appbar__save,
 .cat,
 .tool--pill,
 .bigbtn {
@@ -52,6 +53,7 @@
 
 .appbar__action,
 .appbar__back,
+.appbar__save,
 .tool--pill {
   background:#FFFFFF;
   color:var(--ink);
@@ -71,7 +73,8 @@
 }
 
 .appbar--color .appbar__center-txt {
-  min-width:86px;
+  min-width:0;
+  max-width:min(44vw, 320px);
   padding:8px 14px;
   border-radius:999px;
   background:#E7F1E8;
@@ -79,10 +82,32 @@
   font-size:15px;
   font-weight:900;
   border:1px solid rgba(49, 94, 78, .12);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
-.appbar__progress-line {
-  background:linear-gradient(90deg, #FFD23F, #5BDAC9);
+.appbar__tools--color {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  min-width:0;
+}
+
+.appbar__save {
+  min-height:44px;
+  padding:0 13px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  background:#2F5E4D;
+  color:#fff;
+  border-color:rgba(47, 94, 77, .18);
+  box-shadow:0 10px 20px rgba(47, 94, 77, .18);
+  font-size:14px;
+  font-weight:900;
 }
 
 .home,
@@ -337,11 +362,13 @@
   width:100%;
   padding:0;
   gap:8px;
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
   overflow-x:visible;
 }
 
 .cat {
-  flex:1 1 0;
+  min-width:0;
   min-height:52px;
   display:inline-flex;
   align-items:center;
@@ -350,6 +377,10 @@
   color:var(--ink-soft);
   border:1px solid var(--line);
   box-shadow:none;
+  padding:0 8px;
+  text-align:center;
+  white-space:normal;
+  line-height:1.18;
 }
 
 .cat--on {
@@ -414,26 +445,6 @@
   background:#F8F3EA;
   border:1px solid rgba(63, 52, 39, .1);
   box-shadow:inset 0 0 0 6px #FFFDF8;
-}
-
-.artcard__progress {
-  position:absolute;
-  top:10px;
-  right:10px;
-  z-index:3;
-  min-width:42px;
-  min-height:28px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:0 8px;
-  border-radius:999px;
-  background:#2F5E4D;
-  color:#FFFDF8;
-  border:2px solid #FFFDF8;
-  font-size:12px;
-  font-weight:900;
-  box-shadow:0 8px 16px rgba(47,94,77,.18);
 }
 
 .artcard__thumb canvas,
@@ -580,8 +591,8 @@
   grid-column:2;
   grid-row:1;
   transform:none;
-  width:154px;
-  min-width:154px;
+  width:100%;
+  min-width:0;
   justify-self:end;
   align-self:center;
   display:flex;
@@ -601,9 +612,9 @@
 }
 
 .color-toolbelt__btn {
-  width:40px;
+  width:42px;
   height:40px;
-  min-width:40px;
+  min-width:42px;
   border-radius:13px;
   background:transparent;
   color:#4D4634;
@@ -632,11 +643,11 @@
   right:0;
   bottom:0;
   display:grid;
-  min-height:164px;
-  grid-template-columns:minmax(0, 1fr) auto;
-  grid-template-rows:44px minmax(0, 92px);
+  min-height:168px;
+  grid-template-columns:92px minmax(0, 1fr);
+  grid-template-rows:42px minmax(0, 94px);
   align-items:center;
-  gap:8px 10px;
+  gap:8px 12px;
   padding:12px 14px max(12px, env(safe-area-inset-bottom));
   background:
     linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,253,248,.98)),
@@ -651,13 +662,14 @@
 
 .color--bottom .curcolor {
   grid-column:1;
-  grid-row:1;
-  width:min(132px, 100%);
-  height:44px;
-  border-radius:999px;
-  flex-direction:row;
-  gap:6px;
-  justify-self:start;
+  grid-row:1 / span 2;
+  width:92px;
+  height:100%;
+  border-radius:22px;
+  flex-direction:column;
+  gap:5px;
+  justify-self:stretch;
+  align-self:stretch;
   border:1px solid rgba(25, 28, 29, .08) !important;
   box-shadow:0 7px 18px rgba(25, 28, 29, .08), inset 0 0 0 6px rgba(255,255,255,.18);
 }
@@ -678,7 +690,7 @@
 }
 
 .color--bottom .palette {
-  grid-column:1 / -1;
+  grid-column:2;
   grid-row:2;
   width:100%;
   min-width:0;
@@ -690,11 +702,11 @@
   grid-auto-flow:column;
   width:100%;
   min-width:0;
-  min-height:92px;
+  min-height:94px;
   grid-template-rows:repeat(2, 40px);
-  grid-auto-columns:46px;
-  gap:8px 10px;
-  padding:5px 14px 5px 6px;
+  grid-auto-columns:44px;
+  gap:8px 8px;
+  padding:5px 10px 5px 6px;
   border-radius:18px;
   background:#FFFFFF;
   border:1px solid rgba(63,52,39,.08);
@@ -719,35 +731,6 @@
 .swatch--on {
   transform:scale(1.1);
   box-shadow:0 0 0 5px rgba(255, 210, 63, .46), 0 0 0 9px #FFF6C7, 0 10px 20px rgba(25, 28, 29, .18);
-}
-
-.color--bottom .finishbar {
-  background:var(--gold);
-  color:#241A00;
-}
-
-.palettezone .finishbar {
-  position:static;
-  transform:none;
-  grid-column:2;
-  grid-row:1;
-  justify-self:end;
-  align-self:center;
-  min-height:42px;
-  gap:8px;
-  padding:0 16px;
-  border-radius:18px;
-  background:var(--gold);
-  color:#241A00;
-  font-size:15px;
-  box-shadow:0 8px 18px rgba(143, 106, 0, .18);
-  animation:none;
-}
-
-.color--side .palettezone .finishbar {
-  width:100%;
-  justify-self:stretch;
-  margin-bottom:2px;
 }
 
 .color--side .palettezone--side {
@@ -1231,12 +1214,36 @@
   }
 
   .color--bottom .palettezone--bottom {
-    grid-template-columns:minmax(0, 1fr) auto;
+    grid-template-columns:82px minmax(0, 1fr);
+    gap:8px 9px;
+    padding-inline:10px;
   }
 
   .color--bottom .curcolor {
-    width:min(118px, 100%);
-    height:42px;
+    width:82px;
+  }
+
+  .color-toolbelt {
+    gap:4px;
+    padding:3px;
+  }
+
+  .color-toolbelt__btn {
+    width:38px;
+    min-width:38px;
+    height:38px;
+  }
+
+  .color--bottom .palette--bottom .palette__track {
+    grid-auto-columns:40px;
+    gap:7px 7px;
+    padding-right:8px;
+  }
+
+  .color--bottom .palette--bottom .swatch {
+    width:38px;
+    min-width:38px;
+    height:38px;
   }
 }
 
@@ -1297,6 +1304,15 @@
 }
 
 @media (min-width: 768px) {
+  .cats {
+    display:flex;
+  }
+
+  .cat {
+    flex:1 1 0;
+    white-space:nowrap;
+  }
+
   .home-summary {
     min-height:188px;
     grid-template-columns:150px minmax(220px, 330px) minmax(190px, 1fr);
@@ -1358,31 +1374,27 @@
   }
 
   .color--bottom .palettezone--bottom {
-    min-height:164px;
-    grid-template-columns:minmax(0, 1fr) auto;
-    grid-template-rows:44px minmax(0, 92px);
-    gap:8px 10px;
+    min-height:168px;
+    grid-template-columns:104px minmax(0, 1fr);
+    grid-template-rows:42px minmax(0, 94px);
+    gap:8px 12px;
   }
 
   .color--bottom .curcolor {
-    width:min(132px, 100%);
-    height:44px;
+    width:104px;
+    height:100%;
   }
 
   .color--bottom .palette--bottom .palette__track {
     grid-template-rows:repeat(2, 40px);
-    grid-auto-columns:46px;
-    min-height:92px;
+    grid-auto-columns:44px;
+    min-height:94px;
   }
 
   .color--bottom .palette--bottom .swatch {
     width:40px;
     height:40px;
     min-width:40px;
-  }
-
-  .color--bottom .finishbar {
-    bottom:174px;
   }
 }
 

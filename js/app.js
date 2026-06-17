@@ -16,20 +16,22 @@ const {
 const { loadArtworkBitmap } = window.AssetLoader;
 const { Icon, BigButton, isLight, Palette, useOrientation, Confetti } = window.UIComponents;
 
-function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMode = "preview", onProgressChange, onImageLoad, onRegionsChange }) {
+function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMode = "preview", onImageLoad, onRegionsChange }) {
   const canvasRef = React.useRef(null);
   const baseCanvasRef = React.useRef(null);
   const baseImageDataRef = React.useRef(null);
+  const progressImageDataRef = React.useRef(null);
   const fillsArray = Array.isArray(fills) ? fills : [];
   const regionsRef = React.useRef(null);
   const frameRef = React.useRef(null);
   const lastArtSrcRef = React.useRef("");
   const [imageReady, setImageReady] = React.useState(false);
   const [paintPulse, setPaintPulse] = React.useState(null);
-  const shouldAnalyzeRegions = interactive || Boolean(onProgressChange) || Boolean(onRegionsChange);
+  const shouldAnalyzeRegions = interactive || Boolean(onRegionsChange);
   if (lastArtSrcRef.current !== art.src) {
     regionsRef.current = null;
     baseImageDataRef.current = null;
+    progressImageDataRef.current = null;
     lastArtSrcRef.current = art.src;
   }
   const analyzeRegions = (imgData, width, height) => {
@@ -139,22 +141,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseImgData.data);
     }
     ctx.putImageData(imgData, 0, 0);
-    if (regionsRef.current && onProgressChange) {
-      let coloredSize = 0;
-      let totalSize = 0;
-      const seeds = regionsRef.current;
-      for (let s of seeds) {
-        totalSize += s.size;
-        const idx = (s.y * cw + s.x) * 4;
-        if (isProgressMarked(progressData, idx)) {
-          coloredSize += s.size;
-        }
-      }
-      const pct = totalSize > 0 ? Math.min(100, Math.round(coloredSize / totalSize * 100)) : 0;
-      setTimeout(() => {
-        onProgressChange(pct);
-      }, 0);
-    }
+    progressImageDataRef.current = progressImgData;
   };
   React.useEffect(() => {
     if (!canvasRef.current) return;
@@ -175,12 +162,22 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const ctx = canvasRef.current.getContext("2d", { willReadFrequently: true });
     const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
     const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
-    const progressData = new Uint8ClampedArray(baseImgData.data);
-    const progressImgData = { data: progressData, width: cw, height: ch };
-    for (let f of fillsArray) {
-      const normalizedFill = normalizeFillForFrame(f, frameRef.current);
-      markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseImgData.data);
+    let progressImgData = null;
+    const cachedProgress = progressImageDataRef.current;
+    if (cachedProgress && cachedProgress.width === cw && cachedProgress.height === ch) {
+      progressImgData = {
+        data: new Uint8ClampedArray(cachedProgress.data),
+        width: cw,
+        height: ch
+      };
+    } else {
+      progressImgData = { data: new Uint8ClampedArray(baseImgData.data), width: cw, height: ch };
+      for (let f of fillsArray) {
+        const normalizedFill = normalizeFillForFrame(f, frameRef.current);
+        markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseImgData.data);
+      }
     }
+    const progressData = progressImgData.data;
     const snapRadius = Math.max(26, Math.round(Math.max(scaleX, scaleY) * 22));
     const clickedIdx = (y * cw + x) * 4;
     const clickedIsPaintable = isPaintableBasePixel(baseImgData.data, clickedIdx);
@@ -204,9 +201,9 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const pIdx = (paintY * cw + paintX) * 4;
     if (!isPaintableBasePixel(baseImgData.data, pIdx)) return;
     const isAlreadyColored = isProgressMarked(progressData, pIdx);
+    const selectedRgb = hexToRgb(selected);
     if (isAlreadyColored) {
       const pixel = ctx.getImageData(paintX, paintY, 1, 1).data;
-      const selectedRgb = hexToRgb(selected);
       const dist = Math.abs(pixel[0] - selectedRgb.r) + Math.abs(pixel[1] - selectedRgb.g) + Math.abs(pixel[2] - selectedRgb.b);
       if (dist < 10) {
         return;
@@ -214,6 +211,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     }
     const newFill = { x: paintX, y: paintY, color: selected, v: 2 };
     let nextFills = [...fillsArray, newFill];
+    const directPaintSeeds = [{ x: paintX, y: paintY }];
     markProgressRegion(progressImgData, paintX, paintY, baseImgData.data);
     if (regionsRef.current) {
       const uncoloredSeeds = regionsRef.current.filter((s) => {
@@ -241,16 +239,25 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       if (mergeSeeds.length > 0) {
         mergeSeeds.forEach((s) => {
           markProgressRegion(progressImgData, s.x, s.y, baseImgData.data);
+          directPaintSeeds.push({ x: s.x, y: s.y });
           nextFills.push({ x: s.x, y: s.y, color: selected, v: 2 });
         });
       }
     }
+    const accepted = onPaint(nextFills);
+    if (accepted === false) return;
+    const liveData = ctx.getImageData(0, 0, cw, ch);
+    directPaintSeeds.forEach((seed) => {
+      doFloodFill(liveData, seed.x, seed.y, selectedRgb, 95, baseImgData.data);
+      smoothFillEdges(liveData, baseImgData.data, selectedRgb);
+    });
+    ctx.putImageData(liveData, 0, 0);
+    progressImageDataRef.current = progressImgData;
     const pulse = { id: Date.now(), x: paintX / cw * 100, y: paintY / ch * 100 };
     setPaintPulse(pulse);
     setTimeout(() => {
       setPaintPulse((current) => current && current.id === pulse.id ? null : current);
     }, 460);
-    onPaint(nextFills);
   };
   return /* @__PURE__ */ React.createElement("div", { className: "canvas-art-shell" + (imageReady ? " is-ready" : " is-loading"), style: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("canvas", { ref: baseCanvasRef, style: { display: "none" } }), !imageReady && /* @__PURE__ */ React.createElement("div", { className: "canvas-art-loading", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("span", null)), /* @__PURE__ */ React.createElement(
     "canvas",
@@ -505,7 +512,7 @@ function LobbyScreen({ onStart }) {
       e("div", { className: "lobby-showcase", "aria-hidden": "true" },
         e("div", { className: "lobby-showcase__glow" }),
         showcaseArts.map((art, index) => e("div", { key: art.id, className: "lobby-showcase__card lobby-showcase__card--" + index },
-          e(FinishedThumb, { art, limit: 90 })
+          e(ArtworkImage, { art, priority: index === 0 })
         )),
         e("div", { className: "lobby-showcase__badge" },
           e(Icon, { name: "star", size: 16, color: "#fff" }),
@@ -533,7 +540,7 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
   const summaryArts = artworksList.slice(1, 3);
   const startedCount = artworksList.reduce((count, art) => {
     const saved = progress[art.id];
-    return count + (AppStorage.getSavedPct(saved) > 0 ? 1 : 0);
+    return count + (AppStorage.getSavedFills(saved).length > 0 ? 1 : 0);
   }, 0);
   return e("div", { className: "screen home" },
     e("header", { className: "appbar appbar--home" },
@@ -585,15 +592,14 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
       e("div", { className: "cardgrid" }, list.map((a, idx) => {
         const pr = progress[a.id];
         const fillsArray = AppStorage.getSavedFills(pr);
-        const savedPct = AppStorage.getSavedPct(pr);
-        return e("button", { key: a.id, className: "artcard" + (savedPct > 0 ? " artcard--started" : ""), onClick: () => onPick(a.id) },
+        const hasStarted = fillsArray.length > 0;
+        return e("button", { key: a.id, className: "artcard" + (hasStarted ? " artcard--started" : ""), onClick: () => onPick(a.id) },
           e("div", { className: "artcard__thumb" },
-            savedPct > 0 && e("span", { className: "artcard__progress" }, savedPct, "%"),
             e(Thumb, { art: a, fills: fillsArray, lightweight: true, priority: idx < 6 })
           ),
           e("div", { className: "artcard__body" },
             e("div", { className: "artcard__label" }, a.title),
-            e("div", { className: "artcard__hint" }, savedPct > 0 ? "이어 색칠하기" : getThemeHint(a.category))
+            e("div", { className: "artcard__hint" }, hasStarted ? "이어 색칠하기" : getThemeHint(a.category))
           )
         );
       }))
@@ -660,15 +666,13 @@ function ColorToolbelt({ hasHistory, onUndo, onReset, onZoom }) {
     e("button", { className: "color-toolbelt__btn", onClick: onZoom, "aria-label": "\uB3CB\uBCF4\uAE30 \uD1A0\uAE00" }, e(Icon, { name: "zoom", size: 22 }))
   );
 }
-function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFinish, tweaks, onProgressChange }) {
+function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFinish, tweaks }) {
   const orient = useOrientation();
   const layout = orient === "landscape" ? "side" : "bottom";
   const containerRef = React.useRef(null);
   const [scale, setScale] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
   const [history, setHistory] = React.useState([]);
-  const [pct, setPct] = React.useState(0);
-  const [complete, setComplete] = React.useState(false);
   const [aspect, setAspect] = React.useState(1);
   React.useEffect(() => {
     if (scale === 1) {
@@ -752,9 +756,10 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
     }
   };
   const handleCanvasPaint = (newFills) => {
-    if (Date.now() - lastDragTimeRef.current < 120) return;
+    if (Date.now() - lastDragTimeRef.current < 120) return false;
     setHistory((prev) => [...prev, Array.isArray(fills) ? [...fills] : []]);
     onPaint(newFills);
+    return true;
   };
   React.useEffect(() => {
     const container = containerRef.current;
@@ -911,7 +916,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   const hasHistory = history.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
   const bottomChrome = window.innerWidth >= 768 ? 302 : 220;
-  return /* @__PURE__ */ React.createElement("div", { className: "screen color color--" + layout }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--color", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "appbar__back", onClick: onExit }, /* @__PURE__ */ React.createElement(Icon, { name: "back", size: 28 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uBAA9\uB85D")), /* @__PURE__ */ React.createElement("div", { className: "appbar__center-txt" }, pct, "% \uC644\uB8CC"), layout === "side" && /* @__PURE__ */ React.createElement("div", { className: "appbar__tools" }, /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement(Icon, { name: "undo", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uB418\uB3CC\uB9AC\uAE30")), /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleReset, "aria-label": "\uCD08\uAE30\uD654" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uCC98\uC74C\uBD80\uD130"))), /* @__PURE__ */ React.createElement("div", { className: "appbar__progress-line", style: { width: pct + "%" } })), /* @__PURE__ */ React.createElement("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement("div", { className: "screen color color--" + layout }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--color", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "appbar__back", onClick: onExit }, /* @__PURE__ */ React.createElement(Icon, { name: "back", size: 28 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uBAA9\uB85D")), /* @__PURE__ */ React.createElement("div", { className: "appbar__center-txt appbar__center-title" }, art.title), /* @__PURE__ */ React.createElement("div", { className: "appbar__tools appbar__tools--color" }, layout === "side" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement(Icon, { name: "undo", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uB418\uB3CC\uB9AC\uAE30")), /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleReset, "aria-label": "\uCD08\uAE30\uD654" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uCC98\uC74C\uBD80\uD130"))), /* @__PURE__ */ React.createElement("button", { className: "appbar__save", onClick: onFinish }, /* @__PURE__ */ React.createElement(Icon, { name: "save", size: 19 }), /* @__PURE__ */ React.createElement("span", null, "\uC800\uC7A5\uD558\uAE30")))), /* @__PURE__ */ React.createElement("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
     "div",
     {
       className: "canvaswrap",
@@ -946,11 +951,6 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
           selected,
           interactive: true,
           frameMode: "paint",
-          onProgressChange: (p) => {
-            setPct(p);
-            setComplete(p >= 85);
-            if (onProgressChange) onProgressChange(p);
-          },
           onImageLoad: ({ width, height }) => setAspect(width / height)
         }
       )
@@ -982,7 +982,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       /* @__PURE__ */ React.createElement(Icon, { name: "zoom", size: 22, color: "var(--ink)" }),
       /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "6px", fontSize: "15px", fontWeight: "bold", color: "var(--ink)" } }, scale > 1 ? "\uCD95\uC18C\uD558\uAE30 (1x)" : "\uD06C\uAC8C \uBCF4\uAE30 (2x)")
     )
-  ), /* @__PURE__ */ React.createElement("div", { className: "palettezone palettezone--" + layout + (complete ? " palettezone--complete" : ""), style: { zIndex: 20 } }, complete ? /* @__PURE__ */ React.createElement("button", { className: "finishbar", onClick: onFinish }, /* @__PURE__ */ React.createElement(Icon, { name: "check", size: 22, color: "currentColor" }), " \uC644\uC131\uD558\uAE30") : layout === "bottom" && /* @__PURE__ */ React.createElement(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }), /* @__PURE__ */ React.createElement("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } }, /* @__PURE__ */ React.createElement("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "\uD604\uC7AC \uC0C9"), /* @__PURE__ */ React.createElement("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")), /* @__PURE__ */ React.createElement(Palette, { selected, onSelect, layout }))));
+  ), /* @__PURE__ */ React.createElement("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } }, layout === "bottom" && /* @__PURE__ */ React.createElement(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }), /* @__PURE__ */ React.createElement("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } }, /* @__PURE__ */ React.createElement("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "\uD604\uC7AC \uC0C9"), /* @__PURE__ */ React.createElement("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")), /* @__PURE__ */ React.createElement(Palette, { selected, onSelect, layout }))));
 }
 function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) {
   const e = React.createElement;
@@ -1139,7 +1139,6 @@ function App() {
   const [artId, setArtId] = React.useState(null);
   const [fills, setFills] = React.useState([]);
   const [selected, setSelected] = React.useState(PALETTE[0].c);
-  const [pct, setPct] = React.useState(0);
   const [progress, setProgress] = React.useState(() => AppStorage.loadProgress());
   const [gallery, setGallery] = React.useState(() => AppStorage.loadGallery());
   const [viewItem, setViewItem] = React.useState(null);
@@ -1155,15 +1154,15 @@ function App() {
     if (screen === "color" && artId) {
       const fillsArray = Array.isArray(fills) ? fills : [];
       const next = { ...progress };
-      if (fillsArray.length === 0 && pct === 0) {
+      if (fillsArray.length === 0) {
         delete next[artId];
       } else {
-        next[artId] = { fills: fillsArray, pct };
+        next[artId] = { fills: fillsArray };
       }
       setProgress(next);
       AppStorage.saveProgress(next);
     }
-  }, [fills, pct, screen, artId]);
+  }, [fills, screen, artId]);
   const startApp = () => {
     requestAppFullscreen().finally(() => setScreen("home"));
   };
@@ -1172,9 +1171,7 @@ function App() {
     setArtId(id);
     const saved = progress[id];
     const fillsArray = AppStorage.getSavedFills(saved);
-    const initialPct = AppStorage.getSavedPct(saved);
     setFills(fillsArray);
-    setPct(initialPct);
     setJustSaved(false);
     setScreen("color");
   };
@@ -1241,8 +1238,7 @@ function App() {
       onPaint: handlePaintChange,
       onExit: exitHome,
       onFinish: finish,
-      tweaks: normTweaks,
-      onProgressChange: setPct
+      tweaks: normTweaks
     }
   ), screen === "done" && art && /* @__PURE__ */ React.createElement(
     CompletionScreen,

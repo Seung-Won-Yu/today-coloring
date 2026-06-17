@@ -7,12 +7,6 @@
 .canvasinner { margin:auto; flex:0 0 auto; border-radius:24px; overflow:hidden; background:var(--paper);
   box-shadow:var(--shadow-lg); border:1.5px solid var(--line); }
 
-.progress { flex:1; display:flex; flex-direction:column; gap:5px; min-width:0; padding:0 4px; }
-.progress__bar { height:14px; border-radius:999px; background:var(--accent-soft); overflow:hidden; }
-.progress__bar span { display:block; height:100%; background:linear-gradient(90deg,var(--gold),var(--accent));
-  border-radius:999px; transition:width .4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.progress__txt { font-size:calc(14px * var(--fs)); font-weight:800; color:var(--ink-soft); text-align:center; }
-
 .palettezone { display:flex; align-items:center; gap:12px; background:rgba(255, 255, 255, 0.85);
   -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); z-index:4; }
 .palettezone--bottom { flex-direction:row; padding:12px 16px; border-top:1px solid var(--line);
@@ -37,17 +31,7 @@
 .swatch--on { transform:scale(1.15); box-shadow:0 0 0 4px var(--surface), 0 0 0 7px var(--accent); }
 .swatch__check { font-size:22px; font-weight:900; }
 
-.finishbar { position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
-  display:flex; align-items:center; gap:10px; padding:15px 30px; border-radius:999px;
-  background:linear-gradient(135deg,var(--ok),#448f2b); color:#fff; font-size:calc(18px * var(--fs)); font-weight:900;
-  box-shadow:var(--shadow-lg); animation:pop .35s cubic-bezier(0.34, 1.56, 0.64, 1); white-space:nowrap; z-index:16; }
 @keyframes pop { from{transform:translateX(-50%) scale(.8); opacity:0;} to{transform:translateX(-50%) scale(1); opacity:1;} }
-.finish-fab { position:absolute; right:16px; bottom:calc(118px + env(safe-area-inset-bottom)); z-index:6;
-  padding:13px 24px; border-radius:999px; background:var(--ink); color:var(--paper);
-  font-size:calc(16px * var(--fs)); font-weight:800; box-shadow:var(--shadow-lg); transition:transform 0.15s ease; }
-.finish-fab:active { transform:scale(0.96); }
-.color--side .finish-fab { bottom:24px; right:134px; }
-[data-theme="warm"] .finish-fab { background:var(--accent); color:#fff; }
 
 .hide-narrow { display:inline; }
 @media (max-width:420px) { .hide-narrow { display:none; } }
@@ -84,80 +68,3 @@
   font-weight:700; box-shadow:var(--shadow-lg); z-index:50; animation:pop .3s ease; }
 
 @media (prefers-reduced-motion: reduce) { *{animation-duration:.01ms !important;} }
-
-/* 게임 플로팅 툴바 (하단 가로형 구조로 캔버스 침범 차단) */
-.floating-toolbar {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  padding: 6px 12px;
-  border-radius: 22px;
-  box-shadow: var(--shadow);
-  border: 1.5px solid var(--line);
-  margin: 6px 14px 2px;
-  flex: 0 0 auto;
-  z-index: 10;
-}
-.game-tool-btn {
-  flex: 1;
-  max-width: 64px;
-  height: 48px;
-  border-radius: 14px;
-  background: var(--surface);
-  border: 1.5px solid var(--line);
-  color: var(--ink);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow);
-  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-  cursor: pointer;
-  position: relative;
-}
-.game-tool-btn:active {
-  transform: scale(0.92);
-}
-.game-tool-btn--active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-  box-shadow: 0 4px 12px rgba(224, 88, 79, 0.25);
-  transform: scale(1.05) translateY(-2px);
-}
-.game-tool-btn__lbl {
-  font-size: 8px;
-  font-weight: 900;
-  margin-top: 1px;
-}
-.tool__lvl-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: var(--gold);
-  color: #3a2e10;
-  font-size: 8px;
-  font-weight: 900;
-  padding: 1px 3px;
-  border-radius: 99px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  line-height: 1;
-}
-@media (max-width: 600px) {
-  .floating-toolbar {
-    margin: 4px 10px 0;
-    gap: 4px;
-    padding: 6px 8px;
-  }
-  .game-tool-btn {
-    height: 44px;
-    border-radius: 12px;
-  }
-}
-.zoom-reset-btn:active {
-  transform: scale(0.92) !important;
-}
