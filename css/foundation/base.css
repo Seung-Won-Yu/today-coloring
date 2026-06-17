@@ -57,7 +57,6 @@ h1,h2,h3,p { margin:0; }
 .appbar__logo { width:42px; height:42px; border-radius:14px; background:linear-gradient(135deg,var(--accent),var(--accent-d));
   display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); }
 .appbar h1 { font-size:calc(24px * var(--fs)); font-weight:900; letter-spacing:0; }
-.appbar__title { font-size:calc(21px * var(--fs)); font-weight:700; }
 .appbar__action {
   display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:999px;
   background:var(--accent-soft); color:var(--accent-d); font-weight:800; font-size:calc(15px * var(--fs));
