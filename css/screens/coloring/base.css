@@ -9,8 +9,6 @@
 
 .palettezone { display:flex; align-items:center; gap:12px; background:rgba(255, 255, 255, 0.85);
   -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); z-index:4; }
-.palettezone--bottom { flex-direction:row; padding:12px 16px; border-top:1px solid var(--line);
-  padding-bottom:max(12px, env(safe-area-inset-bottom)); box-shadow:0 -6px 20px rgba(74,56,30,.04); }
 .palettezone--side { flex-direction:column; padding:20px 16px; border-left:1px solid var(--line);
   width:160px; box-shadow:-6px 0 20px rgba(74,56,30,.04); }
 
@@ -19,7 +17,6 @@
   transition:transform 0.15s ease; flex-direction:column; gap:2px; }
 .curcolor span { font-size:12px; font-weight:900; }
 .palettezone--side .curcolor { width:100px; height:80px; border-radius:24px; }
-.palettezone--bottom .curcolor { width: 72px; height: 112px; border-radius: 20px; }
 
 .palette { flex:1; min-width:0; }
 .palette--bottom .palette__track { display: grid; grid-template-rows: repeat(2, 52px); grid-auto-flow: column; gap: 8px 10px; overflow-x: auto; padding: 4px 16px 4px 2px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
