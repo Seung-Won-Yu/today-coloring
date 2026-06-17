@@ -101,10 +101,6 @@
   justify-content:center;
 }
 
-.prompt {
-  padding-inline:18px;
-}
-
 @media (max-height: 700px) {
   .home-summary {
     min-height:188px;
@@ -145,10 +141,6 @@
   .cat {
     min-height:40px;
     padding-inline:18px;
-  }
-
-  .prompt {
-    padding-bottom:4px;
   }
 
   .cardgrid {
