@@ -23,8 +23,6 @@
 .artcard__label { font-size:calc(17px * var(--fs)); font-weight:900; letter-spacing:0; line-height:1.2; }
 .artcard__hint { color:var(--ink-soft); font-size:calc(12px * var(--fs)); font-weight:800; line-height:1.2; }
 .artcard__date { font-size:calc(14px * var(--fs)); color:var(--ink-soft); padding-left:4px; margin-top:-4px; }
-.artcard__done { position:absolute; top:10px; right:10px; width:30px; height:30px; border-radius:999px;
-  background:var(--ok); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,.15); }
 
 /* ── 빈 갤러리 ── */
 .empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:30px; text-align:center; }
