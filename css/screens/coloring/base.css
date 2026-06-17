@@ -36,27 +36,6 @@
 .hide-narrow { display:inline; }
 @media (max-width:420px) { .hide-narrow { display:none; } }
 
-/* ── 완성 / 보기 ── */
-.completion { align-items:center; overflow-y:auto; position:relative; }
-.completion__inner { display:flex; flex-direction:column; align-items:center; gap:14px; padding:24px;
-  width:100%; max-width:440px; z-index:2; margin:auto; }
-.completion__eyebrow { display:flex; align-items:center; gap:8px; font-size:calc(17px * var(--fs));
-  font-weight:800; color:var(--accent-d); }
-.completion__title { font-size:calc(28px * var(--fs)); font-weight:900; letter-spacing:0; text-align:center; }
-.completion__frame { width:min(78vw, 44vh, 320px); aspect-ratio:1; border-radius:28px; overflow:hidden;
-  background:var(--paper); border:3px solid var(--surface); box-shadow:var(--shadow-lg); flex:0 0 auto; }
-.completion__btns { display:flex; flex-direction:column; gap:12px; width:100%; max-width:340px; margin-top:6px; }
-.completion__btns .bigbtn { width:100%; }
-.completion__row { display:flex; gap:12px; }
-.completion__row .bigbtn { flex:1; }
-
-/* ── 마법 변환 효과 (Magic Transform) ── */
-.completion__frame { transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.8s, border-color 0.8s; }
-.completion__frame--magic { 
-  transform: scale(1.05); 
-  box-shadow: 0 20px 60px rgba(240, 180, 60, 0.4), inset 0 0 40px rgba(255,255,255,0.6); 
-  border-color: #F0B43C;
-}
 /* ── 컨페티 ── */
 .confetti { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
 .confetti span { position:absolute; top:-20px; border-radius:2px; animation:fall linear forwards; }
