@@ -365,6 +365,8 @@ function HowToModal({ featuredArt, onClose }) {
   const [guideStep, setGuideStep] = React.useState(0);
   const guideTrackRef = React.useRef(null);
   const guideDragRef = React.useRef({ active: false, startX: 0, scrollLeft: 0 });
+  const guideStepRef = React.useRef(0);
+  const guideScrollTargetRef = React.useRef(null);
   const guideSlides = [
     {
       tag: "01",
@@ -395,36 +397,57 @@ function HowToModal({ featuredArt, onClose }) {
   ];
 
   React.useEffect(() => {
+    guideStepRef.current = 0;
+    guideScrollTargetRef.current = null;
     setGuideStep(0);
     requestAnimationFrame(() => {
       if (guideTrackRef.current) guideTrackRef.current.scrollLeft = 0;
     });
   }, []);
 
+  const syncGuideStep = (idx) => {
+    guideStepRef.current = idx;
+    setGuideStep(idx);
+  };
+  const getGuideIndexFromScroll = () => {
+    const track = guideTrackRef.current;
+    if (!track) return guideStepRef.current;
+    const next = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    return Math.max(0, Math.min(guideSlides.length - 1, next));
+  };
   const scrollGuideTo = (idx) => {
     const next = Math.max(0, Math.min(guideSlides.length - 1, idx));
-    setGuideStep(next);
+    syncGuideStep(next);
     const track = guideTrackRef.current;
     if (track) {
+      guideScrollTargetRef.current = next;
       track.scrollTo({ left: track.clientWidth * next, behavior: "smooth" });
     }
   };
   const nextGuide = () => {
-    if (guideStep === guideSlides.length - 1) {
+    const current = guideStepRef.current;
+    if (current === guideSlides.length - 1) {
       onClose();
       return;
     }
-    scrollGuideTo(guideStep + 1);
+    scrollGuideTo(current + 1);
   };
   const handleGuideScroll = () => {
     const track = guideTrackRef.current;
     if (!track) return;
-    const next = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
-    if (next !== guideStep) setGuideStep(next);
+    const target = guideScrollTargetRef.current;
+    if (target !== null) {
+      const targetLeft = track.clientWidth * target;
+      if (Math.abs(track.scrollLeft - targetLeft) > 2) return;
+      guideScrollTargetRef.current = null;
+    }
+    const next = getGuideIndexFromScroll();
+    if (next !== guideStepRef.current) syncGuideStep(next);
   };
   const handleGuidePointerDown = (ev) => {
     const track = guideTrackRef.current;
     if (!track) return;
+    guideScrollTargetRef.current = null;
     guideDragRef.current = { active: true, startX: ev.clientX, scrollLeft: track.scrollLeft };
     if (track.setPointerCapture) track.setPointerCapture(ev.pointerId);
   };
@@ -438,7 +461,7 @@ function HowToModal({ featuredArt, onClose }) {
     const track = guideTrackRef.current;
     if (!track) return;
     guideDragRef.current.active = false;
-    scrollGuideTo(Math.round(track.scrollLeft / Math.max(1, track.clientWidth)));
+    scrollGuideTo(getGuideIndexFromScroll());
   };
   const renderGuideVisual = (slide) => {
     if (slide.kind === "palette") {
@@ -507,7 +530,7 @@ function HowToModal({ featuredArt, onClose }) {
         guideSlides.map((slide, idx) => e("button", { key: slide.tag, className: idx === guideStep ? "is-on" : "", onClick: () => scrollGuideTo(idx), "aria-label": slide.title }))
       ),
       e("div", { className: "guide-modal__actions" },
-        e("button", { className: "guide-modal__prev", onClick: () => scrollGuideTo(guideStep - 1), disabled: guideStep === 0 }, "이전"),
+        e("button", { className: "guide-modal__prev", onClick: () => scrollGuideTo(guideStepRef.current - 1), disabled: guideStep === 0 }, "이전"),
         e("button", { className: "guide-modal__next", onClick: nextGuide }, guideStep === guideSlides.length - 1 ? "시작" : "다음")
       )
     )
