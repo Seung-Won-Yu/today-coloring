@@ -9,7 +9,7 @@
 
 /* ── 카드 그리드 ── */
 .home, .gallery { overflow-y:auto; }
-.cardgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:16px;
+.cardgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr));
   padding:8px 18px 28px; max-width:860px; width:100%; margin:0 auto; }
 .artcard { display:flex; flex-direction:column; gap:8px; background:transparent; text-align:left; }
 .artcard__thumb { position:relative; aspect-ratio:1; border-radius:24px; overflow:hidden; background:var(--paper);
