@@ -5,7 +5,7 @@
 .cat:active { transform:scale(0.95); }
 [data-theme="warm"] .cat--on { background:var(--accent); border-color:var(--accent); color:#fff; }
 
-.prompt { padding:2px 22px 8px; font-size:calc(17px * var(--fs)); font-weight:600; color:var(--ink-soft); flex:0 0 auto; }
+.prompt { padding:2px 22px 8px; font-size:calc(17px * var(--fs)); font-weight:600; color:var(--ink-soft); }
 
 /* ── 카드 그리드 ── */
 .home, .gallery { overflow-y:auto; }
