@@ -25,6 +25,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   const regionsRef = React.useRef(null);
   const frameRef = React.useRef(null);
   const lastArtSrcRef = React.useRef("");
+  const analysisTaskRef = React.useRef(null);
   const [imageReady, setImageReady] = React.useState(false);
   const [paintPulse, setPaintPulse] = React.useState(null);
   const shouldAnalyzeRegions = interactive || Boolean(onRegionsChange);
@@ -88,8 +89,19 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       console.error("Error analyzing regions", e);
     }
   };
+  const cancelRegionAnalysis = () => {
+    const task = analysisTaskRef.current;
+    if (!task) return;
+    if (task.kind === "idle" && window.cancelIdleCallback) {
+      window.cancelIdleCallback(task.id);
+    } else {
+      window.clearTimeout(task.id);
+    }
+    analysisTaskRef.current = null;
+  };
   React.useEffect(() => {
     let cancelled = false;
+    cancelRegionAnalysis();
     setImageReady(false);
     setPaintPulse(null);
     loadArtworkBitmap(art.src).then((img) => {
@@ -104,9 +116,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         const ctx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
         ctx.drawImage(frame.canvas, 0, 0);
         baseImageDataRef.current = ctx.getImageData(0, 0, cw, ch);
-        if (shouldAnalyzeRegions) {
-          analyzeRegions(baseImageDataRef.current, cw, ch);
-        } else {
+        if (!shouldAnalyzeRegions) {
           regionsRef.current = null;
         }
       }
@@ -115,11 +125,24 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         onImageLoad({ width: cw, height: ch });
       }
       setImageReady(true);
+      if (shouldAnalyzeRegions && baseImageDataRef.current) {
+        const runAnalysis = () => {
+          analysisTaskRef.current = null;
+          if (cancelled || lastArtSrcRef.current !== art.src || !baseImageDataRef.current) return;
+          analyzeRegions(baseImageDataRef.current, cw, ch);
+        };
+        if (window.requestIdleCallback) {
+          analysisTaskRef.current = { kind: "idle", id: window.requestIdleCallback(runAnalysis, { timeout: 700 }) };
+        } else {
+          analysisTaskRef.current = { kind: "timer", id: window.setTimeout(runAnalysis, 0) };
+        }
+      }
     }).catch((error) => {
       if (!cancelled) console.error("Error loading artwork", error);
     });
     return () => {
       cancelled = true;
+      cancelRegionAnalysis();
     };
   }, [art.src, frameMode, shouldAnalyzeRegions]);
   const redraw = (cw, ch) => {
