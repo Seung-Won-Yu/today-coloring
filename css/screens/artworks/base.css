@@ -1,5 +1,5 @@
 /* ── 카테고리 ── */
-.cats { display:flex; gap:10px; overflow-x:auto; padding:14px 18px; scrollbar-width:none; flex:0 0 auto; }
+.cats { gap:10px; overflow-x:auto; padding:14px 18px; scrollbar-width:none; flex:0 0 auto; }
 .cats::-webkit-scrollbar { display:none; }
 .cat {
   font-size:calc(15px * var(--fs)); font-weight:800;
