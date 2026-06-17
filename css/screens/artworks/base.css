@@ -5,7 +5,6 @@
   border:1.5px solid var(--line); font-size:calc(15px * var(--fs)); font-weight:800; color:var(--ink-soft);
   white-space:nowrap; transition:transform 0.15s ease, background-color 0.15s, color 0.15s; }
 .cat:active { transform:scale(0.95); }
-.cat--on { background:var(--ink); color:var(--paper); border-color:var(--ink); }
 [data-theme="warm"] .cat--on { background:var(--accent); border-color:var(--accent); color:#fff; }
 
 .prompt { padding:2px 22px 8px; font-size:calc(17px * var(--fs)); font-weight:600; color:var(--ink-soft); flex:0 0 auto; }
