@@ -84,7 +84,7 @@
     const height = imageData.height;
     const data = imageData.data;
     const getPixelIndex = (x, y) => (y * width + x) * 4;
-    const scanPad = 3;
+    const scanPad = 4;
     const minX = Math.max(1, (bounds ? bounds.minX : 1) - scanPad);
     const minY = Math.max(1, (bounds ? bounds.minY : 1) - scanPad);
     const maxX = Math.min(width - 2, (bounds ? bounds.maxX : width - 2) + scanPad);
@@ -132,7 +132,7 @@
             }
           }
           const darkNeighbors = countDarkBoundaryNeighbors(x, y);
-          const neededNeighbors = darkNeighbors > 0 ? 5 : pass === 0 ? 2 : 4;
+          const neededNeighbors = darkNeighbors >= 4 ? 4 : darkNeighbors > 0 ? (pass === 0 ? 2 : 3) : pass === 0 ? 1 : 3;
           if (fillNeighbors >= neededNeighbors) candidates.push(idx);
         }
       }

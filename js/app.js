@@ -781,6 +781,29 @@ function GalleryScreen({ items, onBack, onView }) {
     }))
   );
 }
+function ConfirmDialog({ title, message, confirmLabel = "확인", cancelLabel = "취소", danger = false, onConfirm, onCancel }) {
+  const e = React.createElement;
+  React.useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onCancel]);
+  return e("div", { className: "confirm-layer", role: "presentation", onClick: onCancel },
+    e("section", { className: "confirm-card", role: "dialog", "aria-modal": "true", "aria-label": title, onClick: (event) => event.stopPropagation() },
+      e("div", { className: "confirm-card__icon " + (danger ? "confirm-card__icon--danger" : "") },
+        e(Icon, { name: danger ? "trash" : "check", size: 24 })
+      ),
+      e("h2", { className: "confirm-card__title" }, title),
+      e("p", { className: "confirm-card__message" }, message),
+      e("div", { className: "confirm-card__actions" },
+        e("button", { type: "button", className: "confirm-card__btn confirm-card__btn--ghost", onClick: onCancel }, cancelLabel),
+        e("button", { type: "button", className: "confirm-card__btn " + (danger ? "confirm-card__btn--danger" : "confirm-card__btn--primary"), onClick: onConfirm }, confirmLabel)
+      )
+    )
+  );
+}
 function ColorToolbelt({ hasHistory, onUndo, onReset, onZoom }) {
   const e = React.createElement;
   return e("div", { className: "color-toolbelt", style: { zIndex: 18 } },
@@ -790,6 +813,7 @@ function ColorToolbelt({ hasHistory, onUndo, onReset, onZoom }) {
   );
 }
 function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFinish, tweaks }) {
+  const e = React.createElement;
   const orient = useOrientation();
   const layout = orient === "landscape" ? "side" : "bottom";
   const containerRef = React.useRef(null);
@@ -797,6 +821,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
   const [history, setHistory] = React.useState([]);
   const [aspect, setAspect] = React.useState(1);
+  const [resetConfirmOpen, setResetConfirmOpen] = React.useState(false);
   React.useEffect(() => {
     if (scale === 1) {
       setOffset({ x: 0, y: 0 });
@@ -873,10 +898,12 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
     onPaint(prevFills);
   };
   const handleReset = () => {
-    if (window.confirm("\uADF8\uB9BC\uC758 \uC0C9\uC0C1\uC744 \uBAA8\uB450 \uCD08\uAE30\uD654\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?")) {
-      onPaint([]);
-      setHistory([]);
-    }
+    setResetConfirmOpen(true);
+  };
+  const confirmReset = () => {
+    onPaint([]);
+    setHistory([]);
+    setResetConfirmOpen(false);
   };
   const handleCanvasPaint = (newFills) => {
     if (Date.now() - lastDragTimeRef.current < 120) return false;
@@ -1040,56 +1067,65 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   const hasHistory = history.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
   const bottomChrome = window.innerWidth >= 768 ? 302 : 260;
-  return /* @__PURE__ */ React.createElement("div", { className: "screen color color--" + layout }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--color", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "appbar__back", onClick: onExit }, /* @__PURE__ */ React.createElement(Icon, { name: "back", size: 28 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uBAA9\uB85D")), /* @__PURE__ */ React.createElement("div", { className: "appbar__center-txt appbar__center-title" }, art.title), /* @__PURE__ */ React.createElement("div", { className: "appbar__tools appbar__tools--color" }, layout === "side" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement(Icon, { name: "undo", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uB418\uB3CC\uB9AC\uAE30")), /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleReset, "aria-label": "\uCD08\uAE30\uD654" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uCC98\uC74C\uBD80\uD130"))), /* @__PURE__ */ React.createElement("button", { className: "appbar__save", onClick: onFinish }, /* @__PURE__ */ React.createElement(Icon, { name: "check", size: 19 }), /* @__PURE__ */ React.createElement("span", null, "\uC644\uC131\uD558\uAE30")))), /* @__PURE__ */ React.createElement("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
-    "div",
-    {
-      className: "canvaswrap",
-      ref: containerRef,
-      style: {
-        width: "100%",
-        height: "100%",
-        touchAction: "none",
-        overflow: "hidden",
-        cursor: scale > 1 ? "grab" : "default"
-      }
-    },
-    /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        className: "canvasinner",
-        style: {
-          width: layout === "side" ? `min(100%, calc((100dvh - 116px) * ${pageAspect}), calc(100dvw - 266px), 840px)` : `min(calc(100dvw - 10px), calc((100dvh - ${bottomChrome}px) * ${pageAspect}), 680px)`,
-          aspectRatio: pageAspect,
-          transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-          transformOrigin: "0 0",
-          transition: touchStartRef.current.isPinching || touchStartRef.current.isDragging ? "none" : "transform 0.15s ease-out",
-          willChange: "transform"
-        }
-      },
-      /* @__PURE__ */ React.createElement(
-        CanvasArt,
-        {
-          art,
-          fills,
-          onPaint: handleCanvasPaint,
-          selected,
-          interactive: true,
-          frameMode: "paint",
-          canPaint: canCanvasPaint,
-          onImageLoad: ({ width, height }) => setAspect(width / height)
-        }
+  return e("div", { className: "screen color color--" + layout },
+    e("header", { className: "appbar appbar--color", style: { position: "relative" } },
+      e("button", { className: "appbar__back", onClick: onExit },
+        e(Icon, { name: "back", size: 28 }),
+        e("span", { className: "hide-narrow" }, "목록")
+      ),
+      e("div", { className: "appbar__center-txt appbar__center-title" }, art.title),
+      e("div", { className: "appbar__tools appbar__tools--color" },
+        layout === "side" && e(React.Fragment, null,
+          e("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "되돌리기" },
+            e(Icon, { name: "undo", size: 20 }),
+            e("span", { className: "hide-narrow" }, "되돌리기")
+          ),
+          e("button", { className: "tool--pill", onClick: handleReset, "aria-label": "초기화" },
+            e(Icon, { name: "trash", size: 20 }),
+            e("span", { className: "hide-narrow" }, "처음부터")
+          )
+        ),
+        e("button", { className: "appbar__save", onClick: onFinish },
+          e(Icon, { name: "check", size: 19 }),
+          e("span", null, "완성하기")
+        )
       )
-    ), layout === "side" && /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        onClick: toggleZoom,
-        className: "zoom-toggle-btn",
-        "aria-label": "\uB3CB\uBCF4\uAE30 \uD1A0\uAE00"
+    ),
+    e("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } },
+      e("div", {
+        className: "canvaswrap",
+        ref: containerRef,
+        style: { width: "100%", height: "100%", touchAction: "none", overflow: "hidden", cursor: scale > 1 ? "grab" : "default" }
       },
-      /* @__PURE__ */ React.createElement(Icon, { name: "zoom", size: 22, color: "var(--ink)" }),
-      /* @__PURE__ */ React.createElement("span", { className: "zoom-toggle-btn__label" }, scale > 1 ? "\uCD95\uC18C\uD558\uAE30 (1x)" : "\uD06C\uAC8C \uBCF4\uAE30 (2x)")
-    )
-  ), /* @__PURE__ */ React.createElement("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } }, layout === "bottom" && /* @__PURE__ */ React.createElement(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }), /* @__PURE__ */ React.createElement("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } }, /* @__PURE__ */ React.createElement("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "\uD604\uC7AC \uC0C9"), /* @__PURE__ */ React.createElement("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")), /* @__PURE__ */ React.createElement(Palette, { selected, onSelect, layout }))));
+        e("div", {
+          className: "canvasinner",
+          style: {
+            width: layout === "side" ? `min(100%, calc((100dvh - 116px) * ${pageAspect}), calc(100dvw - 266px), 840px)` : `min(calc(100dvw - 10px), calc((100dvh - ${bottomChrome}px) * ${pageAspect}), 680px)`,
+            aspectRatio: pageAspect,
+            transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+            transformOrigin: "0 0",
+            transition: touchStartRef.current.isPinching || touchStartRef.current.isDragging ? "none" : "transform 0.15s ease-out",
+            willChange: "transform"
+          }
+        },
+          e(CanvasArt, { art, fills, onPaint: handleCanvasPaint, selected, interactive: true, frameMode: "paint", canPaint: canCanvasPaint, onImageLoad: ({ width, height }) => setAspect(width / height) })
+        ),
+        layout === "side" && e("button", { onClick: toggleZoom, className: "zoom-toggle-btn", "aria-label": "돋보기 토글" },
+          e(Icon, { name: "zoom", size: 22, color: "var(--ink)" }),
+          e("span", { className: "zoom-toggle-btn__label" }, scale > 1 ? "축소하기 (1x)" : "크게 보기 (2x)")
+        )
+      ),
+      e("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } },
+        layout === "bottom" && e(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }),
+        e("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } },
+          e("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "현재 색"),
+          e("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")
+        ),
+        e(Palette, { selected, onSelect, layout })
+      )
+    ),
+    resetConfirmOpen && e(ConfirmDialog, { title: "처음부터 색칠할까요?", message: "지금 작품의 색칠 기록만 지워져요.", confirmLabel: "초기화", cancelLabel: "계속 색칠", danger: true, onConfirm: confirmReset, onCancel: () => setResetConfirmOpen(false) })
+  );
 }
 function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) {
   const e = React.createElement;
@@ -1248,6 +1284,7 @@ function App() {
   const [viewItem, setViewItem] = React.useState(null);
   const [justSaved, setJustSaved] = React.useState(false);
   const [toast, setToast] = React.useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = React.useState(null);
   const progressSaveTimerRef = React.useRef(null);
   const pendingProgressRef = React.useRef(null);
   const artworksList = window.ARTWORKS;
@@ -1327,10 +1364,10 @@ function App() {
     setJustSaved(true);
   };
   const deleteGalleryItem = (itemId) => {
-    if (!window.confirm("\uC774 \uC791\uD488\uC744 \uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?")) return;
     const next = gallery.filter((item) => item.id !== itemId);
     setGallery(next);
     AppStorage.saveGallery(next);
+    setDeleteConfirmId(null);
     if (viewItem && viewItem.id === itemId) {
       setViewItem(null);
       setScreen("gallery");
@@ -1412,9 +1449,9 @@ function App() {
         setJustSaved(false);
         setScreen("color");
       },
-      onDelete: deleteGalleryItem
+      onDelete: setDeleteConfirmId
     }
-  ), toast && /* @__PURE__ */ React.createElement("div", { className: "toast toast--" + screen }, toast), showBottomNav && /* @__PURE__ */ React.createElement(
+  ), deleteConfirmId && /* @__PURE__ */ React.createElement(ConfirmDialog, { title: "\uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?", message: "\uC0AD\uC81C\uD55C \uC644\uC131\uC791\uC740 \uB2E4\uC2DC \uBCF5\uAD6C\uD560 \uC218 \uC5C6\uC5B4\uC694.", confirmLabel: "\uC0AD\uC81C", cancelLabel: "\uCDE8\uC18C", danger: true, onConfirm: () => deleteGalleryItem(deleteConfirmId), onCancel: () => setDeleteConfirmId(null) }), toast && /* @__PURE__ */ React.createElement("div", { className: "toast toast--" + screen }, toast), showBottomNav && /* @__PURE__ */ React.createElement(
     BottomNav,
     {
       active: activeNav,
