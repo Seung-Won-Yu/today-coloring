@@ -767,8 +767,8 @@ function GalleryScreen({ items, onBack, onView }) {
     ) : e("div", { className: "cardgrid" }, items.map((it) => {
     const art = getArtworkById(it.artId);
     if (!art) return null;
-    return e("div", { key: it.id, className: "artcard gallery-card" },
-      e("button", { className: "artcard__thumb", onClick: () => onView(it), "aria-label": art.title + " 보기" },
+    return e("button", { key: it.id, type: "button", className: "artcard gallery-card", onClick: () => onView(it), "aria-label": art.title + " 보기" },
+      e("div", { className: "artcard__thumb" },
         e(Thumb, { art, fills: it.fills })
       ),
       e("div", { className: "artcard__body gallery-card__body" },
