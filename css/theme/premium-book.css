@@ -922,11 +922,6 @@
   transform:translateY(-50%) rotate(-3deg);
 }
 
-.gallery-summary__thumb .finished-thumb,
-.gallery-summary__thumb .canvas-art-shell {
-  border-radius:7px;
-}
-
 .gallery-summary__copy {
   min-width:0;
   text-align:left;
