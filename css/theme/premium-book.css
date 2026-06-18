@@ -1013,7 +1013,6 @@
   flex:0 0 auto;
   width:calc(100% - 36px);
   max-width:430px;
-  min-height:0;
   margin:16px auto calc(126px + env(safe-area-inset-bottom));
   padding:24px 22px 26px;
   border-radius:24px;
