@@ -21,8 +21,12 @@
 }
 
 .completion__eyebrow {
-  min-height:32px;
-  padding:0 13px;
+  min-height:36px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  padding:5px 13px;
   border-radius:999px;
   background:rgba(45,149,140,.12);
   color:#176B64;
