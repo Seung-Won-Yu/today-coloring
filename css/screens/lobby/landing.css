@@ -70,7 +70,7 @@
 
 .lobby-brand__name {
   font-size:17px;
-  line-height:1;
+  line-height:1.16;
   font-weight:900;
 }
 
@@ -79,7 +79,7 @@
   margin:0 auto;
   color:var(--ink);
   font-size:31px;
-  line-height:1.15;
+  line-height:1.2;
   font-weight:900;
 }
 
@@ -330,7 +330,7 @@
   .lobby-title {
     max-width:280px;
     font-size:26px;
-    line-height:1.1;
+    line-height:1.16;
   }
 
   .lobby-subtitle {
@@ -419,6 +419,7 @@
   .lobby-title {
     max-width:520px;
     font-size:24px;
+    line-height:1.16;
     white-space:nowrap;
   }
 

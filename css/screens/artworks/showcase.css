@@ -89,18 +89,6 @@
   display:none;
 }
 
-.cats {
-  width:calc(100% - 28px);
-  max-width:none;
-  margin:10px 14px 6px;
-  flex-wrap:wrap;
-  overflow-x:visible;
-}
-
-.cat {
-  justify-content:center;
-}
-
 @media (max-height: 700px) {
   .home-summary {
     min-height:188px;
@@ -123,18 +111,6 @@
     width:96px;
     min-width:96px;
     padding:7px;
-  }
-
-  .cats {
-    flex-wrap:nowrap;
-    margin-top:8px;
-    margin-bottom:4px;
-    padding:8px 0 8px;
-  }
-
-  .cat {
-    min-height:40px;
-    padding-inline:18px;
   }
 
   .cardgrid {
@@ -173,8 +149,4 @@
     border-width:5px;
   }
 
-  .cats {
-    width:calc(100% - 20px);
-    margin-inline:10px;
-  }
 }

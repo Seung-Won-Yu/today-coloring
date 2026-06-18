@@ -552,8 +552,8 @@ function LobbyScreen({ onStart }) {
           e("span", { className: "lobby-brand__mark" }, e(Icon, { name: "fill", size: 22, color: "#fff" })),
           e("span", { className: "lobby-brand__name" }, "오늘의 색칠")
         ),
-        e("h1", { className: "lobby-title" }, "오늘의 한 장을 칠해볼까요?"),
-        e("p", { className: "lobby-subtitle" }, "오늘 칠할 그림을 고르고 천천히 색을 채워보세요.")
+        e("h1", { className: "lobby-title" }, "한 장 골라 색을 채워요"),
+        e("p", { className: "lobby-subtitle" }, "큰 도안을 고르고 천천히 완성해보세요.")
       ),
       e("div", { className: "lobby-showcase", "aria-hidden": "true" },
         e("div", { className: "lobby-showcase__glow" }),
@@ -566,7 +566,7 @@ function LobbyScreen({ onStart }) {
         )
       ),
       e("div", { className: "lobby-theme-row", "aria-label": "특징" },
-        ["큰 그림", "쉬운 색칠", "갤러리 저장"].map((theme) => e("span", { key: theme }, theme))
+        ["큰 도안", "쉬운 색칠", "완성 보관"].map((theme) => e("span", { key: theme }, theme))
       ),
       e("div", { className: "lobby-palette", "aria-hidden": "true" }, PALETTE.slice(0, 6).map((p) => e("span", { key: p.c, style: { background: p.c } }))),
       e("div", { className: "lobby-actions" },
@@ -603,17 +603,17 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
           e("span", null, "추천")
         ),
         e("div", { className: "home-summary__copy" },
-          e("span", { className: "home-summary__eyebrow" }, "오늘의 추천"),
-          e("h2", null, "오늘의 한 장"),
-          e("p", null, "편안하게 색을 채워보세요."),
+          e("span", { className: "home-summary__eyebrow" }, "추천"),
+          e("h2", null, "한 장 골라보기"),
+          e("p", null, "색을 고르면 바로 시작해요."),
           e("div", { className: "home-summary__actions" },
             featuredArt && e("button", { className: "home-summary__start", type: "button", onClick: () => onPick(featuredArt.id) },
               e(Icon, { name: "pencil", size: 18 }),
-              e("span", null, "시작하기")
+              e("span", null, "색칠 시작")
             ),
             e("button", { className: "home-summary__gallery", type: "button", onClick: onGallery },
               e(Icon, { name: "star", size: 18 }),
-              e("span", null, "보관함 ", galleryCount, "점")
+              e("span", null, "보관 ", galleryCount, "점")
             )
           )
         ),
@@ -624,9 +624,9 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
         )
       ),
       e("section", { className: "home-library-strip", "aria-label": "작품 현황" },
-        e("div", null, e("span", null, "컬렉션"), e("strong", null, totalCount, "장")),
-        e("div", null, e("span", null, "진행 중"), e("strong", null, startedCount, "장")),
-        e("div", null, e("span", null, "보관함"), e("strong", null, galleryCount, "점"))
+        e("div", null, e("span", null, "작품"), e("strong", null, totalCount, "장")),
+        e("div", null, e("span", null, "진행"), e("strong", null, startedCount, "장")),
+        e("div", null, e("span", null, "보관"), e("strong", null, galleryCount, "점"))
       ),
       e("div", { className: "cats" },
         window.CATEGORIES.map((c) => e("button", { key: c, className: "cat" + (c === cat ? " cat--on" : ""), onClick: () => setCat(c) }, c === "전체" ? "전체" : c))
@@ -664,7 +664,7 @@ function GalleryScreen({ items, onBack, onView, onDelete }) {
       ),
       e("button", { className: "appbar__action", onClick: onBack },
         e(Icon, { name: "grid", size: 22 }),
-        e("span", null, "그림")
+        e("span", null, "작품")
       )
     ),
     e("section", { className: "gallery-summary", "aria-label": "갤러리 요약" },
@@ -672,17 +672,17 @@ function GalleryScreen({ items, onBack, onView, onDelete }) {
         latestArt && latest ? e(Thumb, { art: latestArt, fills: latest.fills }) : e(Thumb, { art: latestArt })
       ),
       e("div", { className: "gallery-summary__copy" },
-        e("span", { className: "gallery-summary__eyebrow" }, items.length > 0 ? "완성 보관함" : "첫 작품 준비"),
-        e("h2", null, items.length > 0 ? "오늘의 색을 모아두었어요" : "완성하면 이곳에 걸려요"),
-        e("p", null, items.length > 0 ? "저장한 작품을 다시 보고, 저장하거나 이어서 색칠할 수 있어요." : "마음에 드는 그림을 골라 천천히 완성해보세요.")
+        e("span", { className: "gallery-summary__eyebrow" }, items.length > 0 ? "최근 보관" : "준비 중"),
+        e("h2", null, items.length > 0 && latestArt ? latestArt.title : "첫 작품 준비"),
+        e("p", null, items.length > 0 ? "완성작 " + items.length + "점을 보관 중이에요." : "보관하면 여기서 다시 볼 수 있어요.")
       ),
       e("div", { className: "gallery-summary__count" }, items.length, "점")
     ),
     items.length === 0 ? e("div", { className: "empty empty--gallery" },
       e("div", { className: "empty__art" }, e(Thumb, { art: window.ARTWORKS[0] })),
-      e("p", { className: "empty__title" }, "아직 완성한 그림이 없어요"),
-      e("p", { className: "empty__sub" }, "그림을 고르고 완성하면 보관함에 차곡차곡 모아둘 수 있어요."),
-      e(BigButton, { icon: "plus", onClick: onBack }, "그림 고르러 가기")
+      e("p", { className: "empty__title" }, "아직 보관한 작품이 없어요"),
+      e("p", { className: "empty__sub" }, "마음에 드는 도안을 골라 첫 작품을 완성해보세요."),
+      e(BigButton, { icon: "plus", onClick: onBack }, "작품 고르기")
     ) : e("div", { className: "cardgrid" }, items.map((it) => {
     const art = getArtworkById(it.artId);
     if (!art) return null;
@@ -962,7 +962,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   const hasHistory = history.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
   const bottomChrome = window.innerWidth >= 768 ? 302 : 260;
-  return /* @__PURE__ */ React.createElement("div", { className: "screen color color--" + layout }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--color", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "appbar__back", onClick: onExit }, /* @__PURE__ */ React.createElement(Icon, { name: "back", size: 28 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uBAA9\uB85D")), /* @__PURE__ */ React.createElement("div", { className: "appbar__center-txt appbar__center-title" }, art.title), /* @__PURE__ */ React.createElement("div", { className: "appbar__tools appbar__tools--color" }, layout === "side" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement(Icon, { name: "undo", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uB418\uB3CC\uB9AC\uAE30")), /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleReset, "aria-label": "\uCD08\uAE30\uD654" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uCC98\uC74C\uBD80\uD130"))), /* @__PURE__ */ React.createElement("button", { className: "appbar__save", onClick: onFinish }, /* @__PURE__ */ React.createElement(Icon, { name: "save", size: 19 }), /* @__PURE__ */ React.createElement("span", null, "\uC800\uC7A5\uD558\uAE30")))), /* @__PURE__ */ React.createElement("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement("div", { className: "screen color color--" + layout }, /* @__PURE__ */ React.createElement("header", { className: "appbar appbar--color", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "appbar__back", onClick: onExit }, /* @__PURE__ */ React.createElement(Icon, { name: "back", size: 28 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uBAA9\uB85D")), /* @__PURE__ */ React.createElement("div", { className: "appbar__center-txt appbar__center-title" }, art.title), /* @__PURE__ */ React.createElement("div", { className: "appbar__tools appbar__tools--color" }, layout === "side" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement(Icon, { name: "undo", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uB418\uB3CC\uB9AC\uAE30")), /* @__PURE__ */ React.createElement("button", { className: "tool--pill", onClick: handleReset, "aria-label": "\uCD08\uAE30\uD654" }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 20 }), /* @__PURE__ */ React.createElement("span", { className: "hide-narrow" }, "\uCC98\uC74C\uBD80\uD130"))), /* @__PURE__ */ React.createElement("button", { className: "appbar__save", onClick: onFinish }, /* @__PURE__ */ React.createElement(Icon, { name: "check", size: 19 }), /* @__PURE__ */ React.createElement("span", null, "\uC644\uC131\uD558\uAE30")))), /* @__PURE__ */ React.createElement("div", { className: "colorbody", style: { position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
     "div",
     {
       className: "canvaswrap",
@@ -1018,25 +1018,25 @@ function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) 
   return e("div", { className: "screen completion" },
     e(Confetti, null),
     e("div", { className: "completion__inner" },
-      e("p", { className: "completion__eyebrow" }, e(Icon, { name: saved ? "check" : "star", size: 20, color: "var(--ok)" }), saved ? " 보관 완료" : " 작품 완성"),
-      e("h2", { className: "completion__title" }, saved ? "갤러리에 담았어요" : "오늘의 작품이 완성됐어요"),
-      e("p", { className: "completion__sub" }, saved ? "기기에 저장하거나 다른 그림을 이어서 골라보세요." : "원하면 갤러리에 보관하고, 바로 이미지로 저장할 수 있어요."),
+      e("p", { className: "completion__eyebrow" }, e(Icon, { name: saved ? "check" : "star", size: 20, color: "var(--ok)" }), saved ? " 보관 완료" : " 완성"),
+      e("h2", { className: "completion__title" }, saved ? "갤러리에 담았어요" : "작품이 완성됐어요"),
+      e("p", { className: "completion__sub" }, saved ? "이미지로 저장하거나 다음 작품을 골라보세요." : "보관하거나 이미지로 저장할 수 있어요."),
       e("div", { className: "completion__certificate", "aria-label": "완성 작품 정보" },
-        e("span", null, saved ? "보관된 작품" : "완성 미리보기"),
+        e("span", null, saved ? "보관 작품" : "완성 작품"),
         e("strong", null, art.title),
         e("small", null, fillCount, "번의 색칠 기록")
       ),
       e("div", { className: "completion__frame completion__frame--magic" }, e(CanvasArt, { art, fills, interactive: false, frameMode: "paint" })),
       e("div", { className: "completion__btns" },
-        !saved ? e(BigButton, { icon: "check", onClick: onKeep }, "내 갤러리에 담기") : e(BigButton, { icon: "save", onClick: onSave }, "기기에 저장"),
+        !saved ? e(BigButton, { icon: "check", onClick: onKeep }, "갤러리에 보관") : e(BigButton, { icon: "save", onClick: onSave }, "이미지 저장"),
         !saved ? e("div", { className: "completion__row" },
-          e(BigButton, { icon: "save", onClick: onSave, variant: "soft" }, "기기에 저장"),
-          e(BigButton, { icon: "plus", onClick: onNew, variant: "ghost" }, "새 그림")
+          e(BigButton, { icon: "save", onClick: onSave, variant: "soft" }, "이미지 저장"),
+          e(BigButton, { icon: "plus", onClick: onNew, variant: "ghost" }, "새 작품")
         ) : e("div", { className: "completion__row" },
-          e(BigButton, { icon: "star", onClick: onNew, variant: "soft" }, "다른 그림"),
-          e(BigButton, { onClick: onBack, variant: "ghost" }, "조금 더 칠하기")
+          e(BigButton, { icon: "star", onClick: onNew, variant: "soft" }, "새 작품"),
+          e(BigButton, { onClick: onBack, variant: "ghost" }, "더 칠하기")
         ),
-        !saved && e("button", { className: "completion__textbtn", type: "button", onClick: onBack }, "조금 더 칠하기")
+        !saved && e("button", { className: "completion__textbtn", type: "button", onClick: onBack }, "더 칠하기")
       )
     )
   );
@@ -1050,18 +1050,18 @@ function ViewScreen({ item, onBack, onSave, onRecolor, onDelete }) {
       e("p", { className: "completion__eyebrow" }, art.title),
       e("h2", { className: "completion__title" }, new Date(item.date).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" }), " 완성"),
       e("div", { className: "completion__certificate completion__certificate--view", "aria-label": "갤러리 작품 정보" },
-        e("span", null, "갤러리 보관 작품"),
+        e("span", null, "보관 작품"),
         e("strong", null, art.title),
         e("small", null, (item.fills || []).length, "번의 색칠 기록")
       ),
       e("div", { className: "completion__frame" }, e(CanvasArt, { art, fills: item.fills, interactive: false, frameMode: "paint" })),
       e("div", { className: "completion__btns" },
         e("div", { className: "completion__row" },
-          e(BigButton, { icon: "save", onClick: onSave }, "기기에 저장"),
+          e(BigButton, { icon: "save", onClick: onSave }, "이미지 저장"),
           e(BigButton, { icon: "trash", onClick: () => onDelete(item.id), variant: "danger" }, "삭제")
         ),
         e("div", { className: "completion__row" },
-          e(BigButton, { onClick: onBack, variant: "ghost" }, "갤러리로"),
+          e(BigButton, { onClick: onBack, variant: "ghost" }, "보관함으로"),
           e(BigButton, { onClick: onRecolor, variant: "soft" }, "다시 색칠")
         )
       )
@@ -1216,7 +1216,6 @@ function App() {
     setGallery(next);
     AppStorage.saveGallery(next);
     setJustSaved(true);
-    flash("\uAC24\uB7EC\uB9AC\uC5D0 \uBCF4\uAD00\uD588\uC5B4\uC694");
   };
   const deleteGalleryItem = (itemId) => {
     if (!window.confirm("\uC774 \uC791\uD488\uC744 \uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?")) return;
@@ -1247,7 +1246,7 @@ function App() {
   const themeAttr = t.theme === "\uCC28\uBD84" ? "cool" : t.theme === "\uACE0\uB300\uBE44" ? "contrast" : "warm";
   const showBottomNav = ["home", "gallery"].includes(screen);
   const activeNav = screen;
-  return /* @__PURE__ */ React.createElement("div", { className: "app", "data-theme": themeAttr, style: { "--fs": t.fontScale } }, screen === "lobby" && /* @__PURE__ */ React.createElement(LobbyScreen, { onStart: startApp }), screen === "home" && /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement("div", { className: "app app--" + screen, "data-theme": themeAttr, style: { "--fs": t.fontScale } }, screen === "lobby" && /* @__PURE__ */ React.createElement(LobbyScreen, { onStart: startApp }), screen === "home" && /* @__PURE__ */ React.createElement(
     HomeScreen,
     {
       onPick: pickArt,
@@ -1307,7 +1306,7 @@ function App() {
       },
       onDelete: deleteGalleryItem
     }
-  ), toast && /* @__PURE__ */ React.createElement("div", { className: "toast" }, toast), showBottomNav && /* @__PURE__ */ React.createElement(
+  ), toast && /* @__PURE__ */ React.createElement("div", { className: "toast toast--" + screen }, toast), showBottomNav && /* @__PURE__ */ React.createElement(
     BottomNav,
     {
       active: activeNav,

@@ -5,21 +5,21 @@
 .cat:active { transform:scale(0.95); }
 [data-theme="warm"] .cat--on { background:var(--accent); border-color:var(--accent); color:#fff; }
 
-.prompt { padding:2px 22px 8px; font-size:calc(17px * var(--fs)); font-weight:600; color:var(--ink-soft); }
+.prompt { font-size:calc(17px * var(--fs)); }
 
 /* ── 카드 그리드 ── */
 .home, .gallery { overflow-y:auto; }
 .cardgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr));
   max-width:860px; width:100%; margin:0 auto; }
-.artcard { display:flex; flex-direction:column; gap:8px; background:transparent; text-align:left; }
-.artcard__thumb { position:relative; aspect-ratio:1; border-radius:24px; overflow:hidden; background:var(--paper);
-  border:1.5px solid var(--line); box-shadow:var(--shadow); transition:transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s, border-color 0.2s; }
+.artcard { display:flex; flex-direction:column; text-align:left; }
+.artcard__thumb { position:relative; overflow:hidden;
+  transition:transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s, border-color 0.2s; }
 .artcard:hover .artcard__thumb { transform:translateY(-5px) scale(1.02); box-shadow:var(--shadow-lg); border-color:rgba(74, 56, 30, 0.15); }
 .artcard:active .artcard__thumb { transform:scale(.97); }
-.artcard__body { padding:0 4px; display:flex; flex-direction:column; gap:3px; }
-.artcard__label { font-size:calc(17px * var(--fs)); letter-spacing:0; line-height:1.2; }
-.artcard__hint { font-size:calc(12px * var(--fs)); font-weight:800; line-height:1.2; }
-.artcard__date { font-size:calc(14px * var(--fs)); padding-left:4px; margin-top:-4px; }
+.artcard__body { display:flex; flex-direction:column; }
+.artcard__label { letter-spacing:0; }
+.artcard__hint { font-weight:800; }
+.artcard__date { padding-left:4px; margin-top:-4px; }
 
 /* ── 빈 갤러리 ── */
 .empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:30px; text-align:center; }
