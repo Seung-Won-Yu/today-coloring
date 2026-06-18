@@ -16,7 +16,52 @@ const {
 const { loadArtworkBitmap } = window.AssetLoader;
 const { Icon, BigButton, isLight, Palette, useOrientation, Confetti } = window.UIComponents;
 
-function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMode = "preview", onImageLoad, onRegionsChange }) {
+function nowMs() {
+  return window.performance && window.performance.now ? window.performance.now() : Date.now();
+}
+
+function recordPaintMetric(sample) {
+  if (!window.__COLORING_DEBUG_PAINT) return;
+  const metrics = window.__COLORING_PAINT_METRICS__ || [];
+  metrics.push({ at: Date.now(), ...sample });
+  window.__COLORING_PAINT_METRICS__ = metrics.slice(-80);
+}
+
+function paintSeedOnImageData(imageData, baseData, seed, fillRgb) {
+  const fillBounds = doFloodFill(imageData, seed.x, seed.y, fillRgb, 95, baseData);
+  if (fillBounds) smoothFillEdges(imageData, baseData, fillRgb, 2, fillBounds);
+  return fillBounds;
+}
+
+function replayFillOnImageData(imageData, baseData, fill, frame) {
+  const normalizedFill = normalizeFillForFrame(fill, frame);
+  const fillRgb = hexToRgb(normalizedFill.color);
+  return paintSeedOnImageData(imageData, baseData, normalizedFill, fillRgb);
+}
+
+function useInViewport(options = {}) {
+  const ref = React.useRef(null);
+  const [visible, setVisible] = React.useState(Boolean(options.initial));
+  React.useEffect(() => {
+    const node = ref.current;
+    if (visible || !node) return;
+    if (!window.IntersectionObserver) {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: options.rootMargin || "220px" });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [visible, options.rootMargin]);
+  return [ref, visible];
+}
+
+function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMode = "preview", onImageLoad, onRegionsChange, canPaint }) {
   const canvasRef = React.useRef(null);
   const baseCanvasRef = React.useRef(null);
   const baseImageDataRef = React.useRef(null);
@@ -158,9 +203,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const progressImgData = { data: progressData, width: cw, height: ch };
     for (let f of fillsArray) {
       const normalizedFill = normalizeFillForFrame(f, frameRef.current);
-      const fillRgb = hexToRgb(normalizedFill.color);
-      doFloodFill(imgData, normalizedFill.x, normalizedFill.y, fillRgb, 95, baseImgData.data);
-      smoothFillEdges(imgData, baseImgData.data, fillRgb);
+      replayFillOnImageData(imgData, baseImgData.data, normalizedFill, frameRef.current);
       markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseImgData.data);
     }
     ctx.putImageData(imgData, 0, 0);
@@ -175,6 +218,17 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   }, [fills]);
   const handlePointerUp = (e) => {
     if (!interactive || !onPaint) return;
+    if (canPaint && !canPaint()) return;
+    const metric = {
+      getImageData: 0,
+      progress: 0,
+      merge: 0,
+      fill: 0,
+      smooth: 0,
+      putImageData: 0,
+      commit: 0
+    };
+    const paintStartedAt = nowMs();
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = canvasRef.current.width / rect.width;
     const scaleY = canvasRef.current.height / rect.height;
@@ -184,8 +238,11 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const ch = canvasRef.current.height;
     const ctx = canvasRef.current.getContext("2d", { willReadFrequently: true });
     const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
+    let t0 = nowMs();
     const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
+    metric.getImageData += nowMs() - t0;
     let progressImgData = null;
+    t0 = nowMs();
     const cachedProgress = progressImageDataRef.current;
     if (cachedProgress && cachedProgress.width === cw && cachedProgress.height === ch) {
       progressImgData = {
@@ -200,6 +257,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseImgData.data);
       }
     }
+    metric.progress += nowMs() - t0;
     const progressData = progressImgData.data;
     const snapRadius = Math.max(26, Math.round(Math.max(scaleX, scaleY) * 22));
     const clickedIdx = (y * cw + x) * 4;
@@ -235,8 +293,11 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const newFill = { x: paintX, y: paintY, color: selected, v: 2 };
     let nextFills = [...fillsArray, newFill];
     const directPaintSeeds = [{ x: paintX, y: paintY }];
+    t0 = nowMs();
     markProgressRegion(progressImgData, paintX, paintY, baseImgData.data);
+    metric.progress += nowMs() - t0;
     if (regionsRef.current) {
+      t0 = nowMs();
       const uncoloredSeeds = regionsRef.current.filter((s) => {
         const idx = (s.y * cw + s.x) * 4;
         return !isProgressMarked(progressData, idx);
@@ -266,16 +327,33 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
           nextFills.push({ x: s.x, y: s.y, color: selected, v: 2 });
         });
       }
+      metric.merge += nowMs() - t0;
     }
-    const accepted = onPaint(nextFills);
-    if (accepted === false) return;
+    t0 = nowMs();
     const liveData = ctx.getImageData(0, 0, cw, ch);
+    metric.getImageData += nowMs() - t0;
     directPaintSeeds.forEach((seed) => {
-      doFloodFill(liveData, seed.x, seed.y, selectedRgb, 95, baseImgData.data);
-      smoothFillEdges(liveData, baseImgData.data, selectedRgb);
+      const fillStart = nowMs();
+      const fillBounds = doFloodFill(liveData, seed.x, seed.y, selectedRgb, 95, baseImgData.data);
+      metric.fill += nowMs() - fillStart;
+      const smoothStart = nowMs();
+      if (fillBounds) smoothFillEdges(liveData, baseImgData.data, selectedRgb, 2, fillBounds);
+      metric.smooth += nowMs() - smoothStart;
     });
+    t0 = nowMs();
     ctx.putImageData(liveData, 0, 0);
+    metric.putImageData += nowMs() - t0;
     progressImageDataRef.current = progressImgData;
+    requestAnimationFrame(() => recordPaintMetric({
+      ...metric,
+      total: nowMs() - paintStartedAt,
+      seeds: directPaintSeeds.length,
+      fills: nextFills.length,
+      artId: art.id
+    }));
+    t0 = nowMs();
+    onPaint(nextFills);
+    metric.commit = nowMs() - t0;
     const pulse = { id: Date.now(), x: paintX / cw * 100, y: paintY / ch * 100 };
     setPaintPulse(pulse);
     setTimeout(() => {
@@ -296,10 +374,13 @@ function ArtworkImage({ art, priority = false }) {
 }
 function Thumb({ art, fills, lightweight = false, priority = false }) {
   const fillsArray = Array.isArray(fills) ? fills : [];
+  const [viewportRef, isVisible] = useInViewport({ initial: priority, rootMargin: "360px" });
   if (lightweight && fillsArray.length === 0) {
     return /* @__PURE__ */ React.createElement(ArtworkImage, { art, priority });
   }
-  return /* @__PURE__ */ React.createElement(CanvasArt, { art, fills: fillsArray, interactive: false, frameMode: fillsArray.length > 0 ? "paint" : "preview" });
+  return /* @__PURE__ */ React.createElement("div", { ref: viewportRef, style: { width: "100%", height: "100%" } },
+    isVisible ? /* @__PURE__ */ React.createElement(CanvasArt, { art, fills: fillsArray, interactive: false, frameMode: fillsArray.length > 0 ? "paint" : "preview" }) : /* @__PURE__ */ React.createElement(ArtworkImage, { art, priority: false })
+  );
 }
 const SHOWCASE_PALETTE = [
   "#F6D977",
@@ -652,7 +733,7 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
     )
   );
 }
-function GalleryScreen({ items, onBack, onView, onDelete }) {
+function GalleryScreen({ items, onBack, onView }) {
   const e = React.createElement;
   const latest = items[0];
   const latestArt = latest ? getArtworkById(latest.artId) : window.ARTWORKS[0];
@@ -694,10 +775,6 @@ function GalleryScreen({ items, onBack, onView, onDelete }) {
         e("div", null,
           e("div", { className: "artcard__label" }, art.title),
           e("div", { className: "artcard__date" }, new Date(it.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" }))
-        ),
-        e("button", { className: "gallery-card__delete", type: "button", onClick: () => onDelete(it.id), "aria-label": art.title + " 삭제" },
-          e(Icon, { name: "trash", size: 18 }),
-          e("span", null, "삭제")
         )
       )
     );
@@ -807,6 +884,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
     onPaint(newFills);
     return true;
   };
+  const canCanvasPaint = () => Date.now() - lastDragTimeRef.current >= 120;
   React.useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -997,6 +1075,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
           selected,
           interactive: true,
           frameMode: "paint",
+          canPaint: canCanvasPaint,
           onImageLoad: ({ width, height }) => setAspect(width / height)
         }
       )
@@ -1099,10 +1178,7 @@ function downloadCanvasPng(art, fills) {
       const baseData = new Uint8ClampedArray(imgData.data);
       const fillsArray = Array.isArray(fills) ? fills : [];
       for (let f of fillsArray) {
-        const normalizedFill = normalizeFillForFrame(f, frame);
-        const fillRgb = hexToRgb(normalizedFill.color);
-        doFloodFill(imgData, normalizedFill.x, normalizedFill.y, fillRgb, 95, baseData);
-        smoothFillEdges(imgData, baseData, fillRgb);
+        replayFillOnImageData(imgData, baseData, f, frame);
       }
       ctx.putImageData(imgData, 0, 0);
       const url = canvas.toDataURL("image/png");
@@ -1172,24 +1248,53 @@ function App() {
   const [viewItem, setViewItem] = React.useState(null);
   const [justSaved, setJustSaved] = React.useState(false);
   const [toast, setToast] = React.useState(null);
+  const progressSaveTimerRef = React.useRef(null);
+  const pendingProgressRef = React.useRef(null);
   const artworksList = window.ARTWORKS;
   const art = getArtworkById(artId);
   const flash = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1800);
   };
+  const flushProgressSave = () => {
+    if (progressSaveTimerRef.current) {
+      window.clearTimeout(progressSaveTimerRef.current);
+      progressSaveTimerRef.current = null;
+    }
+    if (pendingProgressRef.current) {
+      AppStorage.saveProgress(pendingProgressRef.current);
+      pendingProgressRef.current = null;
+    }
+  };
+  const scheduleProgressSave = (next) => {
+    pendingProgressRef.current = next;
+    if (progressSaveTimerRef.current) window.clearTimeout(progressSaveTimerRef.current);
+    progressSaveTimerRef.current = window.setTimeout(() => {
+      progressSaveTimerRef.current = null;
+      if (!pendingProgressRef.current) return;
+      AppStorage.saveProgress(pendingProgressRef.current);
+      pendingProgressRef.current = null;
+    }, 220);
+  };
   React.useEffect(() => {
-    if (screen === "color" && artId) {
+    return () => flushProgressSave();
+  }, []);
+  React.useEffect(() => {
+    if (screen !== "color" || !artId) {
+      flushProgressSave();
+      return;
+    }
+    setProgress((currentProgress) => {
       const fillsArray = Array.isArray(fills) ? fills : [];
-      const next = { ...progress };
+      const next = { ...currentProgress };
       if (fillsArray.length === 0) {
         delete next[artId];
       } else {
         next[artId] = { fills: fillsArray };
       }
-      setProgress(next);
-      AppStorage.saveProgress(next);
-    }
+      scheduleProgressSave(next);
+      return next;
+    });
   }, [fills, screen, artId]);
   const startApp = () => {
     requestAppFullscreen().finally(() => setScreen("home"));
@@ -1286,8 +1391,7 @@ function App() {
       onView: (it) => {
         setViewItem(it);
         setScreen("view");
-      },
-      onDelete: deleteGalleryItem
+      }
     }
   ), screen === "view" && viewItem && /* @__PURE__ */ React.createElement(
     ViewScreen,

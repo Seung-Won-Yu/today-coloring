@@ -985,7 +985,6 @@
 .gallery-card__body {
   display:flex;
   align-items:flex-start;
-  justify-content:space-between;
   gap:8px;
 }
 
@@ -1008,27 +1007,6 @@
   width:96px;
   min-width:96px;
   border-radius:12px;
-}
-
-.gallery-card__delete {
-  flex:0 0 auto;
-  min-width:52px;
-  min-height:34px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:4px;
-  padding:0 8px;
-  border-radius:14px;
-  background:#FFF4F0;
-  color:var(--accent-d);
-  border:1px solid rgba(184, 60, 52, .14);
-  font-size:12px;
-  font-weight:900;
-}
-
-.gallery-card__delete:active {
-  transform:scale(.96);
 }
 
 .empty--gallery {

@@ -2,7 +2,7 @@
   function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95, baseData = null) {
     const width = imageData.width;
     const height = imageData.height;
-    if (startX < 0 || startX >= width || startY < 0 || startY >= height) return;
+    if (startX < 0 || startX >= width || startY < 0 || startY >= height) return null;
     const data = imageData.data;
     const getPixelIndex = (x, y) => (y * width + x) * 4;
     const canUseBasePixel = (x, y) => {
@@ -10,7 +10,7 @@
       return isPaintableBasePixel(baseData, getPixelIndex(x, y));
     };
     const targetIdx = getPixelIndex(startX, startY);
-    if (!canUseBasePixel(startX, startY)) return;
+    if (!canUseBasePixel(startX, startY)) return null;
     const targetR = data[targetIdx];
     const targetG = data[targetIdx + 1];
     const targetB = data[targetIdx + 2];
@@ -19,13 +19,13 @@
     const fillG = fillColor.g;
     const fillB = fillColor.b;
     const colorDist = Math.abs(targetR - fillR) + Math.abs(targetG - fillG) + Math.abs(targetB - fillB);
-    if (colorDist < 10) return;
+    if (colorDist < 10) return null;
     const isLinePixel = (r, g, b, a) => {
       if (a < 50) return false;
       return r < 75 && g < 75 && b < 75;
     };
     if (isLinePixel(targetR, targetG, targetB, targetA)) {
-      return;
+      return null;
     }
     const colorMatch = (r, g, b, a, x, y) => {
       if (!canUseBasePixel(x, y)) return false;
@@ -36,44 +36,59 @@
       }
       return Math.abs(r - targetR) <= tolerance && Math.abs(g - targetG) <= tolerance && Math.abs(b - targetB) <= tolerance;
     };
-    const queue = [[startX, startY]];
+    const queue = new Int32Array(width * height);
     const visited = new Uint8Array(width * height);
-    visited[startY * width + startX] = 1;
+    queue[0] = startY * width + startX;
+    visited[queue[0]] = 1;
     let head = 0;
-    while (head < queue.length) {
-      const [cx, cy] = queue[head++];
-      const currIdx = getPixelIndex(cx, cy);
+    let tail = 1;
+    let painted = 0;
+    let minX = startX;
+    let minY = startY;
+    let maxX = startX;
+    let maxY = startY;
+    while (head < tail) {
+      const pos = queue[head++];
+      const cx = pos % width;
+      const cy = Math.floor(pos / width);
+      const currIdx = pos * 4;
       data[currIdx] = fillR;
       data[currIdx + 1] = fillG;
       data[currIdx + 2] = fillB;
       data[currIdx + 3] = 255;
-      const dirs = [
-        [cx + 1, cy],
-        [cx - 1, cy],
-        [cx, cy + 1],
-        [cx, cy - 1]
-      ];
-      for (const [nx, ny] of dirs) {
-        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-          const vIdx = ny * width + nx;
-          if (!visited[vIdx]) {
-            const nIdx = getPixelIndex(nx, ny);
-            if (colorMatch(data[nIdx], data[nIdx + 1], data[nIdx + 2], data[nIdx + 3], nx, ny)) {
-              visited[vIdx] = 1;
-              queue.push([nx, ny]);
-            }
-          }
+      painted++;
+      if (cx < minX) minX = cx;
+      if (cy < minY) minY = cy;
+      if (cx > maxX) maxX = cx;
+      if (cy > maxY) maxY = cy;
+      const neighbors = [pos + 1, pos - 1, pos + width, pos - width];
+      for (let i = 0; i < neighbors.length; i++) {
+        const next = neighbors[i];
+        if (next < 0 || next >= visited.length || visited[next]) continue;
+        const nx = next % width;
+        const ny = Math.floor(next / width);
+        if ((i === 0 && nx === 0) || (i === 1 && nx === width - 1)) continue;
+        const nIdx = next * 4;
+        if (colorMatch(data[nIdx], data[nIdx + 1], data[nIdx + 2], data[nIdx + 3], nx, ny)) {
+          visited[next] = 1;
+          queue[tail++] = next;
         }
       }
     }
+    return { painted, minX, minY, maxX, maxY };
   }
 
-  function smoothFillEdges(imageData, baseData, fillColor, passes = 2) {
+  function smoothFillEdges(imageData, baseData, fillColor, passes = 2, bounds = null) {
     if (!imageData || !baseData || !fillColor) return;
     const width = imageData.width;
     const height = imageData.height;
     const data = imageData.data;
     const getPixelIndex = (x, y) => (y * width + x) * 4;
+    const scanPad = 3;
+    const minX = Math.max(1, (bounds ? bounds.minX : 1) - scanPad);
+    const minY = Math.max(1, (bounds ? bounds.minY : 1) - scanPad);
+    const maxX = Math.min(width - 2, (bounds ? bounds.maxX : width - 2) + scanPad);
+    const maxY = Math.min(height - 2, (bounds ? bounds.maxY : height - 2) + scanPad);
     const isFillPixel = (idx) => {
       return Math.abs(data[idx] - fillColor.r) + Math.abs(data[idx + 1] - fillColor.g) + Math.abs(data[idx + 2] - fillColor.b) <= 22;
     };
@@ -88,6 +103,16 @@
       const luminance = r * 0.299 + g * 0.587 + b * 0.114;
       return min >= 226 && luminance >= 232 && max - min <= 34;
     };
+    const isNearDarkBoundary = (x, y) => {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const idx = getPixelIndex(x + dx, y + dy);
+          if (isLinePixelColor(baseData[idx], baseData[idx + 1], baseData[idx + 2], baseData[idx + 3])) return true;
+        }
+      }
+      return false;
+    };
     const neighborOffsets = [
       [-1, -1], [0, -1], [1, -1],
       [-1, 0],           [1, 0],
@@ -95,18 +120,18 @@
     ];
     for (let pass = 0; pass < passes; pass++) {
       const candidates = [];
-      for (let y = 1; y < height - 1; y++) {
-        for (let x = 1; x < width - 1; x++) {
+      for (let y = minY; y <= maxY; y++) {
+        for (let x = minX; x <= maxX; x++) {
           const idx = getPixelIndex(x, y);
           if (isFillPixel(idx) || !isSoftWhiteEdge(idx)) continue;
-          let touchesFill = false;
+          if (pass > 0 && isNearDarkBoundary(x, y)) continue;
+          let fillNeighbors = 0;
           for (const [dx, dy] of neighborOffsets) {
             if (isFillPixel(getPixelIndex(x + dx, y + dy))) {
-              touchesFill = true;
-              break;
+              fillNeighbors++;
             }
           }
-          if (touchesFill) candidates.push(idx);
+          if (fillNeighbors >= (pass === 0 ? 1 : 3)) candidates.push(idx);
         }
       }
       if (candidates.length === 0) break;
