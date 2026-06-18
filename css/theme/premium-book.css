@@ -874,10 +874,6 @@
   text-underline-offset:4px;
 }
 
-.gallery-card {
-  position:relative;
-}
-
 .gallery-summary {
   position:relative;
   width:calc(100% - 36px);
