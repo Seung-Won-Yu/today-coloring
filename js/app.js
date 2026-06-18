@@ -13,7 +13,7 @@ const {
   createSafeArtworkCanvas,
   normalizeFillForFrame
 } = window.PaintEngine;
-const { loadArtworkBitmap } = window.AssetLoader;
+const { loadArtworkBitmap, preloadArtworkBitmaps } = window.AssetLoader;
 const { Icon, BigButton, isLight, Palette, useOrientation, Confetti } = window.UIComponents;
 
 function nowMs() {
@@ -1252,6 +1252,10 @@ function App() {
   const pendingProgressRef = React.useRef(null);
   const artworksList = window.ARTWORKS;
   const art = getArtworkById(artId);
+  React.useEffect(() => {
+    preloadArtworkBitmaps(artworksList.slice(0, 10).map((item) => item.thumbSrc || item.src), { limit: 10, concurrency: 4 });
+    preloadArtworkBitmaps(artworksList.slice(0, 3).map((item) => item.src), { limit: 3, concurrency: 1 });
+  }, [artworksList]);
   const flash = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1800);

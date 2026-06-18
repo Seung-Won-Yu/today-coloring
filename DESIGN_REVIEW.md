@@ -43,3 +43,9 @@ The app already had a warm, calm visual foundation. The main polish gap was inte
 - The core coloring screen now prioritizes the artwork visually, especially after reducing the bottom panel height.
 - The thumbnail-first home grid loads quickly and avoids expensive canvas work for untouched artworks.
 - The calm paper, sage, and ink palette is consistent across home, coloring, completion, and gallery.
+
+## Final QA Addendum
+
+- Paint edge smoothing now requires stronger neighboring fill support near dark ink, reducing overfill risk while preserving small white-gap cleanup.
+- First-view thumbnails and the first few full artwork images are preloaded during idle time to improve the perceived start and pick-art flow.
+- `npm run qa:flow` now checks paint latency, gallery behavior, and whether dark ink pixels changed after painting. Latest run: max paint total `20.8ms`, ink changes `0`, errors `0`.

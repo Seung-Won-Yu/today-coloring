@@ -103,15 +103,16 @@
       const luminance = r * 0.299 + g * 0.587 + b * 0.114;
       return min >= 226 && luminance >= 232 && max - min <= 34;
     };
-    const isNearDarkBoundary = (x, y) => {
+    const countDarkBoundaryNeighbors = (x, y) => {
+      let count = 0;
       for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
           if (dx === 0 && dy === 0) continue;
           const idx = getPixelIndex(x + dx, y + dy);
-          if (isLinePixelColor(baseData[idx], baseData[idx + 1], baseData[idx + 2], baseData[idx + 3])) return true;
+          if (isLinePixelColor(baseData[idx], baseData[idx + 1], baseData[idx + 2], baseData[idx + 3])) count++;
         }
       }
-      return false;
+      return count;
     };
     const neighborOffsets = [
       [-1, -1], [0, -1], [1, -1],
@@ -124,14 +125,15 @@
         for (let x = minX; x <= maxX; x++) {
           const idx = getPixelIndex(x, y);
           if (isFillPixel(idx) || !isSoftWhiteEdge(idx)) continue;
-          if (pass > 0 && isNearDarkBoundary(x, y)) continue;
           let fillNeighbors = 0;
           for (const [dx, dy] of neighborOffsets) {
             if (isFillPixel(getPixelIndex(x + dx, y + dy))) {
               fillNeighbors++;
             }
           }
-          if (fillNeighbors >= (pass === 0 ? 1 : 3)) candidates.push(idx);
+          const darkNeighbors = countDarkBoundaryNeighbors(x, y);
+          const neededNeighbors = darkNeighbors > 0 ? 5 : pass === 0 ? 2 : 4;
+          if (fillNeighbors >= neededNeighbors) candidates.push(idx);
         }
       }
       if (candidates.length === 0) break;

@@ -47,6 +47,31 @@ async function enterHome(page) {
   await page.waitForSelector(".home .artcard", { timeout: 10000 });
 }
 
+async function ensureHome(page) {
+  const alreadyHome = await page.evaluate(() => Boolean(document.querySelector(".home .artcard")));
+  if (alreadyHome) return;
+  const beforeState = await page.evaluate(() => ({
+    appClass: document.querySelector(".app")?.className || "",
+    buttons: [...document.querySelectorAll("button")].map((item) => item.textContent.replace(/\s+/g, " ").trim()).slice(0, 8)
+  }));
+  await page.evaluate(() => {
+    const homeNav = [...document.querySelectorAll("button")].find((item) => item.textContent.includes("작품"));
+    if (homeNav) homeNav.click();
+  });
+  const reachedHome = await page.evaluate(() => Boolean(document.querySelector(".home .artcard")));
+  if (reachedHome) return;
+  await clickByText(page, "그림 고르기");
+  try {
+    await page.waitForSelector(".home .artcard", { timeout: 10000 });
+  } catch (error) {
+    const afterState = await page.evaluate(() => ({
+      appClass: document.querySelector(".app")?.className || "",
+      buttons: [...document.querySelectorAll("button")].map((item) => item.textContent.replace(/\s+/g, " ").trim()).slice(0, 8)
+    }));
+    throw new Error(`Home navigation failed. before=${JSON.stringify(beforeState)} after=${JSON.stringify(afterState)} cause=${error.message}`);
+  }
+}
+
 async function findPaintPoints(page, limit = 8) {
   return page.evaluate((maxPoints) => {
     const canvas = [...document.querySelectorAll(".color .canvas-art-shell.is-ready canvas")]
@@ -80,9 +105,30 @@ async function findPaintPoints(page, limit = 8) {
   }, limit);
 }
 
+async function inspectPaintSafety(page) {
+  return page.evaluate(() => {
+    const shell = document.querySelector(".color .canvas-art-shell.is-ready");
+    const canvases = shell ? [...shell.querySelectorAll("canvas")] : [];
+    const liveCanvas = canvases.find((item) => item.offsetParent && item.width > 0 && item.height > 0);
+    const baseCanvas = canvases.find((item) => item !== liveCanvas && item.width === liveCanvas?.width && item.height === liveCanvas?.height);
+    if (!liveCanvas || !baseCanvas) return { inkPixels: 0, inkChanged: 0 };
+    const live = liveCanvas.getContext("2d", { willReadFrequently: true }).getImageData(0, 0, liveCanvas.width, liveCanvas.height).data;
+    const base = baseCanvas.getContext("2d", { willReadFrequently: true }).getImageData(0, 0, baseCanvas.width, baseCanvas.height).data;
+    let inkPixels = 0;
+    let inkChanged = 0;
+    for (let idx = 0; idx < base.length; idx += 4) {
+      const isInk = base[idx + 3] > 50 && base[idx] < 75 && base[idx + 1] < 75 && base[idx + 2] < 75;
+      if (!isInk) continue;
+      inkPixels++;
+      const changed = Math.abs(live[idx] - base[idx]) + Math.abs(live[idx + 1] - base[idx + 1]) + Math.abs(live[idx + 2] - base[idx + 2]);
+      if (changed > 18) inkChanged++;
+    }
+    return { inkPixels, inkChanged };
+  });
+}
+
 async function runPaintSample(page, artIndex) {
-  await clickByText(page, "그림 고르기");
-  await page.waitForSelector(".home .artcard", { timeout: 10000 });
+  await ensureHome(page);
   await page.evaluate((index) => document.querySelectorAll(".home .artcard")[index]?.click(), artIndex);
   await page.waitForSelector(".color .canvas-art-shell.is-ready canvas", { timeout: 15000 });
   await sleep(250);
@@ -95,6 +141,7 @@ async function runPaintSample(page, artIndex) {
   await sleep(650);
   const metrics = await page.evaluate(() => window.__COLORING_PAINT_METRICS__ || []);
   const lastMetrics = metrics.slice(-points.length);
+  const paintSafety = await inspectPaintSafety(page);
   await page.screenshot({ path: path.join(OUT_DIR, `paint-${String(artIndex + 1).padStart(2, "0")}.png`), fullPage: false });
   await page.evaluate(() => document.querySelector(".appbar__back")?.click());
   await page.waitForSelector(".home .artcard", { timeout: 10000 });
@@ -104,7 +151,8 @@ async function runPaintSample(page, artIndex) {
     points: points.length,
     samples: lastMetrics.length,
     maxTotal: lastMetrics.length ? Math.max(...lastMetrics.map((item) => item.total || 0)) : 0,
-    avgTotal: lastMetrics.length ? lastMetrics.reduce((sum, item) => sum + (item.total || 0), 0) / lastMetrics.length : 0
+    avgTotal: lastMetrics.length ? lastMetrics.reduce((sum, item) => sum + (item.total || 0), 0) / lastMetrics.length : 0,
+    paintSafety
   };
 }
 
@@ -190,6 +238,7 @@ async function run() {
     console.log(JSON.stringify(result, null, 2));
     if (errors.length) process.exitCode = 1;
     if (paintSamples.some((sample) => sample.samples === 0 || sample.maxTotal > 120)) process.exitCode = 1;
+    if (paintSamples.some((sample) => sample.paintSafety.inkChanged > 0)) process.exitCode = 1;
     if (listState.deleteButtons !== 0 || !detailState.deleteButtonExists) process.exitCode = 1;
   } finally {
     await browser.close();
