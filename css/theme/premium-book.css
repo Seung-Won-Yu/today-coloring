@@ -925,7 +925,6 @@
 .gallery-summary__thumb .finished-thumb,
 .gallery-summary__thumb .canvas-art-shell {
   border-radius:7px;
-  overflow:hidden;
 }
 
 .gallery-summary__copy {
