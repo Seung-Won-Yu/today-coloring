@@ -2193,12 +2193,12 @@
 
 @media (max-width: 430px) {
   .confirm-layer {
-    align-items:flex-end;
-    padding:16px 14px calc(18px + env(safe-area-inset-bottom));
+    align-items:center;
+    padding:18px 14px;
   }
 
   .confirm-card {
-    width:100%;
+    width:min(100%, 336px);
     padding:18px;
     border-radius:20px;
   }
@@ -2232,5 +2232,145 @@
   .completion--view .completion__row .bigbtn,
   .completion--view .completion__btns > .bigbtn {
     min-height:48px;
+  }
+}
+
+/* Coloring controls pass: keep the palette wide, with current color as a brush tag. */
+.color--bottom .palettezone--bottom {
+  min-height:146px;
+  grid-template-columns:minmax(0, 1fr) auto;
+  grid-template-rows:42px minmax(0, 84px);
+  gap:7px 8px;
+  padding:10px 12px max(10px, env(safe-area-inset-bottom));
+}
+
+.color--bottom .curcolor {
+  position:static;
+  grid-column:1;
+  grid-row:1;
+  justify-self:start;
+  align-self:start;
+  z-index:3;
+  width:auto;
+  min-width:118px;
+  max-width:150px;
+  height:42px;
+  padding:6px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:row;
+  gap:6px;
+  border-radius:20px;
+  border:1px solid rgba(25, 28, 29, .16) !important;
+  box-shadow:0 8px 18px rgba(25,28,29,.12), inset 0 0 0 4px rgba(255,255,255,.16);
+}
+
+.color--bottom .curcolor::before {
+  display:none;
+}
+
+.color--bottom .curcolor__brush {
+  display:flex;
+  flex:0 0 auto;
+  margin:0;
+}
+
+.color--bottom .curcolor__label {
+  font-size:10px !important;
+  line-height:1.15;
+}
+
+.color--bottom .curcolor__name {
+  max-width:60px;
+  margin-top:0 !important;
+  font-size:13px !important;
+  line-height:1.12;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:left;
+}
+
+.color--bottom .color-toolbelt {
+  grid-column:2;
+  grid-row:1;
+  justify-self:end;
+  align-self:start;
+  gap:8px;
+  min-height:42px;
+  padding:4px 6px;
+  border-radius:21px;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 8px 20px rgba(25,28,29,.1);
+}
+
+.color--bottom .color-toolbelt__btn {
+  width:42px;
+  min-width:42px;
+  height:38px;
+  border-radius:15px;
+}
+
+.color--bottom .palette {
+  grid-column:1 / -1;
+  grid-row:2;
+  padding-left:0;
+}
+
+.color--bottom .palette--bottom .palette__track {
+  min-height:84px;
+  grid-template-rows:repeat(2, 38px);
+  grid-auto-columns:43px;
+  gap:7px 8px;
+  padding:5px 10px 5px 12px;
+  border-radius:18px;
+}
+
+.color--bottom .palette--bottom .swatch {
+  width:38px;
+  min-width:38px;
+  height:38px;
+}
+
+@media (max-width: 360px) {
+  .color--bottom .palettezone--bottom {
+    grid-template-columns:minmax(0, 1fr) auto;
+    padding-inline:10px;
+  }
+
+  .color--bottom .curcolor {
+    min-width:110px;
+    max-width:128px;
+    height:40px;
+    padding-inline:10px;
+  }
+
+  .color--bottom .curcolor__name {
+    max-width:50px;
+    font-size:12px !important;
+  }
+
+  .color--bottom .color-toolbelt {
+    gap:5px;
+    padding-inline:5px;
+  }
+
+  .color--bottom .color-toolbelt__btn {
+    width:38px;
+    min-width:38px;
+    height:36px;
+  }
+
+  .color--bottom .palette--bottom .palette__track {
+    grid-auto-columns:40px;
+    gap:6px 7px;
+    padding-left:10px;
+  }
+
+  .color--bottom .palette--bottom .swatch {
+    width:36px;
+    min-width:36px;
+    height:36px;
   }
 }

@@ -1118,6 +1118,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
       e("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } },
         layout === "bottom" && e(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }),
         e("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } },
+          e("span", { className: "curcolor__brush", "aria-hidden": "true" }, e(Icon, { name: "brush", size: 17, color: isLight(selected) ? "#4A4036" : "#fff" })),
           e("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "현재 색"),
           e("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")
         ),

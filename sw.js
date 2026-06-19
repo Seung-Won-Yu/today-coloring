@@ -1,4 +1,4 @@
-const CACHE_NAME = 'today-coloring-shell-v104';
+const CACHE_NAME = 'today-coloring-shell-v105';
 const APP_SHELL = [
   './',
   './index.html',
@@ -6,7 +6,7 @@ const APP_SHELL = [
   './assets/icons/app-icon.png',
   './assets/icons/app-icon-192.png',
   './assets/icons/apple-touch-icon.png',
-  './css/styles.css?v=137',
+  './css/styles.css?v=138',
   './js/vendor/react.production.min.js',
   './js/vendor/react-dom.production.min.js',
   './js/data/artworks.js?v=23',
@@ -15,7 +15,7 @@ const APP_SHELL = [
   './js/utils/paint.js?v=19',
   './js/utils/assets.js?v=14',
   './js/ui/components.js?v=14',
-  './js/app.js?v=57'
+  './js/app.js?v=58'
 ];
 
 self.addEventListener('install', function(event) {
