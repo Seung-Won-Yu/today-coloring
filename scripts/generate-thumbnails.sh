@@ -18,4 +18,11 @@ for file in "$SOURCE_DIR"/*.png; do
   sips -Z "$MAX_SIZE" "$file" --out "$THUMB_DIR/$name" >/dev/null
 done
 
+for thumb in "$THUMB_DIR"/*.png; do
+  name=$(basename "$thumb")
+  if [ ! -f "$SOURCE_DIR/$name" ]; then
+    rm -f "$thumb"
+  fi
+done
+
 echo "Generated thumbnails in $THUMB_DIR"

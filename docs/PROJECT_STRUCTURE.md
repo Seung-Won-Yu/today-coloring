@@ -31,7 +31,7 @@ ColoringApp/
     responsive/            # Mobile shell overrides
     theme/                 # Final visual theme
   js/
-    app.js                 # Runtime app loaded by index.html
+    app.js                 # Runtime screens and app state loaded by index.html
     data/
       artworks.js          # Active artwork catalog and theme labels
       palette.js           # Color palette
@@ -44,7 +44,7 @@ ColoringApp/
 
 ## Common Edits
 
-- Add or remove a coloring page: place `vertical-XX.png` in `assets/images/artworks/`, then update `ARTWORK_COUNT` in `js/data/artworks.js`.
+- Add or remove a coloring page: place `vertical-XX.png` in `assets/images/artworks/`, add the same file to `assets/images/thumbs/`, then update `ARTWORK_IDS` and `ARTWORK_META` in `js/data/artworks.js`.
 - Regenerate list thumbnails after artwork changes: run `npm run thumbs`.
 - Change palette colors: edit `js/data/palette.js`.
 - Change saved progress/gallery behavior: edit `js/utils/storage.js`.
@@ -53,6 +53,7 @@ ColoringApp/
 - Change how-to slides layout: edit `css/screens/guide/modal.css` and `css/components/guide-navigation.css`.
 - Keep lobby and how-to separate: lobby state stays in `LobbyScreen`; carousel state, slide text, drag logic, and guide visuals stay in `HowToModal`.
 - Change coloring behavior: edit `js/app.js` and `js/utils/paint.js`; this project currently runs without a build step.
+- Bump `ARTWORK_VERSION`, `js/data/artworks.js?v=XX`, and `today-coloring-shell-vXX` together when artwork assets change so old browser caches do not serve stale images.
 
 ## Artwork Rule
 
