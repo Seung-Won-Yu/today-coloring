@@ -29,7 +29,7 @@ function recordPaintMetric(sample) {
 
 function paintSeedOnImageData(imageData, baseData, seed, fillRgb) {
   const fillBounds = doFloodFill(imageData, seed.x, seed.y, fillRgb, 95, baseData);
-  if (fillBounds) smoothFillEdges(imageData, baseData, fillRgb, 2, fillBounds);
+  if (fillBounds) smoothFillEdges(imageData, baseData, fillRgb, 3, fillBounds);
   return fillBounds;
 }
 
@@ -337,7 +337,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       const fillBounds = doFloodFill(liveData, seed.x, seed.y, selectedRgb, 95, baseImgData.data);
       metric.fill += nowMs() - fillStart;
       const smoothStart = nowMs();
-      if (fillBounds) smoothFillEdges(liveData, baseImgData.data, selectedRgb, 2, fillBounds);
+      if (fillBounds) smoothFillEdges(liveData, baseImgData.data, selectedRgb, 3, fillBounds);
       metric.smooth += nowMs() - smoothStart;
     });
     t0 = nowMs();

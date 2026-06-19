@@ -84,7 +84,7 @@
     const height = imageData.height;
     const data = imageData.data;
     const getPixelIndex = (x, y) => (y * width + x) * 4;
-    const scanPad = 4;
+    const scanPad = 6;
     const minX = Math.max(1, (bounds ? bounds.minX : 1) - scanPad);
     const minY = Math.max(1, (bounds ? bounds.minY : 1) - scanPad);
     const maxX = Math.min(width - 2, (bounds ? bounds.maxX : width - 2) + scanPad);
@@ -92,7 +92,7 @@
     const isFillPixel = (idx) => {
       return Math.abs(data[idx] - fillColor.r) + Math.abs(data[idx + 1] - fillColor.g) + Math.abs(data[idx + 2] - fillColor.b) <= 22;
     };
-    const isSoftWhiteEdge = (idx) => {
+    const isSoftEdgeFringe = (idx, darkNeighbors) => {
       const r = baseData[idx];
       const g = baseData[idx + 1];
       const b = baseData[idx + 2];
@@ -101,7 +101,9 @@
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
       const luminance = r * 0.299 + g * 0.587 + b * 0.114;
-      return min >= 226 && luminance >= 232 && max - min <= 34;
+      const chroma = max - min;
+      if (min >= 224 && luminance >= 228 && chroma <= 42) return true;
+      return darkNeighbors > 0 && luminance >= 218 && chroma <= 72;
     };
     const countDarkBoundaryNeighbors = (x, y) => {
       let count = 0;
@@ -119,20 +121,22 @@
       [-1, 0],           [1, 0],
       [-1, 1],  [0, 1],  [1, 1]
     ];
-    for (let pass = 0; pass < passes; pass++) {
+    const totalPasses = Math.max(3, passes);
+    for (let pass = 0; pass < totalPasses; pass++) {
       const candidates = [];
       for (let y = minY; y <= maxY; y++) {
         for (let x = minX; x <= maxX; x++) {
           const idx = getPixelIndex(x, y);
-          if (isFillPixel(idx) || !isSoftWhiteEdge(idx)) continue;
+          if (isFillPixel(idx)) continue;
+          const darkNeighbors = countDarkBoundaryNeighbors(x, y);
+          if (!isSoftEdgeFringe(idx, darkNeighbors)) continue;
           let fillNeighbors = 0;
           for (const [dx, dy] of neighborOffsets) {
             if (isFillPixel(getPixelIndex(x + dx, y + dy))) {
               fillNeighbors++;
             }
           }
-          const darkNeighbors = countDarkBoundaryNeighbors(x, y);
-          const neededNeighbors = darkNeighbors >= 4 ? 4 : darkNeighbors > 0 ? (pass === 0 ? 2 : 3) : pass === 0 ? 1 : 3;
+          const neededNeighbors = darkNeighbors >= 4 ? 3 : darkNeighbors > 0 ? (pass === 0 ? 1 : 2) : pass === 0 ? 1 : 3;
           if (fillNeighbors >= neededNeighbors) candidates.push(idx);
         }
       }
@@ -141,6 +145,34 @@
         data[idx] = fillColor.r;
         data[idx + 1] = fillColor.g;
         data[idx + 2] = fillColor.b;
+        data[idx + 3] = 255;
+      }
+    }
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const idx = getPixelIndex(x, y);
+        if (isFillPixel(idx)) continue;
+        const r = baseData[idx];
+        const g = baseData[idx + 1];
+        const b = baseData[idx + 2];
+        const a = baseData[idx + 3];
+        if (isLinePixelColor(r, g, b, a)) continue;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const luminance = r * 0.299 + g * 0.587 + b * 0.114;
+        if (luminance < 92 || luminance > 224 || max - min > 72) continue;
+        const darkNeighbors = countDarkBoundaryNeighbors(x, y);
+        if (darkNeighbors === 0) continue;
+        let fillNeighbors = 0;
+        for (const [dx, dy] of neighborOffsets) {
+          if (isFillPixel(getPixelIndex(x + dx, y + dy))) fillNeighbors++;
+        }
+        if (fillNeighbors === 0) continue;
+        const inkAlpha = Math.max(0.14, Math.min(0.74, (238 - luminance) / 172 + Math.min(darkNeighbors, 3) * 0.035));
+        const fillAlpha = 1 - inkAlpha;
+        data[idx] = Math.round(fillColor.r * fillAlpha);
+        data[idx + 1] = Math.round(fillColor.g * fillAlpha);
+        data[idx + 2] = Math.round(fillColor.b * fillAlpha);
         data[idx + 3] = 255;
       }
     }
