@@ -1,13 +1,12 @@
 const AppStorage = window.AppStorage;
 const {
-  doFloodFill,
+  fillConnectedRegion,
   hexToRgb,
   isProgressMarked,
   isPaintableBasePixel,
   findNearestUnpaintedStart,
   findNearestPaintedStart,
   markProgressRegion,
-  smoothFillEdges,
   createSafeArtworkCanvas,
   normalizeFillForFrame
 } = window.PaintEngine;
@@ -26,9 +25,7 @@ function recordPaintMetric(sample) {
 }
 
 function paintSeedOnImageData(imageData, baseData, seed, fillRgb) {
-  const fillBounds = doFloodFill(imageData, seed.x, seed.y, fillRgb, 95, baseData);
-  if (fillBounds) smoothFillEdges(imageData, baseData, fillRgb, 3, fillBounds);
-  return fillBounds;
+  return fillConnectedRegion(imageData, baseData, seed, fillRgb, { smoothPasses: 3 });
 }
 
 function replayFillOnImageData(imageData, baseData, fill, frame) {
@@ -299,11 +296,8 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     metric.getImageData += nowMs() - t0;
     directPaintSeeds.forEach((seed) => {
       const fillStart = nowMs();
-      const fillBounds = doFloodFill(liveData, seed.x, seed.y, selectedRgb, 95, baseImgData.data);
+      fillConnectedRegion(liveData, baseImgData.data, seed, selectedRgb, { smoothPasses: 3 });
       metric.fill += nowMs() - fillStart;
-      const smoothStart = nowMs();
-      if (fillBounds) smoothFillEdges(liveData, baseImgData.data, selectedRgb, 3, fillBounds);
-      metric.smooth += nowMs() - smoothStart;
     });
     t0 = nowMs();
     ctx.putImageData(liveData, 0, 0);
