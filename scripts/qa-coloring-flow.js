@@ -8,7 +8,7 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = Number(process.env.PORT || 8123);
 const BASE_URL = process.env.QA_URL || `http://127.0.0.1:${PORT}`;
 const OUT_DIR = process.env.QA_OUT || "/private/tmp/today-coloring-qa";
-const ART_INDICES = (process.env.QA_ART_INDICES || "0,1,5,12,20,28")
+const ART_INDICES = (process.env.QA_ART_INDICES || "0,1,5,12,20,29")
   .split(",")
   .map((value) => Number(value.trim()))
   .filter((value) => Number.isFinite(value) && value >= 0);
