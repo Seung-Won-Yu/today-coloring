@@ -46,7 +46,7 @@ ColoringApp/
 
 - Add or remove a coloring page: place `vertical-XX.png` in `assets/images/artworks/`, add the same file to `assets/images/thumbs/`, then update `ARTWORK_IDS` and `ARTWORK_META` in `js/data/artworks.js`.
 - Regenerate list thumbnails after artwork changes: run `npm run thumbs`.
-- Change palette colors: edit `js/data/palette.js`.
+- Change palette colors: edit `js/data/palette.js`, then bump `js/data/palette.js?v=XX` and `today-coloring-shell-vXX`.
 - Change saved progress/gallery behavior: edit `js/utils/storage.js`.
 - Change lobby/home visual polish: edit `css/screens/lobby/` and `css/screens/artworks/`.
 - Change coloring screen, book surface, and palette layout: edit `css/theme/premium-book.css`.
