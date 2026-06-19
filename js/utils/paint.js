@@ -84,7 +84,10 @@
     const height = imageData.height;
     const data = imageData.data;
     const getPixelIndex = (x, y) => (y * width + x) * 4;
-    const scanPad = 6;
+    const paintedSize = bounds && bounds.painted ? bounds.painted : 0;
+    const isTinyFill = paintedSize > 0 && paintedSize <= 360;
+    const isSmallFill = paintedSize > 0 && paintedSize <= 1400;
+    const scanPad = isTinyFill ? 2 : isSmallFill ? 4 : 6;
     const minX = Math.max(1, (bounds ? bounds.minX : 1) - scanPad);
     const minY = Math.max(1, (bounds ? bounds.minY : 1) - scanPad);
     const maxX = Math.min(width - 2, (bounds ? bounds.maxX : width - 2) + scanPad);
@@ -121,7 +124,7 @@
       [-1, 0],           [1, 0],
       [-1, 1],  [0, 1],  [1, 1]
     ];
-    const totalPasses = Math.max(3, passes);
+    const totalPasses = isTinyFill ? 0 : isSmallFill ? Math.min(1, passes) : Math.max(3, passes);
     for (let pass = 0; pass < totalPasses; pass++) {
       const candidates = [];
       for (let y = minY; y <= maxY; y++) {
@@ -136,7 +139,7 @@
               fillNeighbors++;
             }
           }
-          const neededNeighbors = darkNeighbors >= 4 ? 3 : darkNeighbors > 0 ? (pass === 0 ? 1 : 2) : pass === 0 ? 1 : 3;
+          const neededNeighbors = isSmallFill ? 3 : darkNeighbors >= 4 ? 3 : darkNeighbors > 0 ? (pass === 0 ? 1 : 2) : pass === 0 ? 1 : 3;
           if (fillNeighbors >= neededNeighbors) candidates.push(idx);
         }
       }
@@ -167,7 +170,7 @@
         for (const [dx, dy] of neighborOffsets) {
           if (isFillPixel(getPixelIndex(x + dx, y + dy))) fillNeighbors++;
         }
-        if (fillNeighbors === 0) continue;
+        if (fillNeighbors < (isSmallFill ? 2 : 1)) continue;
         const inkAlpha = Math.max(0.14, Math.min(0.74, (238 - luminance) / 172 + Math.min(darkNeighbors, 3) * 0.035));
         const fillAlpha = 1 - inkAlpha;
         data[idx] = Math.round(fillColor.r * fillAlpha);
@@ -260,16 +263,6 @@
       if (best) return best;
     }
     return null;
-  }
-
-  function shouldMergeTinyRegion(seed) {
-    if (!seed || seed.isBackground) return false;
-    return seed.size <= 72;
-  }
-
-  function shouldMergeLastSmallRegion(seed) {
-    if (!seed || seed.isBackground) return false;
-    return seed.size <= 160;
   }
 
   function markProgressRegion(imageData, x, y, baseData = null) {
@@ -378,8 +371,6 @@
     isPaintableBasePixel,
     findNearestUnpaintedStart,
     findNearestPaintedStart,
-    shouldMergeTinyRegion,
-    shouldMergeLastSmallRegion,
     markProgressRegion,
     createSafeArtworkCanvas,
     normalizeFillForFrame

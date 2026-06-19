@@ -1,5 +1,16 @@
-var ARTWORK_VERSION = '14';
+var ARTWORK_VERSION = '15';
 var ARTWORK_COUNT = 60;
+var ARTWORK_APPROVED_IDS = [
+  '15', '17', '40', '43', '11', '50', '41', '59', '46', '29',
+  '13', '05', '14', '21', '28', '55', '34', '60', '22', '31',
+  '38', '58', '53', '48', '54', '10', '49', '19', '37'
+];
+var ARTWORK_REWORK_IDS = [
+  '44', '04', '39', '30', '57', '33', '35', '18', '51', '47',
+  '01', '16', '27', '25', '42', '08', '07', '56', '52', '24',
+  '36', '09', '06', '32', '02', '23', '20', '12', '26', '45',
+  '03'
+];
 
 var CATEGORY_ORDER = ['꽃과 식물', '동물과 자연', '일상 소품', '전통과 공예', '풍경 여행'];
 
@@ -94,8 +105,14 @@ function createVerticalArtwork(num) {
   };
 }
 
-window.ARTWORKS = Array.from({ length: ARTWORK_COUNT }, function(_, index) {
+window.ALL_ARTWORKS = Array.from({ length: ARTWORK_COUNT }, function(_, index) {
   return createVerticalArtwork(index + 1);
+});
+window.ARTWORKS = ARTWORK_APPROVED_IDS.map(function(label) {
+  return createVerticalArtwork(Number(label));
+});
+window.ARTWORK_REWORKS = ARTWORK_REWORK_IDS.map(function(label) {
+  return createVerticalArtwork(Number(label));
 });
 
 window.CATEGORIES = ['전체'].concat(CATEGORY_ORDER);

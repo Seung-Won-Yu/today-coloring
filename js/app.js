@@ -6,8 +6,6 @@ const {
   isPaintableBasePixel,
   findNearestUnpaintedStart,
   findNearestPaintedStart,
-  shouldMergeTinyRegion,
-  shouldMergeLastSmallRegion,
   markProgressRegion,
   smoothFillEdges,
   createSafeArtworkCanvas,
@@ -73,7 +71,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   const analysisTaskRef = React.useRef(null);
   const [imageReady, setImageReady] = React.useState(false);
   const [paintPulse, setPaintPulse] = React.useState(null);
-  const shouldAnalyzeRegions = interactive || Boolean(onRegionsChange);
+  const shouldAnalyzeRegions = Boolean(onRegionsChange);
   if (lastArtSrcRef.current !== art.src) {
     regionsRef.current = null;
     baseImageDataRef.current = null;
@@ -296,39 +294,6 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     t0 = nowMs();
     markProgressRegion(progressImgData, paintX, paintY, baseImgData.data);
     metric.progress += nowMs() - t0;
-    if (regionsRef.current) {
-      t0 = nowMs();
-      const uncoloredSeeds = regionsRef.current.filter((s) => {
-        const idx = (s.y * cw + s.x) * 4;
-        return !isProgressMarked(progressData, idx);
-      });
-      const nearbyMergeRadius = Math.max(54, Math.min(cw, ch) * 0.13);
-      const nearbyMergeRadiusSq = nearbyMergeRadius * nearbyMergeRadius;
-      const isNearPaintPoint = (s) => {
-        const dx = s.x - paintX;
-        const dy = s.y - paintY;
-        return dx * dx + dy * dy <= nearbyMergeRadiusSq;
-      };
-      const tinySeeds = uncoloredSeeds.filter((s) => shouldMergeTinyRegion(s) && isNearPaintPoint(s));
-      const lastSmallSeeds = uncoloredSeeds.length <= 3 && uncoloredSeeds.every(shouldMergeLastSmallRegion) ? uncoloredSeeds : [];
-      const mergeSeeds = [...tinySeeds, ...lastSmallSeeds].filter((seed, index, all) => {
-        return all.findIndex((item) => item.x === seed.x && item.y === seed.y) === index;
-      }).sort((a, b) => {
-        const adx = a.x - paintX;
-        const ady = a.y - paintY;
-        const bdx = b.x - paintX;
-        const bdy = b.y - paintY;
-        return adx * adx + ady * ady - (bdx * bdx + bdy * bdy);
-      }).slice(0, 18);
-      if (mergeSeeds.length > 0) {
-        mergeSeeds.forEach((s) => {
-          markProgressRegion(progressImgData, s.x, s.y, baseImgData.data);
-          directPaintSeeds.push({ x: s.x, y: s.y });
-          nextFills.push({ x: s.x, y: s.y, color: selected, v: 2 });
-        });
-      }
-      metric.merge += nowMs() - t0;
-    }
     t0 = nowMs();
     const liveData = ctx.getImageData(0, 0, cw, ch);
     metric.getImageData += nowMs() - t0;
@@ -435,7 +400,8 @@ function FinishedThumb({ art, className = "", limit = 80 }) {
 }
 // Artwork data is loaded from js/data/artworks.js.
 function getArtworkById(id) {
-  return window.ARTWORKS.find((art) => art.id === id) || null;
+  const source = window.ALL_ARTWORKS || window.ARTWORKS;
+  return source.find((art) => art.id === id) || null;
 }
 function getThemeHint(category) {
   return THEME_HINTS[category] || "오늘의 작품";
@@ -643,7 +609,7 @@ function LobbyScreen({ onStart }) {
         )),
         e("div", { className: "lobby-showcase__badge" },
           e(Icon, { name: "star", size: 16, color: "#fff" }),
-          e("span", null, "작품 60장")
+          e("span", null, "작품 ", window.ARTWORKS.length, "장")
         )
       ),
       e("div", { className: "lobby-theme-row", "aria-label": "특징" },
@@ -1066,7 +1032,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   }, [scale, aspect, layout]);
   const hasHistory = history.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
-  const bottomChrome = window.innerWidth >= 768 ? 302 : 260;
+  const bottomChrome = window.innerWidth >= 768 ? 310 : 268;
   return e("div", { className: "screen color color--" + layout },
     e("header", { className: "appbar appbar--color", style: { position: "relative" } },
       e("button", { className: "appbar__back", onClick: onExit },
