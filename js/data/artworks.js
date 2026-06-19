@@ -1,8 +1,9 @@
-var ARTWORK_VERSION = '16';
+var ARTWORK_VERSION = '17';
 var ARTWORK_IDS = [
   '15', '17', '40', '43', '11', '50', '41', '59', '46', '29',
   '13', '05', '14', '21', '28', '55', '34', '60', '22', '31',
-  '38', '58', '53', '48', '54', '10', '49', '19', '37', '61'
+  '38', '58', '53', '48', '54', '10', '49', '37', '61', '62',
+  '63', '64', '65', '66', '67', '68', '69', '70', '71', '72'
 ];
 var ARTWORK_COUNT = ARTWORK_IDS.length;
 
@@ -24,7 +25,6 @@ var ARTWORK_META = {
   '14': { title: '유칼립투스 코알라', category: '동물과 자연' },
   '15': { title: '초원의 양', category: '동물과 자연' },
   '17': { title: '대나무 숲 아기 판다', category: '동물과 자연' },
-  '19': { title: '처마 아래 등롱', category: '전통과 공예' },
   '21': { title: '찻상의 다기', category: '일상 소품' },
   '22': { title: '물 위의 연꽃', category: '꽃과 식물' },
   '28': { title: '달빛 장식', category: '전통과 공예' },
@@ -46,7 +46,18 @@ var ARTWORK_META = {
   '58': { title: '햇살 아래 고래', category: '동물과 자연' },
   '59': { title: '바닷속 해파리', category: '동물과 자연' },
   '60': { title: '감나무 열매', category: '꽃과 식물' },
-  '61': { title: '버섯 아래 아기 여우', category: '동물과 자연' }
+  '61': { title: '버섯 아래 아기 여우', category: '동물과 자연' },
+  '62': { title: '리본 꽃다발', category: '꽃과 식물' },
+  '63': { title: '생일 케이크', category: '일상 소품' },
+  '64': { title: '정원의 토끼 친구들', category: '동물과 자연' },
+  '65': { title: '바닷속 친구들', category: '동물과 자연' },
+  '66': { title: '소풍 곰 인형', category: '일상 소품' },
+  '67': { title: '노을 열기구', category: '풍경 여행' },
+  '68': { title: '해변의 돛단배', category: '풍경 여행' },
+  '69': { title: '사막의 선인장', category: '꽃과 식물' },
+  '70': { title: '가을 고슴도치', category: '동물과 자연' },
+  '71': { title: '전통 놀이 소품', category: '전통과 공예' },
+  '72': { title: '겨울 눈사람', category: '풍경 여행' }
 };
 
 function padArtworkNumber(num) {
