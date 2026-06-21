@@ -1162,6 +1162,36 @@ function BottomNav({ active, galleryCount, onHome, onGallery }) {
     !!item.count && /* @__PURE__ */ React.createElement("span", { className: "bottom-nav__badge" }, item.count)
   )));
 }
+function getArtworkFileName(art) {
+  return `${art.title || "today-coloring"}_\uC644\uC131.png`;
+}
+function postImageToNativeBridge(dataUrl, fileName, art) {
+  const bridge = window.ReactNativeWebView;
+  if (!bridge || typeof bridge.postMessage !== "function") return false;
+  try {
+    bridge.postMessage(JSON.stringify({
+      type: "COLORING_SAVE_IMAGE",
+      payload: {
+        artId: art.id,
+        title: art.title,
+        fileName,
+        mimeType: "image/png",
+        base64: dataUrl.split(",")[1] || ""
+      }
+    }));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+function triggerBrowserDownload(dataUrl, fileName) {
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 function downloadCanvasPng(art, fills) {
   return loadArtworkBitmap(art.src).then((img) => new Promise((resolve, reject) => {
     try {
@@ -1179,12 +1209,10 @@ function downloadCanvasPng(art, fills) {
       }
       ctx.putImageData(imgData, 0, 0);
       const url = canvas.toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${art.title}_\uC644\uC131.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const fileName = getArtworkFileName(art);
+      if (!postImageToNativeBridge(url, fileName, art)) {
+        triggerBrowserDownload(url, fileName);
+      }
       resolve();
     } catch (e) {
       reject(e);
