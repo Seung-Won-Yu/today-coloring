@@ -77,3 +77,5 @@ h1,h2,h3,p { margin:0; }
   }
 }
 .appbar__tools { display:flex; gap:10px; }
+.appbar__right { display:flex; align-items:center; justify-content:flex-end; gap:8px; min-width:0; }
+.appbar__settings { min-width:44px; min-height:44px; padding-inline:12px; }

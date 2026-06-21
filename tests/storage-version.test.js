@@ -97,6 +97,21 @@ function run() {
   const savedGallery = JSON.parse(context.localStorage.getItem("sori_gallery_v12"));
   assert.strictEqual(savedGallery[0].artworkVersion, "20");
 
+  assert.strictEqual(AppStorage.loadSettings().fontScale, 1);
+  AppStorage.saveSettings({ fontScale: 1.24 });
+  const savedSettings = JSON.parse(context.localStorage.getItem("sori_settings_v1"));
+  assert.strictEqual(savedSettings.fontScale, 1.24);
+
+  const settingsContext = loadStorage({
+    sori_settings_v1: JSON.stringify({ fontScale: 1.12 })
+  });
+  assert.strictEqual(settingsContext.window.AppStorage.loadSettings().fontScale, 1.12);
+
+  const invalidSettingsContext = loadStorage({
+    sori_settings_v1: JSON.stringify({ fontScale: 3 })
+  });
+  assert.strictEqual(invalidSettingsContext.window.AppStorage.loadSettings().fontScale, 1);
+
   console.log("storage-version.test.js passed");
 }
 

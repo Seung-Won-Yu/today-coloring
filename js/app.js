@@ -618,7 +618,7 @@ function LobbyScreen({ onStart }) {
     showGuide && e(HowToModal, { featuredArt, onClose: closeGuide })
   );
 }
-function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount }) {
+function HomeScreen({ onPick, onGallery, onSettings, artworksList, progress, galleryCount }) {
   const e = React.createElement;
   const [cat, setCat] = React.useState("전체");
   const list = artworksList.filter((a) => cat === "전체" || a.category === cat);
@@ -635,7 +635,13 @@ function HomeScreen({ onPick, onGallery, artworksList, progress, galleryCount })
         e("span", { className: "appbar__logo" }, e(Icon, { name: "star", size: 24, color: "#fff" })),
         e("h1", { style: { whiteSpace: "nowrap" } }, "오늘의 색칠")
       ),
-      e("div", { className: "appbar__count" }, totalCount, "장")
+      e("div", { className: "appbar__right" },
+        e("button", { type: "button", className: "appbar__action appbar__settings", onClick: onSettings, "aria-label": "설정" },
+          e(Icon, { name: "settings", size: 20 }),
+          e("span", { className: "hide-narrow" }, "설정")
+        ),
+        e("div", { className: "appbar__count" }, totalCount, "장")
+      )
     ),
     e("main", { className: "home-panel" },
       e("section", { className: "home-summary", "aria-label": "그림 선택" },
@@ -761,6 +767,48 @@ function ConfirmDialog({ title, message, confirmLabel = "확인", cancelLabel = 
         e("button", { type: "button", className: "confirm-card__btn confirm-card__btn--ghost", onClick: onCancel }, cancelLabel),
         e("button", { type: "button", className: "confirm-card__btn " + (danger ? "confirm-card__btn--danger" : "confirm-card__btn--primary"), onClick: onConfirm }, confirmLabel)
       )
+    )
+  );
+}
+const FONT_SCALE_OPTIONS = [
+  { label: "보통", value: 1 },
+  { label: "크게", value: 1.12 },
+  { label: "아주 크게", value: 1.24 }
+];
+function SettingsDialog({ settings, onChange, onClose }) {
+  const e = React.createElement;
+  const fontScale = settings && settings.fontScale ? settings.fontScale : 1;
+  React.useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+  return e("div", { className: "confirm-layer settings-layer", role: "presentation", onClick: onClose },
+    e("section", { className: "settings-card", role: "dialog", "aria-modal": "true", "aria-labelledby": "settings-title", onClick: (event) => event.stopPropagation() },
+      e("div", { className: "settings-card__top" },
+        e("h2", { id: "settings-title", className: "settings-card__title" }, "설정"),
+        e("button", { type: "button", className: "settings-card__close", onClick: onClose, "aria-label": "설정 닫기", autoFocus: true },
+          e(Icon, { name: "check", size: 20 })
+        )
+      ),
+      e("fieldset", { className: "settings-field" },
+        e("legend", null, "글씨 크기"),
+        e("div", { className: "settings-segment", role: "group", "aria-label": "글씨 크기" },
+          FONT_SCALE_OPTIONS.map((option) => {
+            const selected = Math.abs(fontScale - option.value) < 0.001;
+            return e("button", {
+              key: option.value,
+              type: "button",
+              className: "settings-segment__btn" + (selected ? " settings-segment__btn--on" : ""),
+              "aria-pressed": selected,
+              onClick: () => onChange({ fontScale: option.value })
+            }, option.label);
+          })
+        )
+      ),
+      e("p", { className: "settings-preview", "aria-live": "polite" }, "오늘의 색칠")
     )
   );
 }
@@ -1263,11 +1311,12 @@ function requestAppFullscreen() {
   }
 }
 function App() {
-  const t = TWEAK_DEFAULTS;
   const [screen, setScreen] = React.useState("lobby");
   const [artId, setArtId] = React.useState(null);
   const [fills, setFills] = React.useState([]);
   const [undoHistory, setUndoHistory] = React.useState([]);
+  const [settings, setSettings] = React.useState(() => AppStorage.loadSettings());
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [selected, setSelected] = React.useState(PALETTE[0].c);
   const [progress, setProgress] = React.useState(() => AppStorage.loadProgress());
   const [gallery, setGallery] = React.useState(() => AppStorage.loadGallery());
@@ -1279,6 +1328,7 @@ function App() {
   const pendingProgressRef = React.useRef(null);
   const artworksList = window.ARTWORKS;
   const art = getArtworkById(artId);
+  const t = { ...TWEAK_DEFAULTS, ...settings };
   React.useEffect(() => {
     preloadArtworkBitmaps(artworksList.slice(0, 10).map((item) => item.thumbSrc || item.src), { limit: 10, concurrency: 4 });
     preloadArtworkBitmaps(artworksList.slice(0, 3).map((item) => item.src), { limit: 3, concurrency: 1 });
@@ -1286,6 +1336,13 @@ function App() {
   const flash = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1800);
+  };
+  const updateSettings = (patch) => {
+    setSettings((current) => {
+      const next = AppStorage.createSettings({ ...current, ...patch });
+      AppStorage.saveSettings(next);
+      return next;
+    });
   };
   const flushProgressSave = () => {
     if (progressSaveTimerRef.current) {
@@ -1389,6 +1446,7 @@ function App() {
     {
       onPick: pickArt,
       onGallery: () => setScreen("gallery"),
+      onSettings: () => setSettingsOpen(true),
       artworksList,
       progress,
       galleryCount: gallery.length
@@ -1454,7 +1512,7 @@ function App() {
     onHome: () => setScreen("home"),
       onGallery: () => setScreen("gallery")
     }
-  ));
+  ), settingsOpen && /* @__PURE__ */ React.createElement(SettingsDialog, { settings, onChange: updateSettings, onClose: () => setSettingsOpen(false) }));
 }
 window.App = App;
 ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));

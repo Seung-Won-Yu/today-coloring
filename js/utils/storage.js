@@ -2,6 +2,11 @@
   const STORAGE_VERSION = "v12";
   const GALLERY_KEY = "sori_gallery_" + STORAGE_VERSION;
   const PROGRESS_KEY = "sori_progress_" + STORAGE_VERSION;
+  const SETTINGS_KEY = "sori_settings_v1";
+  const FONT_SCALE_OPTIONS = [1, 1.12, 1.24];
+  const DEFAULT_SETTINGS = {
+    fontScale: 1
+  };
 
   function readJson(key, fallback) {
     try {
@@ -16,6 +21,29 @@
       localStorage.setItem(key, JSON.stringify(value));
     } catch (_) {
     }
+  }
+
+  function normalizeFontScale(value) {
+    const numeric = Number(value);
+    const matched = FONT_SCALE_OPTIONS.find((option) => Math.abs(option - numeric) < 0.001);
+    return matched || DEFAULT_SETTINGS.fontScale;
+  }
+
+  function createSettings(settings) {
+    return {
+      fontScale: normalizeFontScale(settings && settings.fontScale)
+    };
+  }
+
+  function loadSettings() {
+    const saved = readJson(SETTINGS_KEY, DEFAULT_SETTINGS);
+    const normalized = createSettings(saved);
+    if (!saved || saved.fontScale !== normalized.fontScale) writeJson(SETTINGS_KEY, normalized);
+    return normalized;
+  }
+
+  function saveSettings(settings) {
+    writeJson(SETTINGS_KEY, createSettings(settings));
   }
 
   function getSavedFills(saved) {
@@ -134,6 +162,9 @@
     saveGallery,
     loadProgress,
     saveProgress,
+    loadSettings,
+    saveSettings,
+    createSettings,
     getSavedFills,
     getSavedHistory,
     getArtworkVersion,

@@ -1872,7 +1872,10 @@
 .home-summary__start:focus-visible,
 .gallery-card:focus-visible,
 .color-toolbelt__btn:focus-visible,
-.swatch:focus-visible {
+.swatch:focus-visible,
+.appbar__settings:focus-visible,
+.settings-card__close:focus-visible,
+.settings-segment__btn:focus-visible {
   outline:3px solid rgba(255, 210, 63, .72);
   outline-offset:3px;
 }
@@ -2165,6 +2168,92 @@
 .confirm-card__btn--danger {
   background:#9A493F;
   color:#fff;
+}
+
+.settings-card {
+  width:min(100%, 360px);
+  display:grid;
+  gap:16px;
+  padding:18px;
+  border-radius:22px;
+  background:#FFFDF8;
+  border:1px solid rgba(63,52,39,.12);
+  box-shadow:0 24px 70px rgba(27,22,18,.22);
+}
+
+.settings-card__top {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.settings-card__title {
+  margin:0;
+  color:var(--ink);
+  font-size:22px;
+  line-height:1.2;
+  font-weight:900;
+}
+
+.settings-card__close {
+  width:44px;
+  height:44px;
+  display:grid;
+  place-items:center;
+  border-radius:15px;
+  background:#DCE8DC;
+  color:#2F5E4D;
+}
+
+.settings-field {
+  min-width:0;
+  margin:0;
+  padding:0;
+  border:0;
+}
+
+.settings-field legend {
+  margin-bottom:10px;
+  color:var(--ink-soft);
+  font-size:14px;
+  font-weight:900;
+}
+
+.settings-segment {
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:8px;
+}
+
+.settings-segment__btn {
+  min-height:48px;
+  padding:0 10px;
+  border-radius:15px;
+  background:#F7F1E8;
+  color:var(--ink);
+  border:2px solid transparent;
+  font-size:15px;
+  font-weight:900;
+}
+
+.settings-segment__btn--on {
+  background:#2F5E4D;
+  color:#fff;
+  border-color:#2F5E4D;
+}
+
+.settings-preview {
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px 14px;
+  border-radius:18px;
+  background:#F7F1E8;
+  color:var(--ink);
+  font-size:calc(18px * var(--fs));
+  font-weight:900;
 }
 
 .completion {

@@ -1,4 +1,4 @@
-@import url("./foundation/base.css");
+@import url("./foundation/base.css?v=2");
 @import url("./screens/artworks/base.css");
 @import url("./screens/coloring/base.css");
 @import url("./components/guide-navigation.css");
@@ -8,5 +8,5 @@
 @import url("./components/canvas-feedback.css");
 @import url("./screens/artworks/cards.css");
 @import url("./screens/completion/reward.css");
-@import url("./theme/premium-book.css");
+@import url("./theme/premium-book.css?v=2");
 @import url("./screens/lobby/landing.css");
