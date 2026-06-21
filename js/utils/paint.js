@@ -264,10 +264,11 @@
     const isTinyFill = paintedSize > 0 && paintedSize <= 420;
     const isSmallFill = paintedSize > 0 && paintedSize <= 1600;
     const isDarkFill = isDarkFillColor(fillColor);
-    const scanPad = isDarkFill ? (isTinyFill ? 20 : isSmallFill ? 16 : 8) : isTinyFill ? 72 : isSmallFill ? 52 : 18;
-    const joinRadius = isDarkFill ? (isTinyFill || isSmallFill ? 3 : 2) : isTinyFill ? 10 : isSmallFill ? 8 : 5;
-    const maxIslandSize = isDarkFill ? (isTinyFill ? 180 : isSmallFill ? 160 : 80) : isTinyFill ? 1200 : isSmallFill ? 1800 : Math.min(1100, Math.max(220, Math.round(paintedSize * 0.07)));
-    const passes = isDarkFill ? 1 : isTinyFill ? 5 : isSmallFill ? 4 : 2;
+    if (isDarkFill) return bounds;
+    const scanPad = isTinyFill ? 72 : isSmallFill ? 52 : 18;
+    const joinRadius = isTinyFill ? 10 : isSmallFill ? 8 : 5;
+    const maxIslandSize = isTinyFill ? 1200 : isSmallFill ? 1800 : Math.min(1100, Math.max(220, Math.round(paintedSize * 0.07)));
+    const passes = isTinyFill ? 5 : isSmallFill ? 4 : 2;
     const minX = Math.max(1, bounds.minX - scanPad);
     const minY = Math.max(1, bounds.minY - scanPad);
     const maxX = Math.min(width - 2, bounds.maxX + scanPad);
@@ -348,7 +349,6 @@
             }
           }
           if (!nearFill) continue;
-          if (tooLarge && isDarkFill) continue;
           if (tooLarge && !isTinyFill && !isSmallFill) continue;
           const fillPixels = tooLarge ? edgePixels : pixels;
           if (fillPixels.length === 0) continue;
