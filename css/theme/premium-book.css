@@ -26,6 +26,25 @@
   --wide-content-max:1240px;
 }
 
+[data-theme="contrast"] {
+  --bg:#FFFFFF;
+  --surface:#FFFFFF;
+  --paper:#FFFFFF;
+  --ink:#111111;
+  --ink-soft:#2A2116;
+  --accent:#B12F17;
+  --accent-d:#7B1C0B;
+  --accent-soft:#FFF1EC;
+  --gold:#FFD23F;
+  --line:#111111;
+  --ok:#155C36;
+  --shadow:0 0 0 2px #111111;
+  --shadow-lg:0 0 0 3px #111111;
+  --studio-bg:#F7F7F2;
+  --sage:#E5F2E7;
+  --studio-line:rgba(17,17,17,.38);
+}
+
 .app {
   background:
     radial-gradient(circle at 18% -4%, rgba(255,255,255,.9), transparent 30%),
@@ -33,6 +52,12 @@
     repeating-linear-gradient(90deg, rgba(75,55,35,.026) 0 1px, transparent 1px 16px),
     linear-gradient(180deg, rgba(255,255,255,.62), transparent 180px),
     var(--bg);
+}
+
+[data-theme="contrast"].app {
+  background:
+    repeating-linear-gradient(90deg, rgba(17,17,17,.035) 0 1px, transparent 1px 24px),
+    linear-gradient(180deg, #FFFFFF 0%, #F3F1EA 100%);
 }
 
 .appbar {
@@ -130,6 +155,14 @@
     radial-gradient(circle at 50% 0%, rgba(255,255,255,.86), transparent 34%),
     radial-gradient(circle at 84% 14%, rgba(220,232,220,.62), transparent 34%),
     linear-gradient(180deg, #FBF8F0 0%, #EFE7D8 100%);
+}
+
+[data-theme="contrast"] .home,
+[data-theme="contrast"] .gallery,
+[data-theme="contrast"] .completion {
+  background:
+    repeating-linear-gradient(90deg, rgba(17,17,17,.035) 0 1px, transparent 1px 24px),
+    linear-gradient(180deg, #FFFFFF 0%, #F4F2EA 100%);
 }
 
 .home-panel {
@@ -2358,6 +2391,52 @@
   background:#2F5E4D;
   color:#fff;
   border-color:#2F5E4D;
+}
+
+[data-theme="contrast"] .settings-card,
+[data-theme="contrast"] .confirm-card,
+[data-theme="contrast"] .home-summary,
+[data-theme="contrast"] .home-library-strip,
+[data-theme="contrast"] .artcard,
+[data-theme="contrast"] .gallery-summary,
+[data-theme="contrast"] .gallery-card,
+[data-theme="contrast"] .completion__frame,
+[data-theme="contrast"] .empty--gallery {
+  border-color:#111111;
+  box-shadow:0 0 0 2px #111111;
+}
+
+[data-theme="contrast"] .settings-card__close,
+[data-theme="contrast"] .home-summary__eyebrow,
+[data-theme="contrast"] .appbar__center-txt,
+[data-theme="contrast"] .prompt em,
+[data-theme="contrast"] .bottom-nav__badge,
+[data-theme="contrast"] .gallery-summary__count {
+  background:#FFF3A8;
+  color:#111111;
+  border-color:#111111;
+}
+
+[data-theme="contrast"] .settings-segment__btn,
+[data-theme="contrast"] .settings-preview,
+[data-theme="contrast"] .bigbtn--ghost,
+[data-theme="contrast"] .bigbtn--soft,
+[data-theme="contrast"] .appbar__action,
+[data-theme="contrast"] .appbar__back,
+[data-theme="contrast"] .tool--pill {
+  background:#FFFFFF;
+  color:#111111;
+  border-color:#111111;
+}
+
+[data-theme="contrast"] .settings-segment__btn--on,
+[data-theme="contrast"] .home-summary__start,
+[data-theme="contrast"] .appbar__save,
+[data-theme="contrast"] .bottom-nav__item--on,
+[data-theme="contrast"] .cat--on {
+  background:#111111;
+  color:#FFFFFF;
+  border-color:#111111;
 }
 
 .settings-preview {

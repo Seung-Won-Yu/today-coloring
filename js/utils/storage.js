@@ -4,8 +4,10 @@
   const PROGRESS_KEY = "sori_progress_" + STORAGE_VERSION;
   const SETTINGS_KEY = "sori_settings_v1";
   const FONT_SCALE_OPTIONS = [1, 1.12, 1.24];
+  const THEME_OPTIONS = ["따뜻", "차분", "고대비"];
   const DEFAULT_SETTINGS = {
-    fontScale: 1
+    fontScale: 1,
+    theme: "따뜻"
   };
 
   function readJson(key, fallback) {
@@ -29,16 +31,21 @@
     return matched || DEFAULT_SETTINGS.fontScale;
   }
 
+  function normalizeTheme(value) {
+    return THEME_OPTIONS.includes(value) ? value : DEFAULT_SETTINGS.theme;
+  }
+
   function createSettings(settings) {
     return {
-      fontScale: normalizeFontScale(settings && settings.fontScale)
+      fontScale: normalizeFontScale(settings && settings.fontScale),
+      theme: normalizeTheme(settings && settings.theme)
     };
   }
 
   function loadSettings() {
     const saved = readJson(SETTINGS_KEY, DEFAULT_SETTINGS);
     const normalized = createSettings(saved);
-    if (!saved || saved.fontScale !== normalized.fontScale) writeJson(SETTINGS_KEY, normalized);
+    if (!saved || saved.fontScale !== normalized.fontScale || saved.theme !== normalized.theme) writeJson(SETTINGS_KEY, normalized);
     return normalized;
   }
 

@@ -802,9 +802,15 @@ const FONT_SCALE_OPTIONS = [
   { label: "크게", value: 1.12 },
   { label: "아주 크게", value: 1.24 }
 ];
+const THEME_OPTIONS = [
+  { label: "기본", value: "따뜻" },
+  { label: "차분", value: "차분" },
+  { label: "고대비", value: "고대비" }
+];
 function SettingsDialog({ settings, onChange, onClose }) {
   const e = React.createElement;
   const fontScale = settings && settings.fontScale ? settings.fontScale : 1;
+  const theme = settings && settings.theme ? settings.theme : "따뜻";
   React.useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "Escape") onClose();
@@ -831,6 +837,21 @@ function SettingsDialog({ settings, onChange, onClose }) {
               className: "settings-segment__btn" + (selected ? " settings-segment__btn--on" : ""),
               "aria-pressed": selected,
               onClick: () => onChange({ fontScale: option.value })
+            }, option.label);
+          })
+        )
+      ),
+      e("fieldset", { className: "settings-field" },
+        e("legend", null, "화면 색감"),
+        e("div", { className: "settings-segment", role: "group", "aria-label": "화면 색감" },
+          THEME_OPTIONS.map((option) => {
+            const selected = theme === option.value;
+            return e("button", {
+              key: option.value,
+              type: "button",
+              className: "settings-segment__btn" + (selected ? " settings-segment__btn--on" : ""),
+              "aria-pressed": selected,
+              onClick: () => onChange({ theme: option.value })
             }, option.label);
           })
         )
