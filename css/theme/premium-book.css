@@ -23,6 +23,7 @@
   --color-canvas-max-side:920px;
   --color-side-panel-width:252px;
   --color-side-reserved:320px;
+  --wide-content-max:1240px;
 }
 
 .app {
@@ -1831,6 +1832,45 @@
 
   .color--side .canvasinner .canvas-art-shell {
     padding:0;
+  }
+}
+
+@media (min-width: 1180px) {
+  .home,
+  .gallery {
+    background:
+      linear-gradient(90deg, rgba(75,55,35,.055), transparent 150px, transparent calc(100% - 150px), rgba(75,55,35,.055)),
+      linear-gradient(90deg, transparent 0, transparent calc(50% - 690px), rgba(255,253,248,.46) calc(50% - 690px) calc(50% - 650px), transparent calc(50% - 650px) calc(50% + 650px), rgba(255,253,248,.46) calc(50% + 650px) calc(50% + 690px), transparent calc(50% + 690px)),
+      repeating-linear-gradient(90deg, rgba(51,40,26,.018) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(0deg, rgba(51,40,26,.018) 0 1px, transparent 1px 28px),
+      linear-gradient(180deg, #FBF8F0 0%, #EFE7D8 100%);
+  }
+
+  .home-panel,
+  .home-library-strip,
+  .gallery-summary,
+  .home .cardgrid,
+  .gallery .cardgrid {
+    max-width:var(--wide-content-max);
+  }
+
+  .home-panel {
+    width:min(calc(100% - 56px), var(--wide-content-max));
+    gap:16px;
+  }
+
+  .home .cardgrid {
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:20px 18px;
+  }
+
+  .gallery-summary {
+    width:min(calc(100% - 56px), var(--wide-content-max));
+  }
+
+  .gallery--filled .cardgrid {
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:20px;
   }
 }
 
