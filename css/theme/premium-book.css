@@ -1885,6 +1885,22 @@
   transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;
 }
 
+.artcard__thumb,
+.gallery-card,
+.cat,
+.home-summary__start,
+.home-summary__gallery,
+.appbar__action,
+.appbar__back,
+.appbar__save,
+.tool--pill,
+.bigbtn,
+.bottom-nav__item,
+.color-toolbelt__btn,
+.swatch {
+  transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease, background-color .14s ease, color .14s ease;
+}
+
 .artcard:focus-visible,
 .cat:focus-visible,
 .home-summary__start:focus-visible,
@@ -1896,6 +1912,49 @@
 .settings-segment__btn:focus-visible {
   outline:3px solid rgba(255, 210, 63, .72);
   outline-offset:3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .artcard:hover,
+  .gallery-card:hover {
+    transform:translateY(-3px);
+    border-color:rgba(63, 52, 39, .18);
+    box-shadow:0 16px 32px rgba(51, 40, 26, .1);
+  }
+
+  .artcard:hover .artcard__thumb,
+  .gallery-card:hover .artcard__thumb {
+    transform:translateY(-2px);
+    border-color:rgba(63, 52, 39, .16);
+    box-shadow:inset 0 0 0 6px #FFFDF8, 0 10px 18px rgba(51, 40, 26, .08);
+  }
+
+  .cat:hover:not(.cat--on),
+  .home-summary__gallery:hover,
+  .appbar__action:hover,
+  .appbar__back:hover,
+  .tool--pill:hover:not(:disabled),
+  .color-toolbelt__btn:hover:not(:disabled),
+  .bottom-nav__item:hover:not(.bottom-nav__item--on) {
+    transform:translateY(-1px);
+    box-shadow:0 10px 22px rgba(51, 40, 26, .08);
+  }
+
+  .home-summary__start:hover,
+  .appbar__save:hover,
+  .bigbtn:hover {
+    transform:translateY(-2px);
+    box-shadow:0 14px 28px rgba(47, 94, 77, .2);
+  }
+
+  .swatch:hover:not(.swatch--on) {
+    transform:translateY(-2px) scale(1.04);
+    box-shadow:0 12px 24px rgba(51, 40, 26, .14);
+  }
+
+  .swatch--on:hover {
+    transform:translateY(-1px) scale(1.1);
+  }
 }
 
 .color--bottom .canvaswrap {

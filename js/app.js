@@ -1130,7 +1130,7 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
       e("div", {
         className: "canvaswrap",
         ref: containerRef,
-        style: { width: "100%", height: "100%", touchAction: "none", overflow: "hidden", cursor: scale > 1 ? "grab" : "default" }
+        style: { width: "100%", height: "100%", touchAction: "none", overflow: "hidden", cursor: scale > 1 ? "grab" : "crosshair" }
       },
         e("div", {
           className: "canvasinner",
