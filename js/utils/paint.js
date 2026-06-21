@@ -1,4 +1,13 @@
 (function() {
+  function getColorLuminance(r, g, b) {
+    return r * 0.299 + g * 0.587 + b * 0.114;
+  }
+
+  function isDarkFillColor(fillColor) {
+    if (!fillColor) return false;
+    return getColorLuminance(fillColor.r, fillColor.g, fillColor.b) < 118;
+  }
+
   function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95, baseData = null) {
     const width = imageData.width;
     const height = imageData.height;
@@ -103,7 +112,7 @@
       if (isLinePixelColor(r, g, b, a)) return false;
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
-      const luminance = r * 0.299 + g * 0.587 + b * 0.114;
+      const luminance = getColorLuminance(r, g, b);
       const chroma = max - min;
       if (min >= 224 && luminance >= 228 && chroma <= 42) return true;
       return darkNeighbors > 0 && luminance >= 218 && chroma <= 72;
@@ -162,7 +171,7 @@
         if (isLinePixelColor(r, g, b, a)) continue;
         const max = Math.max(r, g, b);
         const min = Math.min(r, g, b);
-        const luminance = r * 0.299 + g * 0.587 + b * 0.114;
+        const luminance = getColorLuminance(r, g, b);
         if (luminance < 92 || luminance > 224 || max - min > 72) continue;
         const darkNeighbors = countDarkBoundaryNeighbors(x, y);
         if (darkNeighbors === 0) continue;
@@ -173,9 +182,9 @@
         if (fillNeighbors < (isSmallFill ? 2 : 1)) continue;
         const inkAlpha = Math.max(0.14, Math.min(0.74, (238 - luminance) / 172 + Math.min(darkNeighbors, 3) * 0.035));
         const fillAlpha = 1 - inkAlpha;
-        data[idx] = Math.round(fillColor.r * fillAlpha);
-        data[idx + 1] = Math.round(fillColor.g * fillAlpha);
-        data[idx + 2] = Math.round(fillColor.b * fillAlpha);
+        data[idx] = Math.round(fillColor.r * fillAlpha + r * inkAlpha);
+        data[idx + 1] = Math.round(fillColor.g * fillAlpha + g * inkAlpha);
+        data[idx + 2] = Math.round(fillColor.b * fillAlpha + b * inkAlpha);
         data[idx + 3] = 255;
       }
     }
@@ -193,6 +202,58 @@
     };
   }
 
+  function isRestorableBoundaryPixel(baseData, getPixelIndex, x, y) {
+    const idx = getPixelIndex(x, y);
+    const r = baseData[idx];
+    const g = baseData[idx + 1];
+    const b = baseData[idx + 2];
+    const a = baseData[idx + 3];
+    if (isLinePixelColor(r, g, b, a)) return true;
+    if (a < 50) return false;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const luminance = getColorLuminance(r, g, b);
+    if (min > 238 && luminance > 247 && max - min < 28) return false;
+    if (luminance >= 228 || max - min >= 86) return false;
+    let coreLineNeighbors = 0;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const neighborIdx = getPixelIndex(x + dx, y + dy);
+        if (isLinePixelColor(baseData[neighborIdx], baseData[neighborIdx + 1], baseData[neighborIdx + 2], baseData[neighborIdx + 3])) {
+          coreLineNeighbors++;
+        }
+      }
+    }
+    return coreLineNeighbors >= 1;
+  }
+
+  function restoreBoundaryPixels(imageData, baseData, bounds) {
+    if (!imageData || !baseData || !bounds) return;
+    const width = imageData.width;
+    const height = imageData.height;
+    const data = imageData.data;
+    const getPixelIndex = (x, y) => (y * width + x) * 4;
+    const minX = Math.max(1, bounds.minX - 3);
+    const minY = Math.max(1, bounds.minY - 3);
+    const maxX = Math.min(width - 2, bounds.maxX + 3);
+    const maxY = Math.min(height - 2, bounds.maxY + 3);
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const idx = getPixelIndex(x, y);
+        if (!isRestorableBoundaryPixel(baseData, getPixelIndex, x, y)) continue;
+        const r = baseData[idx];
+        const g = baseData[idx + 1];
+        const b = baseData[idx + 2];
+        const a = baseData[idx + 3];
+        data[idx] = r;
+        data[idx + 1] = g;
+        data[idx + 2] = b;
+        data[idx + 3] = a;
+      }
+    }
+  }
+
   function absorbNearbyPaintableIslands(imageData, baseData, fillColor, bounds) {
     if (!imageData || !baseData || !fillColor || !bounds) return bounds;
     const width = imageData.width;
@@ -202,10 +263,11 @@
     const paintedSize = bounds.painted || 0;
     const isTinyFill = paintedSize > 0 && paintedSize <= 420;
     const isSmallFill = paintedSize > 0 && paintedSize <= 1600;
-    const scanPad = isTinyFill ? 72 : isSmallFill ? 52 : 18;
-    const joinRadius = isTinyFill ? 10 : isSmallFill ? 8 : 5;
-    const maxIslandSize = isTinyFill ? 1200 : isSmallFill ? 1800 : Math.min(1100, Math.max(220, Math.round(paintedSize * 0.07)));
-    const passes = isTinyFill ? 5 : isSmallFill ? 4 : 2;
+    const isDarkFill = isDarkFillColor(fillColor);
+    const scanPad = isDarkFill ? (isTinyFill ? 20 : isSmallFill ? 16 : 8) : isTinyFill ? 72 : isSmallFill ? 52 : 18;
+    const joinRadius = isDarkFill ? (isTinyFill || isSmallFill ? 3 : 2) : isTinyFill ? 10 : isSmallFill ? 8 : 5;
+    const maxIslandSize = isDarkFill ? (isTinyFill ? 180 : isSmallFill ? 160 : 80) : isTinyFill ? 1200 : isSmallFill ? 1800 : Math.min(1100, Math.max(220, Math.round(paintedSize * 0.07)));
+    const passes = isDarkFill ? 1 : isTinyFill ? 5 : isSmallFill ? 4 : 2;
     const minX = Math.max(1, bounds.minX - scanPad);
     const minY = Math.max(1, bounds.minY - scanPad);
     const maxX = Math.min(width - 2, bounds.maxX + scanPad);
@@ -286,6 +348,7 @@
             }
           }
           if (!nearFill) continue;
+          if (tooLarge && isDarkFill) continue;
           if (tooLarge && !isTinyFill && !isSmallFill) continue;
           const fillPixels = tooLarge ? edgePixels : pixels;
           if (fillPixels.length === 0) continue;
@@ -316,17 +379,19 @@
   function fillConnectedRegion(imageData, baseData, seed, fillColor, options = {}) {
     const tolerance = options.tolerance || 95;
     const shouldSmooth = options.smooth !== false;
+    const isDarkFill = isDarkFillColor(fillColor);
     const fillBounds = doFloodFill(imageData, seed.x, seed.y, fillColor, tolerance, baseData);
     if (!fillBounds) return null;
     let mergedBounds = fillBounds;
-    if (shouldSmooth) smoothFillEdges(imageData, baseData, fillColor, options.smoothPasses || 3, mergedBounds);
+    if (shouldSmooth && !isDarkFill) smoothFillEdges(imageData, baseData, fillColor, options.smoothPasses || 3, mergedBounds);
     mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
-    if (shouldSmooth && mergedBounds !== fillBounds) {
+    if (shouldSmooth && !isDarkFill && mergedBounds !== fillBounds) {
       smoothFillEdges(imageData, baseData, fillColor, Math.min(2, options.smoothPasses || 2), mergedBounds);
       mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
       smoothFillEdges(imageData, baseData, fillColor, 1, mergedBounds);
       mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
     }
+    restoreBoundaryPixels(imageData, baseData, mergedBounds);
     return mergedBounds;
   }
 
