@@ -1374,10 +1374,26 @@ function isAppDisplayMode() {
     window.matchMedia("(display-mode: standalone)").matches
   );
 }
-function lockPortraitOrientation() {
+function shouldLockPortraitOrientation() {
+  return Math.min(window.innerWidth || 0, window.innerHeight || 0) < 768;
+}
+function releaseOrientationLock() {
+  const orientation = window.screen && window.screen.orientation;
+  if (!orientation || !orientation.unlock) return false;
+  try {
+    orientation.unlock();
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+function applyOrientationPolicy() {
   const orientation = window.screen && window.screen.orientation;
   if (!orientation || !orientation.lock) {
     return Promise.resolve(false);
+  }
+  if (!shouldLockPortraitOrientation()) {
+    return Promise.resolve(releaseOrientationLock());
   }
   try {
     return Promise.resolve(orientation.lock("portrait-primary"))
@@ -1389,19 +1405,19 @@ function lockPortraitOrientation() {
 }
 function requestAppFullscreen() {
   if (isAppDisplayMode() || document.fullscreenElement) {
-    return lockPortraitOrientation();
+    return applyOrientationPolicy();
   }
   const target = document.documentElement;
   const request = target.requestFullscreen || target.webkitRequestFullscreen || target.msRequestFullscreen;
   if (!request) {
-    return lockPortraitOrientation();
+    return applyOrientationPolicy();
   }
   try {
     return Promise.resolve(request.call(target))
-      .then(() => lockPortraitOrientation().then(() => true))
-      .catch(() => lockPortraitOrientation().then(() => false));
+      .then(() => applyOrientationPolicy().then(() => true))
+      .catch(() => applyOrientationPolicy().then(() => false));
   } catch (_) {
-    return lockPortraitOrientation();
+    return applyOrientationPolicy();
   }
 }
 function App() {
