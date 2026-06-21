@@ -2546,6 +2546,90 @@
   max-width:352px;
 }
 
+@media (min-width: 1180px) and (min-height: 760px) {
+  .completion {
+    padding-inline:28px;
+  }
+
+  .completion__inner {
+    max-width:1040px;
+    min-height:calc(100dvh - 56px);
+    display:grid;
+    grid-template-columns:minmax(360px, 470px) minmax(340px, 390px);
+    grid-template-areas:
+      "art eyebrow"
+      "art title"
+      "art sub"
+      "art cert"
+      "art buttons";
+    align-content:center;
+    align-items:center;
+    justify-content:center;
+    column-gap:46px;
+    row-gap:10px;
+    padding:0;
+  }
+
+  .completion__eyebrow,
+  .completion__title,
+  .completion__sub,
+  .completion__certificate,
+  .completion__btns {
+    justify-self:start;
+  }
+
+  .completion__eyebrow {
+    grid-area:eyebrow;
+  }
+
+  .completion__title {
+    grid-area:title;
+    max-width:390px;
+    font-size:40px;
+    text-align:left;
+  }
+
+  .completion__sub {
+    grid-area:sub;
+    max-width:390px;
+    margin-bottom:0;
+    text-align:left;
+  }
+
+  .completion__certificate {
+    grid-area:cert;
+    width:100%;
+    max-width:390px;
+  }
+
+  .completion__frame {
+    grid-area:art;
+    width:min(34vw, 460px, 68vh);
+    justify-self:end;
+    align-self:center;
+  }
+
+  .completion__btns {
+    grid-area:buttons;
+    max-width:390px;
+    margin-top:2px;
+  }
+
+  .completion--view .completion__inner {
+    max-width:960px;
+    grid-template-columns:minmax(320px, 420px) minmax(340px, 390px);
+    grid-template-areas:
+      "art eyebrow"
+      "art title"
+      "art cert"
+      "art buttons";
+  }
+
+  .completion--view .completion__frame {
+    width:min(32vw, 420px, 64vh);
+  }
+}
+
 @media (max-width: 430px) {
   .confirm-layer {
     align-items:center;
