@@ -19,6 +19,10 @@
   --mat:#D9C9AE;
   --sage:#DCE8DC;
   --studio-line:rgba(61, 49, 38, .1);
+  --color-canvas-max-bottom:680px;
+  --color-canvas-max-side:920px;
+  --color-side-panel-width:252px;
+  --color-side-reserved:320px;
 }
 
 .app {
@@ -496,7 +500,7 @@
 }
 
 .color--side .canvaswrap {
-  padding:18px 258px 24px 24px;
+  padding:8px calc(var(--color-side-panel-width) + 40px) 8px 24px;
 }
 
 .canvaswrap::after {
@@ -724,7 +728,7 @@
   top:0;
   right:0;
   bottom:0;
-  width:252px;
+  width:var(--color-side-panel-width);
   z-index:2;
   background:#FFFFFF;
   border-left:1px solid rgba(25, 28, 29, .08);
@@ -768,7 +772,7 @@
 
 .zoom-toggle-btn {
   position:absolute;
-  right:272px;
+  right:calc(var(--color-side-panel-width) + 20px);
   bottom:20px;
   z-index:10;
   min-height:46px;
@@ -1688,6 +1692,10 @@
 }
 
 @media (min-width: 768px) {
+  .color {
+    --color-canvas-max-bottom:690px;
+  }
+
   .home-panel {
     width:calc(100% - 28px);
     max-width:1040px;
@@ -1800,7 +1808,7 @@
 
 @media (min-width: 900px) and (orientation: landscape) {
   .color--side .canvasinner {
-    max-width:680px;
+    max-width:var(--color-canvas-max-side);
   }
 
   .color--side .canvasinner .canvas-art-shell {
