@@ -772,14 +772,14 @@ function ColorToolbelt({ hasHistory, onUndo, onReset, onZoom }) {
     e("button", { className: "color-toolbelt__btn", onClick: onZoom, "aria-label": "\uB3CB\uBCF4\uAE30 \uD1A0\uAE00" }, e(Icon, { name: "zoom", size: 22 }))
   );
 }
-function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFinish, tweaks }) {
+function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHistoryChange, onExit, onFinish, tweaks }) {
   const e = React.createElement;
   const orient = useOrientation();
   const layout = orient === "landscape" ? "side" : "bottom";
   const containerRef = React.useRef(null);
   const [scale, setScale] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
-  const [history, setHistory] = React.useState([]);
+  const historyStack = Array.isArray(history) ? history : [];
   const [aspect, setAspect] = React.useState(1);
   const [resetConfirmOpen, setResetConfirmOpen] = React.useState(false);
   React.useEffect(() => {
@@ -852,9 +852,9 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
     lastDragTimeRef.current = Date.now();
   };
   const handleUndo = () => {
-    if (history.length === 0) return;
-    const prevFills = history[history.length - 1];
-    setHistory(history.slice(0, -1));
+    if (historyStack.length === 0) return;
+    const prevFills = historyStack[historyStack.length - 1];
+    onHistoryChange(historyStack.slice(0, -1));
     onPaint(prevFills);
   };
   const handleReset = () => {
@@ -862,12 +862,12 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
   };
   const confirmReset = () => {
     onPaint([]);
-    setHistory([]);
+    onHistoryChange([]);
     setResetConfirmOpen(false);
   };
   const handleCanvasPaint = (newFills) => {
     if (Date.now() - lastDragTimeRef.current < 120) return false;
-    setHistory((prev) => [...prev, Array.isArray(fills) ? [...fills] : []]);
+    onHistoryChange((prev) => [...(Array.isArray(prev) ? prev : []), Array.isArray(fills) ? [...fills] : []]);
     onPaint(newFills);
     return true;
   };
@@ -1024,7 +1024,7 @@ function ColoringScreen({ art, fills, selected, onSelect, onPaint, onExit, onFin
     window.addEventListener("resize", keepInBounds);
     return () => window.removeEventListener("resize", keepInBounds);
   }, [scale, aspect, layout]);
-  const hasHistory = history.length > 0;
+  const hasHistory = historyStack.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
   const bottomChrome = window.innerWidth >= 768 ? 250 : 268;
   return e("div", { className: "screen color color--" + layout },
@@ -1267,6 +1267,7 @@ function App() {
   const [screen, setScreen] = React.useState("lobby");
   const [artId, setArtId] = React.useState(null);
   const [fills, setFills] = React.useState([]);
+  const [undoHistory, setUndoHistory] = React.useState([]);
   const [selected, setSelected] = React.useState(PALETTE[0].c);
   const [progress, setProgress] = React.useState(() => AppStorage.loadProgress());
   const [gallery, setGallery] = React.useState(() => AppStorage.loadGallery());
@@ -1320,12 +1321,12 @@ function App() {
       if (fillsArray.length === 0) {
         delete next[artId];
       } else {
-        next[artId] = AppStorage.createProgressEntry(artId, fillsArray);
+        next[artId] = AppStorage.createProgressEntry(artId, fillsArray, undoHistory);
       }
       scheduleProgressSave(next);
       return next;
     });
-  }, [fills, screen, artId]);
+  }, [fills, undoHistory, screen, artId]);
   const startApp = () => {
     requestAppFullscreen().finally(() => setScreen("home"));
   };
@@ -1334,7 +1335,9 @@ function App() {
     setArtId(id);
     const saved = progress[id];
     const fillsArray = AppStorage.getSavedFills(saved);
+    const savedHistory = AppStorage.getSavedHistory(saved);
     setFills(fillsArray);
+    setUndoHistory(savedHistory);
     setJustSaved(false);
     setScreen("color");
   };
@@ -1395,9 +1398,11 @@ function App() {
     {
       art,
       fills,
+      history: undoHistory,
       selected,
       onSelect: setSelected,
       onPaint: handlePaintChange,
+      onHistoryChange: setUndoHistory,
       onExit: exitHome,
       onFinish: finish,
       tweaks: normTweaks
@@ -1435,6 +1440,7 @@ function App() {
       onRecolor: () => {
         setArtId(viewItem.artId);
         setFills(viewItem.fills);
+        setUndoHistory([]);
         setJustSaved(false);
         setScreen("color");
       },

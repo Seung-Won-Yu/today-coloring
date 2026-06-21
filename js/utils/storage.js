@@ -23,6 +23,20 @@
     return saved && Array.isArray(saved.fills) ? saved.fills : [];
   }
 
+  function normalizeUndoHistory(history) {
+    if (!Array.isArray(history)) return { value: [], changed: history !== undefined };
+    const next = history.filter((item) => Array.isArray(item));
+    return {
+      value: next.length === history.length ? history : next,
+      changed: next.length !== history.length
+    };
+  }
+
+  function getSavedHistory(saved) {
+    if (!saved || typeof saved !== "object" || Array.isArray(saved)) return [];
+    return normalizeUndoHistory(saved.undoHistory).value;
+  }
+
   function getArtworkById(artId) {
     const source = window.ARTWORKS || window.ALL_ARTWORKS || [];
     return source.find((art) => art && art.id === artId) || null;
@@ -43,9 +57,11 @@
     return String(saved.artworkVersion) === currentVersion;
   }
 
-  function createProgressEntry(artId, fills) {
+  function createProgressEntry(artId, fills, undoHistory) {
+    const normalizedHistory = normalizeUndoHistory(undoHistory);
     return {
       fills: Array.isArray(fills) ? fills : [],
+      undoHistory: normalizedHistory.value,
       artworkVersion: getArtworkVersion(artId)
     };
   }
@@ -65,13 +81,14 @@
     Object.keys(changed ? {} : progress).forEach((artId) => {
       const saved = progress[artId];
       const fills = getSavedFills(saved);
+      const savedHistory = getSavedHistory(saved);
       if (!getArtworkById(artId) || !versionMatches(saved, artId) || !Array.isArray(fills) || fills.length === 0) {
         changed = true;
         return;
       }
-      const normalized = createProgressEntry(artId, fills);
+      const normalized = createProgressEntry(artId, fills, savedHistory);
       next[artId] = normalized;
-      if (!saved || Array.isArray(saved) || saved.artworkVersion !== normalized.artworkVersion || saved.fills !== fills) changed = true;
+      if (!saved || Array.isArray(saved) || saved.artworkVersion !== normalized.artworkVersion || saved.fills !== fills || !Array.isArray(saved.undoHistory) || saved.undoHistory !== savedHistory) changed = true;
     });
     return { value: next, changed };
   }
@@ -118,6 +135,7 @@
     loadProgress,
     saveProgress,
     getSavedFills,
+    getSavedHistory,
     getArtworkVersion,
     createProgressEntry,
     createGalleryItem
