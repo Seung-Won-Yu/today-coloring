@@ -521,6 +521,57 @@
     return Boolean(isWhiteBaseColor(r, g, b, a));
   }
 
+  function analyzePaintRegions(baseImageData, width = null, height = null) {
+    if (!baseImageData) return [];
+    const data = baseImageData.data || baseImageData;
+    const sourceWidth = width || baseImageData.width;
+    const sourceHeight = height || baseImageData.height;
+    if (!data || !sourceWidth || !sourceHeight) return [];
+    const visited = new Uint8Array(sourceWidth * sourceHeight);
+    const queue = new Int32Array(sourceWidth * sourceHeight);
+    const seeds = [];
+    const getPixelIndex = (x, y) => (y * sourceWidth + x) * 4;
+    for (let y = 4; y < sourceHeight - 4; y += 2) {
+      for (let x = 4; x < sourceWidth - 4; x += 2) {
+        const vIdx = y * sourceWidth + x;
+        if (visited[vIdx]) continue;
+        const pIdx = getPixelIndex(x, y);
+        if (!isPaintableBasePixel(data, pIdx)) continue;
+        let regionSize = 0;
+        let isBackground = false;
+        let head = 0;
+        let tail = 1;
+        queue[0] = vIdx;
+        visited[vIdx] = 1;
+        const enqueueIfPaintable = (nx, ny) => {
+          if (nx < 0 || nx >= sourceWidth || ny < 0 || ny >= sourceHeight) return;
+          const nvIdx = ny * sourceWidth + nx;
+          if (visited[nvIdx]) return;
+          if (!isPaintableBasePixel(data, getPixelIndex(nx, ny))) return;
+          visited[nvIdx] = 1;
+          queue[tail++] = nvIdx;
+        };
+        while (head < tail) {
+          const pos = queue[head++];
+          const cx = pos % sourceWidth;
+          const cy = Math.floor(pos / sourceWidth);
+          regionSize++;
+          if (cx <= 35 || cy <= 35 || cx >= sourceWidth - 36 || cy >= sourceHeight - 36) {
+            isBackground = true;
+          }
+          enqueueIfPaintable(cx + 4, cy);
+          enqueueIfPaintable(cx - 4, cy);
+          enqueueIfPaintable(cx, cy + 4);
+          enqueueIfPaintable(cx, cy - 4);
+        }
+        if (regionSize > 5) {
+          seeds.push({ x, y, size: regionSize, isBackground });
+        }
+      }
+    }
+    return seeds;
+  }
+
   function findNearestUnpaintedStart(baseData, progressData, width, height, x, y, radius) {
     const canPaint = (px, py) => {
       if (px < 0 || px >= width || py < 0 || py >= height) return false;
@@ -729,6 +780,7 @@
     isProgressMarked,
     isLinePixelColor,
     isPaintableBasePixel,
+    analyzePaintRegions,
     findNearestUnpaintedStart,
     findNearestPaintedStart,
     markProgressRegion,

@@ -35,6 +35,18 @@ function pixelAt(imageData, x, y) {
   return Array.from(imageData.data.slice(idx, idx + 4));
 }
 
+function setRect(imageData, minX, minY, maxX, maxY, color) {
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      const idx = (y * imageData.width + x) * 4;
+      imageData.data[idx] = color[0];
+      imageData.data[idx + 1] = color[1];
+      imageData.data[idx + 2] = color[2];
+      imageData.data[idx + 3] = color[3];
+    }
+  }
+}
+
 function run() {
   const PaintEngine = loadPaintEngine();
   const fillColor = { r: 36, g: 126, b: 238 };
@@ -71,6 +83,13 @@ function run() {
   assert(fringePixel[2] > 0, "anti-aliased fringe should keep visible fill color instead of white halo");
   assert(linePixel[0] < 40 && linePixel[1] < 40 && linePixel[2] < 40, "hard line should stay dark");
   assert.deepStrictEqual(backgroundPixel, blueSky, "colored artwork backgrounds should stay in color");
+
+  const regionBase = createImageData(96, 96, Array(96 * 96).fill([24, 24, 24, 255]));
+  setRect(regionBase, 40, 40, 56, 56, [255, 255, 255, 255]);
+  const regions = PaintEngine.analyzePaintRegions(regionBase, regionBase.width, regionBase.height);
+  assert(regions.length > 0, "center paint island should be discovered");
+  assert(regions.every((region) => !region.isBackground), "center paint island should not be classified as background");
+  assert(regions.some((region) => region.size > 5), "center paint island should be large enough for showcase fills");
 
   console.log("paint-engine.test.js passed");
 }

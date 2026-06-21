@@ -8,6 +8,7 @@ const {
   createFillLayerImageData,
   paintFillLayerSeed,
   composePaintLayers,
+  analyzePaintRegions,
   findNearestUnpaintedStart,
   findNearestPaintedStart,
   markProgressRegion,
@@ -26,6 +27,26 @@ function recordPaintMetric(sample) {
   const metrics = window.__COLORING_PAINT_METRICS__ || [];
   metrics.push({ at: Date.now(), ...sample });
   window.__COLORING_PAINT_METRICS__ = metrics.slice(-80);
+}
+
+const regionAnalysisCache = new Map();
+const REGION_ANALYSIS_CACHE_LIMIT = 12;
+function getRegionAnalysisCacheKey(art, frameMode, width, height) {
+  const artKey = art ? `${art.id || ""}@${art.version || ""}@${art.src || ""}` : "";
+  return `${artKey}:${frameMode}:${width}x${height}`;
+}
+
+function cloneRegionAnalysis(regions) {
+  return (regions || []).map((region) => ({ ...region }));
+}
+
+function rememberRegionAnalysis(cacheKey, regions) {
+  if (!cacheKey) return;
+  if (!regionAnalysisCache.has(cacheKey) && regionAnalysisCache.size >= REGION_ANALYSIS_CACHE_LIMIT) {
+    const oldestKey = regionAnalysisCache.keys().next().value;
+    if (oldestKey) regionAnalysisCache.delete(oldestKey);
+  }
+  regionAnalysisCache.set(cacheKey, cloneRegionAnalysis(regions));
 }
 
 function replayFillOnFillLayer(fillLayerImageData, baseData, fill, frame) {
@@ -98,59 +119,10 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     progressImageDataRef.current = null;
     lastArtSrcRef.current = art.src;
   }
-  const analyzeRegions = (imgData, width, height) => {
-    try {
-      const data = imgData.data;
-      const visited = new Uint8Array(width * height);
-      const seeds = [];
-      const getPixelIndex = (x, y) => (y * width + x) * 4;
-      for (let y = 4; y < height - 4; y += 2) {
-        for (let x = 4; x < width - 4; x += 2) {
-          const vIdx = y * width + x;
-          if (visited[vIdx]) continue;
-          const pIdx = getPixelIndex(x, y);
-          if (isPaintableBasePixel(data, pIdx)) {
-            let regionSize = 0;
-            let isBackground = false;
-            const queue = [[x, y]];
-            visited[vIdx] = 1;
-            let head = 0;
-            while (head < queue.length) {
-              const [cx, cy] = queue[head++];
-              regionSize++;
-              if (cx <= 35 || cy <= 35 || cx >= width - 36 || cy >= height - 36) {
-                isBackground = true;
-              }
-              const dirs = [
-                [cx + 4, cy],
-                [cx - 4, cy],
-                [cx, cy + 4],
-                [cx, cy - 4]
-              ];
-              for (const [nx, ny] of dirs) {
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                  const nvIdx = ny * width + nx;
-                  if (!visited[nvIdx]) {
-                    const npIdx = getPixelIndex(nx, ny);
-                    if (isPaintableBasePixel(data, npIdx)) {
-                      visited[nvIdx] = 1;
-                      queue.push([nx, ny]);
-                    }
-                  }
-                }
-              }
-            }
-            if (regionSize > 5) {
-              seeds.push({ x, y, size: regionSize, isBackground });
-            }
-          }
-        }
-      }
-      regionsRef.current = seeds;
-      if (onRegionsChange) onRegionsChange(seeds);
-    } catch (e) {
-      console.error("Error analyzing regions", e);
-    }
+  const publishRegions = (regions) => {
+    const next = cloneRegionAnalysis(regions);
+    regionsRef.current = next;
+    if (onRegionsChange) onRegionsChange(next);
   };
   const cancelRegionAnalysis = () => {
     const task = analysisTaskRef.current;
@@ -191,10 +163,22 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       }
       setImageReady(true);
       if (shouldAnalyzeRegions && baseImageDataRef.current) {
+        const cacheKey = getRegionAnalysisCacheKey(art, frameMode, cw, ch);
+        const cachedRegions = regionAnalysisCache.get(cacheKey);
+        if (cachedRegions) {
+          publishRegions(cachedRegions);
+          return;
+        }
         const runAnalysis = () => {
           analysisTaskRef.current = null;
           if (cancelled || lastArtSrcRef.current !== art.src || !baseImageDataRef.current) return;
-          analyzeRegions(baseImageDataRef.current, cw, ch);
+          try {
+            const regions = analyzePaintRegions(baseImageDataRef.current, cw, ch);
+            rememberRegionAnalysis(cacheKey, regions);
+            publishRegions(regions);
+          } catch (e) {
+            console.error("Error analyzing regions", e);
+          }
         };
         if (window.requestIdleCallback) {
           analysisTaskRef.current = { kind: "idle", id: window.requestIdleCallback(runAnalysis, { timeout: 700 }) };
