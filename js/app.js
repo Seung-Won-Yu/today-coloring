@@ -75,7 +75,7 @@ function useInViewport(options = {}) {
   return [ref, visible];
 }
 
-function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMode = "preview", onImageLoad, onRegionsChange, canPaint }) {
+function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMode = "preview", onImageLoad, onRegionsChange, canPaint, paintFeedback = true }) {
   const canvasRef = React.useRef(null);
   const baseCanvasRef = React.useRef(null);
   const baseImageDataRef = React.useRef(null);
@@ -340,11 +340,13 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     t0 = nowMs();
     onPaint(nextFills);
     metric.commit = nowMs() - t0;
-    const pulse = { id: Date.now(), x: paintX / cw * 100, y: paintY / ch * 100 };
-    setPaintPulse(pulse);
-    setTimeout(() => {
-      setPaintPulse((current) => current && current.id === pulse.id ? null : current);
-    }, 460);
+    if (paintFeedback) {
+      const pulse = { id: Date.now(), x: paintX / cw * 100, y: paintY / ch * 100 };
+      setPaintPulse(pulse);
+      setTimeout(() => {
+        setPaintPulse((current) => current && current.id === pulse.id ? null : current);
+      }, 460);
+    }
   };
   return /* @__PURE__ */ React.createElement("div", { className: "canvas-art-shell" + (imageReady ? " is-ready" : " is-loading"), style: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("canvas", { ref: baseCanvasRef, style: { display: "none" } }), !imageReady && /* @__PURE__ */ React.createElement("div", { className: "canvas-art-loading", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("span", null)), /* @__PURE__ */ React.createElement(
     "canvas",
@@ -811,6 +813,7 @@ function SettingsDialog({ settings, onChange, onClose }) {
   const e = React.createElement;
   const fontScale = settings && settings.fontScale ? settings.fontScale : 1;
   const theme = settings && settings.theme ? settings.theme : "따뜻";
+  const paintFeedback = !settings || settings.paintFeedback !== false;
   React.useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "Escape") onClose();
@@ -854,6 +857,21 @@ function SettingsDialog({ settings, onChange, onClose }) {
               onClick: () => onChange({ theme: option.value })
             }, option.label);
           })
+        )
+      ),
+      e("fieldset", { className: "settings-field" },
+        e("legend", null, "색칠 반응"),
+        e("label", { className: "settings-toggle" },
+          e("span", { className: "settings-toggle__text" }, "표시"),
+          e("input", {
+            className: "settings-toggle__input",
+            type: "checkbox",
+            checked: paintFeedback,
+            onChange: (event) => onChange({ paintFeedback: event.target.checked })
+          }),
+          e("span", { className: "settings-toggle__track", "aria-hidden": "true" },
+            e("span", { className: "settings-toggle__thumb" })
+          )
         )
       ),
       e("p", { className: "settings-preview", "aria-live": "polite" }, "오늘의 색칠")
@@ -1164,7 +1182,7 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
             willChange: "transform"
           }
         },
-          e(CanvasArt, { art, fills, onPaint: handleCanvasPaint, selected, interactive: true, frameMode: "paint", canPaint: canCanvasPaint, onImageLoad: ({ width, height }) => setAspect(width / height) })
+          e(CanvasArt, { art, fills, onPaint: handleCanvasPaint, selected, interactive: true, frameMode: "paint", canPaint: canCanvasPaint, paintFeedback: tweaks.paintFeedback !== false, onImageLoad: ({ width, height }) => setAspect(width / height) })
         ),
         layout === "side" && e("button", { onClick: toggleZoom, className: "zoom-toggle-btn", "aria-label": "돋보기 토글" },
           e(Icon, { name: "zoom", size: 22, color: "var(--ink)" }),
@@ -1320,7 +1338,8 @@ const TWEAK_DEFAULTS = {
   "palettePos": "\uC790\uB3D9",
   "paintMode": "\uD0ED",
   "fontScale": 1,
-  "theme": "\uB530\uB73B"
+  "theme": "\uB530\uB73B",
+  "paintFeedback": true
 };
 function isAppDisplayMode() {
   return Boolean(

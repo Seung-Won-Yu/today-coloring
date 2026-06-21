@@ -99,22 +99,26 @@ function run() {
 
   assert.strictEqual(AppStorage.loadSettings().fontScale, 1);
   assert.strictEqual(AppStorage.loadSettings().theme, "따뜻");
-  AppStorage.saveSettings({ fontScale: 1.24, theme: "고대비" });
+  assert.strictEqual(AppStorage.loadSettings().paintFeedback, true);
+  AppStorage.saveSettings({ fontScale: 1.24, theme: "고대비", paintFeedback: false });
   const savedSettings = JSON.parse(context.localStorage.getItem("sori_settings_v1"));
   assert.strictEqual(savedSettings.fontScale, 1.24);
   assert.strictEqual(savedSettings.theme, "고대비");
+  assert.strictEqual(savedSettings.paintFeedback, false);
 
   const settingsContext = loadStorage({
-    sori_settings_v1: JSON.stringify({ fontScale: 1.12, theme: "차분" })
+    sori_settings_v1: JSON.stringify({ fontScale: 1.12, theme: "차분", paintFeedback: false })
   });
   assert.strictEqual(settingsContext.window.AppStorage.loadSettings().fontScale, 1.12);
   assert.strictEqual(settingsContext.window.AppStorage.loadSettings().theme, "차분");
+  assert.strictEqual(settingsContext.window.AppStorage.loadSettings().paintFeedback, false);
 
   const invalidSettingsContext = loadStorage({
-    sori_settings_v1: JSON.stringify({ fontScale: 3, theme: "번쩍" })
+    sori_settings_v1: JSON.stringify({ fontScale: 3, theme: "번쩍", paintFeedback: "꺼짐" })
   });
   assert.strictEqual(invalidSettingsContext.window.AppStorage.loadSettings().fontScale, 1);
   assert.strictEqual(invalidSettingsContext.window.AppStorage.loadSettings().theme, "따뜻");
+  assert.strictEqual(invalidSettingsContext.window.AppStorage.loadSettings().paintFeedback, true);
 
   console.log("storage-version.test.js passed");
 }

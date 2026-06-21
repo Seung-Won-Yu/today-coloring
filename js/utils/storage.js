@@ -7,7 +7,8 @@
   const THEME_OPTIONS = ["따뜻", "차분", "고대비"];
   const DEFAULT_SETTINGS = {
     fontScale: 1,
-    theme: "따뜻"
+    theme: "따뜻",
+    paintFeedback: true
   };
 
   function readJson(key, fallback) {
@@ -35,17 +36,22 @@
     return THEME_OPTIONS.includes(value) ? value : DEFAULT_SETTINGS.theme;
   }
 
+  function normalizePaintFeedback(value) {
+    return value === false ? false : true;
+  }
+
   function createSettings(settings) {
     return {
       fontScale: normalizeFontScale(settings && settings.fontScale),
-      theme: normalizeTheme(settings && settings.theme)
+      theme: normalizeTheme(settings && settings.theme),
+      paintFeedback: normalizePaintFeedback(settings && settings.paintFeedback)
     };
   }
 
   function loadSettings() {
     const saved = readJson(SETTINGS_KEY, DEFAULT_SETTINGS);
     const normalized = createSettings(saved);
-    if (!saved || saved.fontScale !== normalized.fontScale || saved.theme !== normalized.theme) writeJson(SETTINGS_KEY, normalized);
+    if (!saved || saved.fontScale !== normalized.fontScale || saved.theme !== normalized.theme || saved.paintFeedback !== normalized.paintFeedback) writeJson(SETTINGS_KEY, normalized);
     return normalized;
   }
 
