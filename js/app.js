@@ -1320,7 +1320,7 @@ function App() {
       if (fillsArray.length === 0) {
         delete next[artId];
       } else {
-        next[artId] = { fills: fillsArray };
+        next[artId] = AppStorage.createProgressEntry(artId, fillsArray);
       }
       scheduleProgressSave(next);
       return next;
@@ -1346,7 +1346,7 @@ function App() {
   };
   const keepInGallery = () => {
     if (justSaved) return;
-    const item = { id: "g" + Date.now(), artId, fills, date: Date.now() };
+    const item = AppStorage.createGalleryItem({ id: "g" + Date.now(), artId, fills, date: Date.now() });
     const next = [item, ...gallery];
     setGallery(next);
     AppStorage.saveGallery(next);

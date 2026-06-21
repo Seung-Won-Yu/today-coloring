@@ -1,4 +1,5 @@
 var ARTWORK_VERSION = '20';
+var ARTWORK_SAVE_VERSION = '20';
 var ARTWORK_IDS = [
   '15', '17', '40', '43', '11', '50', '41', '59', '46', '29',
   '13', '05', '14', '21', '28', '55', '34', '60', '22', '31',
@@ -22,7 +23,7 @@ var ARTWORK_META = {
   '10': { title: '대나무 숲 판다', category: '동물과 자연' },
   '11': { title: '농장의 병아리', category: '동물과 자연' },
   '13': { title: '장화 신은 아기 돼지', category: '동물과 자연' },
-  '14': { title: '유칼립투스 코알라', category: '동물과 자연' },
+  '14': { title: '유칼립투스 코알라', category: '동물과 자연', requiresVersionedSave: true },
   '15': { title: '초원의 양', category: '동물과 자연' },
   '17': { title: '대나무 숲 아기 판다', category: '동물과 자연' },
   '21': { title: '찻상의 다기', category: '일상 소품' },
@@ -45,7 +46,7 @@ var ARTWORK_META = {
   '55': { title: '왕관 장식', category: '전통과 공예' },
   '58': { title: '햇살 아래 고래', category: '동물과 자연' },
   '59': { title: '바닷속 해파리', category: '동물과 자연' },
-  '60': { title: '감나무 열매', category: '꽃과 식물' },
+  '60': { title: '감나무 열매', category: '꽃과 식물', requiresVersionedSave: true },
   '61': { title: '버섯 아래 아기 여우', category: '동물과 자연' },
   '62': { title: '리본 꽃다발', category: '꽃과 식물' },
   '63': { title: '생일 케이크', category: '일상 소품' },
@@ -72,6 +73,8 @@ function createVerticalArtwork(num) {
     id: 'vertical-' + label,
     title: meta.title,
     category: meta.category,
+    version: meta.version || ARTWORK_SAVE_VERSION,
+    requiresVersionedSave: Boolean(meta.requiresVersionedSave),
     src: 'assets/images/artworks/' + file + '?v=' + ARTWORK_VERSION,
     thumbSrc: 'assets/images/thumbs/' + file + '?v=' + ARTWORK_VERSION,
     isCanvas: true,
