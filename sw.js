@@ -1,4 +1,4 @@
-const CACHE_NAME = 'today-coloring-shell-v118';
+const CACHE_NAME = 'today-coloring-shell-v119';
 const APP_SHELL = [
   './',
   './index.html',
@@ -9,7 +9,7 @@ const APP_SHELL = [
   './css/styles.css?v=140',
   './js/vendor/react.production.min.js',
   './js/vendor/react-dom.production.min.js',
-  './js/data/artworks.js?v=28',
+  './js/data/artworks.js?v=29',
   './js/data/palette.js?v=2',
   './js/utils/storage.js?v=14',
   './js/utils/paint.js?v=26',

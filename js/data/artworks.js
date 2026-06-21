@@ -1,4 +1,4 @@
-var ARTWORK_VERSION = '19';
+var ARTWORK_VERSION = '20';
 var ARTWORK_IDS = [
   '15', '17', '40', '43', '11', '50', '41', '59', '46', '29',
   '13', '05', '14', '21', '28', '55', '34', '60', '22', '31',
@@ -66,7 +66,7 @@ function padArtworkNumber(num) {
 
 function createVerticalArtwork(num) {
   var label = padArtworkNumber(num);
-  var file = 'vertical-' + label + '.png';
+  var file = 'vertical-' + label + '.webp';
   var meta = ARTWORK_META[label] || { title: '작품 ' + label, category: '꽃과 식물' };
   return {
     id: 'vertical-' + label,
