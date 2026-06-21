@@ -344,9 +344,24 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
 function ArtworkImage({ art, priority = false }) {
   return /* @__PURE__ */ React.createElement("img", { src: art.thumbSrc || art.src, alt: "", loading: priority ? "eager" : "lazy", decoding: "async", fetchpriority: priority ? "high" : "auto", draggable: "false" });
 }
-function Thumb({ art, fills, lightweight = false, priority = false }) {
+function SnapshotImage({ src, priority = false, className = "" }) {
+  return /* @__PURE__ */ React.createElement("img", {
+    className,
+    src,
+    alt: "",
+    loading: priority ? "eager" : "lazy",
+    decoding: "async",
+    fetchpriority: priority ? "high" : "auto",
+    draggable: "false",
+    style: { width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%", objectFit: "contain", display: "block" }
+  });
+}
+function Thumb({ art, fills, snapshotDataUrl, lightweight = false, priority = false }) {
   const fillsArray = Array.isArray(fills) ? fills : [];
   const [viewportRef, isVisible] = useInViewport({ initial: priority, rootMargin: "360px" });
+  if (snapshotDataUrl) {
+    return /* @__PURE__ */ React.createElement(SnapshotImage, { src: snapshotDataUrl, priority });
+  }
   if (lightweight && fillsArray.length === 0) {
     return /* @__PURE__ */ React.createElement(ArtworkImage, { art, priority });
   }
@@ -729,7 +744,7 @@ function GalleryScreen({ items, onBack, onView }) {
     ),
     e("section", { className: "gallery-summary", "aria-label": "갤러리 요약" },
       e("div", { className: "gallery-summary__thumb", "aria-hidden": "true" },
-        latestArt && latest ? e(Thumb, { art: latestArt, fills: latest.fills }) : e(Thumb, { art: latestArt })
+        latestArt && latest ? e(Thumb, { art: latestArt, fills: latest.fills, snapshotDataUrl: latest.snapshotDataUrl }) : e(Thumb, { art: latestArt })
       ),
       e("div", { className: "gallery-summary__copy" },
         e("span", { className: "gallery-summary__eyebrow" }, items.length > 0 ? "최근 보관" : "준비 중"),
@@ -748,7 +763,7 @@ function GalleryScreen({ items, onBack, onView }) {
     if (!art) return null;
     return e("button", { key: it.id, type: "button", className: "artcard gallery-card", onClick: () => onView(it), "aria-label": art.title + " 보기" },
       e("div", { className: "artcard__thumb" },
-        e(Thumb, { art, fills: it.fills })
+        e(Thumb, { art, fills: it.fills, snapshotDataUrl: it.snapshotDataUrl })
       ),
       e("div", { className: "artcard__body gallery-card__body" },
         e("div", null,
@@ -1228,7 +1243,9 @@ function ViewScreen({ item, onBack, onSave, onRecolor, onDelete }) {
         e("strong", null, art.title),
         e("small", null, (item.fills || []).length, "번의 색칠 기록")
       ),
-      e("div", { className: "completion__frame" }, e(CanvasArt, { art, fills: item.fills, interactive: false, frameMode: "paint" })),
+      e("div", { className: "completion__frame" },
+        item.snapshotDataUrl ? e(SnapshotImage, { src: item.snapshotDataUrl, priority: true }) : e(CanvasArt, { art, fills: item.fills, interactive: false, frameMode: "paint" })
+      ),
       e("div", { className: "completion__btns" },
         e("div", { className: "completion__row" },
           e(BigButton, { icon: "save", onClick: onSave }, "이미지 저장"),
@@ -1290,7 +1307,10 @@ function triggerBrowserDownload(dataUrl, fileName) {
   a.click();
   document.body.removeChild(a);
 }
-function downloadCanvasPng(art, fills) {
+function renderArtworkDataUrl(art, fills, options = {}) {
+  const mimeType = options.mimeType || "image/png";
+  const quality = options.quality;
+  const maxSide = options.maxSide || 0;
   return loadArtworkBitmap(art.src).then((img) => new Promise((resolve, reject) => {
     try {
       const canvas = document.createElement("canvas");
@@ -1307,16 +1327,38 @@ function downloadCanvasPng(art, fills) {
       const { fillLayer } = buildPaintLayerState(immutableBaseImgData, fillsArray, frame);
       const composed = composePaintLayers(immutableBaseImgData, fillLayer, lineLayer);
       ctx.putImageData(composed, 0, 0);
-      const url = canvas.toDataURL("image/png");
-      const fileName = getArtworkFileName(art);
-      if (!postImageToNativeBridge(url, fileName, art)) {
-        triggerBrowserDownload(url, fileName);
+      let outputCanvas = canvas;
+      if (maxSide > 0 && Math.max(canvas.width, canvas.height) > maxSide) {
+        const scale = maxSide / Math.max(canvas.width, canvas.height);
+        const scaledCanvas = document.createElement("canvas");
+        scaledCanvas.width = Math.max(1, Math.round(canvas.width * scale));
+        scaledCanvas.height = Math.max(1, Math.round(canvas.height * scale));
+        const scaledCtx = scaledCanvas.getContext("2d");
+        scaledCtx.imageSmoothingEnabled = true;
+        scaledCtx.imageSmoothingQuality = "high";
+        scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+        outputCanvas = scaledCanvas;
       }
-      resolve();
+      resolve({
+        dataUrl: quality ? outputCanvas.toDataURL(mimeType, quality) : outputCanvas.toDataURL(mimeType),
+        width: outputCanvas.width,
+        height: outputCanvas.height
+      });
     } catch (e) {
       reject(e);
     }
   }));
+}
+function createGallerySnapshotDataUrl(art, fills) {
+  return renderArtworkDataUrl(art, fills, { maxSide: 420, mimeType: "image/webp", quality: 0.74 }).then((snapshot) => snapshot.dataUrl);
+}
+function downloadCanvasPng(art, fills) {
+  return renderArtworkDataUrl(art, fills).then(({ dataUrl }) => {
+    const fileName = getArtworkFileName(art);
+    if (!postImageToNativeBridge(dataUrl, fileName, art)) {
+      triggerBrowserDownload(dataUrl, fileName);
+    }
+  });
 }
 const TWEAK_DEFAULTS = {
   "palettePos": "\uC790\uB3D9",
@@ -1457,12 +1499,21 @@ function App() {
     setScreen("done");
   };
   const keepInGallery = () => {
-    if (justSaved) return;
+    if (justSaved || !art) return;
+    setJustSaved(true);
     const item = AppStorage.createGalleryItem({ id: "g" + Date.now(), artId, fills, date: Date.now() });
     const next = [item, ...gallery];
     setGallery(next);
     AppStorage.saveGallery(next);
-    setJustSaved(true);
+    createGallerySnapshotDataUrl(art, fills).then((snapshotDataUrl) => {
+      const itemWithSnapshot = AppStorage.createGalleryItem({ ...item, snapshotDataUrl });
+      setGallery((currentGallery) => {
+        const updated = currentGallery.map((galleryItem) => galleryItem.id === item.id ? itemWithSnapshot : galleryItem);
+        AppStorage.saveGallery(updated);
+        return updated;
+      });
+    }).catch(() => {
+    });
   };
   const deleteGalleryItem = (itemId) => {
     const next = gallery.filter((item) => item.id !== itemId);

@@ -92,10 +92,14 @@ function run() {
   assert.strictEqual(savedProgress["vertical-15"].artworkVersion, "20");
   assertJsonEqual(savedProgress["vertical-15"].undoHistory, [[{ x: 3, y: 3, color: "#def" }]]);
 
-  const newGalleryItem = AppStorage.createGalleryItem({ id: "new", artId: "vertical-15", fills: [], date: 1 });
-  AppStorage.saveGallery([newGalleryItem]);
+  const snapshotDataUrl = "data:image/webp;base64,abc123";
+  const newGalleryItem = AppStorage.createGalleryItem({ id: "new", artId: "vertical-15", fills: [], date: 1, snapshotDataUrl });
+  const invalidSnapshotItem = AppStorage.createGalleryItem({ id: "bad-snapshot", artId: "vertical-17", fills: [], date: 2, snapshotDataUrl: "not-an-image" });
+  AppStorage.saveGallery([newGalleryItem, invalidSnapshotItem]);
   const savedGallery = JSON.parse(context.localStorage.getItem("sori_gallery_v12"));
   assert.strictEqual(savedGallery[0].artworkVersion, "20");
+  assert.strictEqual(savedGallery[0].snapshotDataUrl, snapshotDataUrl);
+  assert.strictEqual(savedGallery[1].snapshotDataUrl, undefined);
 
   assert.strictEqual(AppStorage.loadSettings().fontScale, 1);
   assert.strictEqual(AppStorage.loadSettings().theme, "따뜻");

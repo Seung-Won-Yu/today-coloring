@@ -78,6 +78,11 @@
     return normalizeUndoHistory(saved.undoHistory).value;
   }
 
+  function normalizeSnapshotDataUrl(value) {
+    if (typeof value !== "string") return undefined;
+    return /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value) ? value : undefined;
+  }
+
   function getArtworkById(artId) {
     const source = window.ARTWORKS || window.ALL_ARTWORKS || [];
     return source.find((art) => art && art.id === artId) || null;
@@ -109,11 +114,15 @@
 
   function createGalleryItem(item) {
     if (!item || !item.artId) return item;
-    return {
+    const normalized = {
       ...item,
       fills: Array.isArray(item.fills) ? item.fills : [],
       artworkVersion: getArtworkVersion(item.artId)
     };
+    const snapshotDataUrl = normalizeSnapshotDataUrl(item.snapshotDataUrl);
+    if (snapshotDataUrl) normalized.snapshotDataUrl = snapshotDataUrl;
+    else delete normalized.snapshotDataUrl;
+    return normalized;
   }
 
   function normalizeProgress(progress) {
@@ -145,7 +154,7 @@
       }
       const normalized = createGalleryItem(item);
       next.push(normalized);
-      if (!Array.isArray(item.fills) || item.artworkVersion !== normalized.artworkVersion) changed = true;
+      if (!Array.isArray(item.fills) || item.artworkVersion !== normalized.artworkVersion || item.snapshotDataUrl !== normalized.snapshotDataUrl) changed = true;
     });
     return { value: next, changed };
   }
