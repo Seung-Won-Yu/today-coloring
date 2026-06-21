@@ -1,9 +1,13 @@
 const AppStorage = window.AppStorage;
 const {
-  fillConnectedRegion,
   hexToRgb,
   isProgressMarked,
   isPaintableBasePixel,
+  isLinePixelColor,
+  buildLineLayerImageData,
+  createFillLayerImageData,
+  paintFillLayerSeed,
+  composePaintLayers,
   findNearestUnpaintedStart,
   findNearestPaintedStart,
   markProgressRegion,
@@ -24,14 +28,29 @@ function recordPaintMetric(sample) {
   window.__COLORING_PAINT_METRICS__ = metrics.slice(-80);
 }
 
-function paintSeedOnImageData(imageData, baseData, seed, fillRgb) {
-  return fillConnectedRegion(imageData, baseData, seed, fillRgb, { smoothPasses: 3 });
-}
-
-function replayFillOnImageData(imageData, baseData, fill, frame) {
+function replayFillOnFillLayer(fillLayerImageData, baseData, fill, frame) {
   const normalizedFill = normalizeFillForFrame(fill, frame);
   const fillRgb = hexToRgb(normalizedFill.color);
-  return paintSeedOnImageData(imageData, baseData, normalizedFill, fillRgb);
+  return paintFillLayerSeed(fillLayerImageData, baseData, normalizedFill, fillRgb);
+}
+
+function cloneFillLayerImageData(imageData) {
+  if (!imageData) return null;
+  const clone = createFillLayerImageData(imageData.width, imageData.height);
+  clone.data.set(imageData.data);
+  return clone;
+}
+
+function buildPaintLayerState(baseImgData, fillsArray, frame) {
+  const fillLayer = createFillLayerImageData(baseImgData.width, baseImgData.height);
+  const progressData = new Uint8ClampedArray(baseImgData.data);
+  const progressImgData = { data: progressData, width: baseImgData.width, height: baseImgData.height };
+  for (let f of fillsArray) {
+    const normalizedFill = normalizeFillForFrame(f, frame);
+    replayFillOnFillLayer(fillLayer, baseImgData.data, normalizedFill, frame);
+    markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseImgData.data);
+  }
+  return { fillLayer, progressImgData };
 }
 
 function useInViewport(options = {}) {
@@ -60,6 +79,8 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   const canvasRef = React.useRef(null);
   const baseCanvasRef = React.useRef(null);
   const baseImageDataRef = React.useRef(null);
+  const lineLayerImageDataRef = React.useRef(null);
+  const fillLayerImageDataRef = React.useRef(null);
   const progressImageDataRef = React.useRef(null);
   const fillsArray = Array.isArray(fills) ? fills : [];
   const regionsRef = React.useRef(null);
@@ -72,6 +93,8 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   if (lastArtSrcRef.current !== art.src) {
     regionsRef.current = null;
     baseImageDataRef.current = null;
+    lineLayerImageDataRef.current = null;
+    fillLayerImageDataRef.current = null;
     progressImageDataRef.current = null;
     lastArtSrcRef.current = art.src;
   }
@@ -156,6 +179,8 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         const ctx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
         ctx.drawImage(frame.canvas, 0, 0);
         baseImageDataRef.current = ctx.getImageData(0, 0, cw, ch);
+        lineLayerImageDataRef.current = buildLineLayerImageData(baseImageDataRef.current);
+        fillLayerImageDataRef.current = null;
         if (!shouldAnalyzeRegions) {
           regionsRef.current = null;
         }
@@ -190,18 +215,14 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     canvasRef.current.width = cw;
     canvasRef.current.height = ch;
     const ctx = canvasRef.current.getContext("2d", { willReadFrequently: true });
-    ctx.drawImage(baseCanvasRef.current, 0, 0);
-    const imgData = ctx.getImageData(0, 0, cw, ch);
     const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
     const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
-    const progressData = new Uint8ClampedArray(baseImgData.data);
-    const progressImgData = { data: progressData, width: cw, height: ch };
-    for (let f of fillsArray) {
-      const normalizedFill = normalizeFillForFrame(f, frameRef.current);
-      replayFillOnImageData(imgData, baseImgData.data, normalizedFill, frameRef.current);
-      markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseImgData.data);
-    }
-    ctx.putImageData(imgData, 0, 0);
+    const lineLayer = lineLayerImageDataRef.current || buildLineLayerImageData(baseImgData);
+    lineLayerImageDataRef.current = lineLayer;
+    const { fillLayer, progressImgData } = buildPaintLayerState(baseImgData, fillsArray, frameRef.current);
+    const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
+    ctx.putImageData(composed, 0, 0);
+    fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
   };
   React.useEffect(() => {
@@ -262,7 +283,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const clickedG = baseImgData.data[clickedIdx + 1];
     const clickedB = baseImgData.data[clickedIdx + 2];
     const clickedA = baseImgData.data[clickedIdx + 3];
-    const clickedIsLine = clickedA >= 50 && clickedR < 75 && clickedG < 75 && clickedB < 75;
+    const clickedIsLine = isLinePixelColor(clickedR, clickedG, clickedB, clickedA);
     let start = { x, y };
     if (!clickedIsPaintable) {
       if (!clickedIsLine) return;
@@ -292,16 +313,22 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     markProgressRegion(progressImgData, paintX, paintY, baseImgData.data);
     metric.progress += nowMs() - t0;
     t0 = nowMs();
-    const liveData = ctx.getImageData(0, 0, cw, ch);
-    metric.getImageData += nowMs() - t0;
+    const cachedFillLayer = fillLayerImageDataRef.current;
+    let fillLayer = cachedFillLayer && cachedFillLayer.width === cw && cachedFillLayer.height === ch
+      ? cloneFillLayerImageData(cachedFillLayer)
+      : buildPaintLayerState(baseImgData, fillsArray, frameRef.current).fillLayer;
     directPaintSeeds.forEach((seed) => {
       const fillStart = nowMs();
-      fillConnectedRegion(liveData, baseImgData.data, seed, selectedRgb, { smoothPasses: 3 });
+      paintFillLayerSeed(fillLayer, baseImgData.data, seed, selectedRgb);
       metric.fill += nowMs() - fillStart;
     });
     t0 = nowMs();
-    ctx.putImageData(liveData, 0, 0);
+    const lineLayer = lineLayerImageDataRef.current || buildLineLayerImageData(baseImgData);
+    lineLayerImageDataRef.current = lineLayer;
+    const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
+    ctx.putImageData(composed, 0, 0);
     metric.putImageData += nowMs() - t0;
+    fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
     requestAnimationFrame(() => recordPaintMetric({
       ...metric,
@@ -1249,13 +1276,14 @@ function downloadCanvasPng(art, fills) {
       canvas.height = frame.height;
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       ctx.drawImage(frame.canvas, 0, 0);
-      const imgData = ctx.getImageData(0, 0, frame.width, frame.height);
-      const baseData = new Uint8ClampedArray(imgData.data);
+      const baseImgData = ctx.getImageData(0, 0, frame.width, frame.height);
+      const baseData = new Uint8ClampedArray(baseImgData.data);
+      const immutableBaseImgData = { data: baseData, width: frame.width, height: frame.height };
+      const lineLayer = buildLineLayerImageData(immutableBaseImgData);
       const fillsArray = Array.isArray(fills) ? fills : [];
-      for (let f of fillsArray) {
-        replayFillOnImageData(imgData, baseData, f, frame);
-      }
-      ctx.putImageData(imgData, 0, 0);
+      const { fillLayer } = buildPaintLayerState(immutableBaseImgData, fillsArray, frame);
+      const composed = composePaintLayers(immutableBaseImgData, fillLayer, lineLayer);
+      ctx.putImageData(composed, 0, 0);
       const url = canvas.toDataURL("image/png");
       const fileName = getArtworkFileName(art);
       if (!postImageToNativeBridge(url, fileName, art)) {

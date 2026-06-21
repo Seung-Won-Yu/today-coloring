@@ -8,6 +8,106 @@
     return getColorLuminance(fillColor.r, fillColor.g, fillColor.b) < 118;
   }
 
+  const LINE_ALPHA_WHITE_POINT = 248;
+  const LINE_ALPHA_GAIN = 1.38;
+  const HARD_LINE_LUMINANCE = 112;
+  const LINE_CHROMA_LIMIT = 72;
+
+  function createImageDataLike(width, height, data = null) {
+    const pixels = data || new Uint8ClampedArray(width * height * 4);
+    if (typeof ImageData !== "undefined") {
+      return new ImageData(pixels, width, height);
+    }
+    return { data: pixels, width, height };
+  }
+
+  function getPixelStats(r, g, b) {
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    return {
+      max,
+      min,
+      chroma: max - min,
+      luminance: getColorLuminance(r, g, b)
+    };
+  }
+
+  function isWhiteBaseColor(r, g, b, a) {
+    if (a < 50) return false;
+    const stats = getPixelStats(r, g, b);
+    return stats.min > 238 && stats.luminance > 247 && stats.chroma < 28;
+  }
+
+  function isHardLineCoreColor(r, g, b, a) {
+    if (a < 50) return false;
+    const stats = getPixelStats(r, g, b);
+    return stats.luminance <= HARD_LINE_LUMINANCE && stats.chroma <= LINE_CHROMA_LIMIT;
+  }
+
+  function getLineAlphaFromColor(r, g, b, a) {
+    if (a < 50) return 0;
+    const stats = getPixelStats(r, g, b);
+    return Math.max(0, Math.min(255, Math.round((LINE_ALPHA_WHITE_POINT - stats.luminance) * LINE_ALPHA_GAIN)));
+  }
+
+  function hasHardLineNeighbor(source, width, height, x, y, radius = 2) {
+    for (let dy = -radius; dy <= radius; dy++) {
+      const py = y + dy;
+      if (py < 0 || py >= height) continue;
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const px = x + dx;
+        if (px < 0 || px >= width) continue;
+        const idx = (py * width + px) * 4;
+        if (isHardLineCoreColor(source[idx], source[idx + 1], source[idx + 2], source[idx + 3])) return true;
+      }
+    }
+    return false;
+  }
+
+  function getLineAlphaForBasePixel(source, width, height, x, y) {
+    const idx = (y * width + x) * 4;
+    const r = source[idx];
+    const g = source[idx + 1];
+    const b = source[idx + 2];
+    const a = source[idx + 3];
+    if (isHardLineCoreColor(r, g, b, a)) return getLineAlphaFromColor(r, g, b, a);
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const luminance = getColorLuminance(r, g, b);
+    if (min >= 246 && luminance >= 248 && max - min <= 18) return 0;
+    if (max - min > LINE_CHROMA_LIMIT || luminance <= HARD_LINE_LUMINANCE || luminance >= LINE_ALPHA_WHITE_POINT) return 0;
+    return hasHardLineNeighbor(source, width, height, x, y) ? getLineAlphaFromColor(r, g, b, a) : 0;
+  }
+
+  function isFloodFillBasePixel(data, width, height, x, y) {
+    const idx = (y * width + x) * 4;
+    const r = data[idx];
+    const g = data[idx + 1];
+    const b = data[idx + 2];
+    const a = data[idx + 3];
+    if (isWhiteBaseColor(r, g, b, a)) return true;
+    return getLineAlphaForBasePixel(data, width, height, x, y) > 0 && !isHardLineCoreColor(r, g, b, a);
+  }
+
+  function buildLineLayerImageData(baseImageData) {
+    const width = baseImageData.width;
+    const height = baseImageData.height;
+    const source = baseImageData.data;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let idx = 0; idx < data.length; idx += 4) {
+      data[idx] = 0;
+      data[idx + 1] = 0;
+      data[idx + 2] = 0;
+      data[idx + 3] = getLineAlphaForBasePixel(source, width, height, (idx / 4) % width, Math.floor((idx / 4) / width));
+    }
+    return createImageDataLike(width, height, data);
+  }
+
+  function createFillLayerImageData(width, height) {
+    return createImageDataLike(width, height);
+  }
+
   function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95, baseData = null) {
     const width = imageData.width;
     const height = imageData.height;
@@ -16,7 +116,7 @@
     const getPixelIndex = (x, y) => (y * width + x) * 4;
     const canUseBasePixel = (x, y) => {
       if (!baseData) return true;
-      return isPaintableBasePixel(baseData, getPixelIndex(x, y));
+      return isFloodFillBasePixel(baseData, width, height, x, y);
     };
     const targetIdx = getPixelIndex(startX, startY);
     if (!canUseBasePixel(startX, startY)) return null;
@@ -28,7 +128,7 @@
     const fillG = fillColor.g;
     const fillB = fillColor.b;
     const colorDist = Math.abs(targetR - fillR) + Math.abs(targetG - fillG) + Math.abs(targetB - fillB);
-    if (colorDist < 10) return null;
+    if (targetA >= 50 && colorDist < 10) return null;
     const isLinePixel = (r, g, b, a) => {
       if (a < 50) return false;
       return r < 75 && g < 75 && b < 75;
@@ -39,6 +139,7 @@
     const colorMatch = (r, g, b, a, x, y) => {
       if (!canUseBasePixel(x, y)) return false;
       if (isLinePixel(r, g, b, a)) return false;
+      if (targetA < 50 || a < 50) return targetA < 50 && a < 50;
       if (targetR > 215 && targetG > 215 && targetB > 215) {
         const isGrayscale = Math.abs(r - g) < 50 && Math.abs(g - b) < 50 && Math.abs(r - b) < 50;
         if (isGrayscale) return r > 185 && g > 185 && b > 185;
@@ -379,19 +480,21 @@
   function fillConnectedRegion(imageData, baseData, seed, fillColor, options = {}) {
     const tolerance = options.tolerance || 95;
     const shouldSmooth = options.smooth !== false;
+    const shouldAbsorb = options.absorbIslands !== false;
+    const shouldRestore = options.restoreBoundary !== false;
     const isDarkFill = isDarkFillColor(fillColor);
     const fillBounds = doFloodFill(imageData, seed.x, seed.y, fillColor, tolerance, baseData);
     if (!fillBounds) return null;
     let mergedBounds = fillBounds;
     if (shouldSmooth && !isDarkFill) smoothFillEdges(imageData, baseData, fillColor, options.smoothPasses || 3, mergedBounds);
-    mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
+    if (shouldAbsorb) mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
     if (shouldSmooth && !isDarkFill && mergedBounds !== fillBounds) {
       smoothFillEdges(imageData, baseData, fillColor, Math.min(2, options.smoothPasses || 2), mergedBounds);
-      mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
+      if (shouldAbsorb) mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
       smoothFillEdges(imageData, baseData, fillColor, 1, mergedBounds);
-      mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
+      if (shouldAbsorb) mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
     }
-    restoreBoundaryPixels(imageData, baseData, mergedBounds);
+    if (shouldRestore) restoreBoundaryPixels(imageData, baseData, mergedBounds);
     return mergedBounds;
   }
 
@@ -407,8 +510,7 @@
   }
 
   function isLinePixelColor(r, g, b, a) {
-    if (a < 50) return false;
-    return r < 75 && g < 75 && b < 75;
+    return isHardLineCoreColor(r, g, b, a);
   }
 
   function isPaintableBasePixel(data, idx) {
@@ -416,11 +518,7 @@
     const g = data[idx + 1];
     const b = data[idx + 2];
     const a = data[idx + 3];
-    if (isLinePixelColor(r, g, b, a)) return false;
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const luminance = r * 0.299 + g * 0.587 + b * 0.114;
-    return min > 238 && luminance > 247 && max - min < 28;
+    return Boolean(isWhiteBaseColor(r, g, b, a));
   }
 
   function findNearestUnpaintedStart(baseData, progressData, width, height, x, y, radius) {
@@ -480,7 +578,49 @@
   }
 
   function markProgressRegion(imageData, x, y, baseData = null) {
-    fillConnectedRegion(imageData, baseData, { x, y }, PROGRESS_MARKER, { smooth: false });
+    fillConnectedRegion(imageData, baseData, { x, y }, PROGRESS_MARKER, {
+      smooth: false,
+      absorbIslands: false,
+      restoreBoundary: false
+    });
+  }
+
+  function paintFillLayerSeed(fillLayerImageData, baseData, seed, fillColor) {
+    return fillConnectedRegion(fillLayerImageData, baseData, seed, fillColor, {
+      smooth: false,
+      absorbIslands: false,
+      restoreBoundary: false
+    });
+  }
+
+  function composePaintLayers(baseImageData, fillLayerImageData, lineLayerImageData = null) {
+    const width = baseImageData.width;
+    const height = baseImageData.height;
+    const fillData = fillLayerImageData.data;
+    const baseData = baseImageData.data;
+    const lineData = lineLayerImageData ? lineLayerImageData.data : buildLineLayerImageData(baseImageData).data;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let idx = 0; idx < data.length; idx += 4) {
+      const fillAlpha = fillData[idx + 3] / 255;
+      const lineAlpha = lineData[idx + 3] / 255;
+      const useOriginalBase = fillAlpha === 0 && lineAlpha === 0 && !isPaintableBasePixel(baseData, idx);
+      const baseR = useOriginalBase ? baseData[idx] : 255;
+      const baseG = useOriginalBase ? baseData[idx + 1] : 255;
+      const baseB = useOriginalBase ? baseData[idx + 2] : 255;
+      let r = Math.round(fillData[idx] * fillAlpha + baseR * (1 - fillAlpha));
+      let g = Math.round(fillData[idx + 1] * fillAlpha + baseG * (1 - fillAlpha));
+      let b = Math.round(fillData[idx + 2] * fillAlpha + baseB * (1 - fillAlpha));
+      if (lineAlpha > 0) {
+        r = Math.round(r * (1 - lineAlpha));
+        g = Math.round(g * (1 - lineAlpha));
+        b = Math.round(b * (1 - lineAlpha));
+      }
+      data[idx] = r;
+      data[idx + 1] = g;
+      data[idx + 2] = b;
+      data[idx + 3] = 255;
+    }
+    return createImageDataLike(width, height, data);
   }
 
   const safeArtworkFrameCache = new Map();
@@ -581,8 +721,13 @@
     doFloodFill,
     fillConnectedRegion,
     smoothFillEdges,
+    buildLineLayerImageData,
+    createFillLayerImageData,
+    paintFillLayerSeed,
+    composePaintLayers,
     hexToRgb,
     isProgressMarked,
+    isLinePixelColor,
     isPaintableBasePixel,
     findNearestUnpaintedStart,
     findNearestPaintedStart,
