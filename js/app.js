@@ -1081,7 +1081,7 @@ function ColorToolbelt({ hasHistory, isZoomed, onUndo, onReset, onZoom }) {
   return e("div", { className: "color-toolbelt", style: { zIndex: 18 } },
     e("button", { className: "color-toolbelt__btn", onClick: onUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30", title: "\uB418\uB3CC\uB9AC\uAE30" },
       e(Icon, { name: "undo", size: 19 }),
-      e("span", { className: "color-toolbelt__label" }, "\uB418\uB3CC\uB9BC")
+      e("span", { className: "color-toolbelt__label" }, "\uB418\uB3CC\uB9AC\uAE30")
     ),
     e("button", { className: "color-toolbelt__btn", onClick: onReset, "aria-label": "\uCC98\uC74C\uBD80\uD130", title: "\uCC98\uC74C\uBD80\uD130" },
       e(Icon, { name: "reset", size: 19 }),
@@ -1089,7 +1089,7 @@ function ColorToolbelt({ hasHistory, isZoomed, onUndo, onReset, onZoom }) {
     ),
     e("button", { className: "color-toolbelt__btn", onClick: onZoom, "aria-label": isZoomed ? "\uCD95\uC18C\uD558\uAE30" : "\uD06C\uAC8C \uBCF4\uAE30", title: isZoomed ? "\uCD95\uC18C\uD558\uAE30" : "\uD06C\uAC8C \uBCF4\uAE30" },
       e(Icon, { name: isZoomed ? "zoomOut" : "zoomIn", size: 19 }),
-      e("span", { className: "color-toolbelt__label" }, isZoomed ? "\uCD95\uC18C" : "\uD655\uB300")
+      e("span", { className: "color-toolbelt__label" }, isZoomed ? "\uCD95\uC18C\uD558\uAE30" : "\uD06C\uAC8C \uBCF4\uAE30")
     )
   );
 }
@@ -1361,16 +1361,6 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
       ),
       e("div", { className: "appbar__center-txt appbar__center-title" }, art.title),
       e("div", { className: "appbar__tools appbar__tools--color" },
-        layout === "side" && e(React.Fragment, null,
-          e("button", { className: "tool--pill", onClick: handleUndo, disabled: !hasHistory, "aria-label": "되돌리기" },
-            e(Icon, { name: "undo", size: 20 }),
-            e("span", { className: "hide-narrow" }, "되돌리기")
-          ),
-          e("button", { className: "tool--pill", onClick: handleReset, "aria-label": "처음부터" },
-            e(Icon, { name: "reset", size: 20 }),
-            e("span", { className: "hide-narrow" }, "처음부터")
-          )
-        ),
         e("button", { className: "appbar__save", onClick: onFinish },
           e(Icon, { name: "check", size: 19 }),
           e("span", null, "완성하기")
@@ -1398,14 +1388,12 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
         )
       ),
       e("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } },
-        layout === "bottom" && e(ColorToolbelt, { hasHistory, isZoomed: scale > 1, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }),
-        e("div", { className: "curcolor", "aria-label": "\uC120\uD0DD\uD55C \uC0C9 " + selectedColorName, style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } },
-          e("span", { className: "curcolor__brush", "aria-hidden": "true" }, e(Icon, { name: "brush", size: 18, color: isLight(selected) ? "#4A4036" : "#fff" })),
-          e("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, selectedColorName)
-        ),
-        layout === "side" && e("button", { onClick: toggleZoom, className: "zoom-toggle-btn", "aria-label": scale > 1 ? "축소하기" : "크게 보기" },
-          e(Icon, { name: scale > 1 ? "zoomOut" : "zoomIn", size: 22, color: "var(--ink)" }),
-          e("span", { className: "zoom-toggle-btn__label" }, scale > 1 ? "축소하기 (1x)" : "크게 보기 (2x)")
+        e("div", { className: "color-controls" },
+          e("div", { className: "curcolor", "aria-label": "\uC120\uD0DD\uD55C \uC0C9 " + selectedColorName, style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } },
+            e("span", { className: "curcolor__brush", "aria-hidden": "true" }, e(Icon, { name: "brush", size: 18, color: isLight(selected) ? "#4A4036" : "#fff" })),
+            e("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, selectedColorName)
+          ),
+          e(ColorToolbelt, { hasHistory, isZoomed: scale > 1, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom })
         ),
         e(Palette, { selected, onSelect, layout })
       )
