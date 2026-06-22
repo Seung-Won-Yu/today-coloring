@@ -8,10 +8,21 @@
     return getColorLuminance(fillColor.r, fillColor.g, fillColor.b) < 118;
   }
 
-  const LINE_ALPHA_WHITE_POINT = 248;
-  const LINE_ALPHA_GAIN = 1.38;
-  const HARD_LINE_LUMINANCE = 112;
-  const LINE_CHROMA_LIMIT = 72;
+  // Tuned thresholds for separating fillable paper, soft line edges, and hard ink.
+  const PAINT_TUNING = Object.freeze({
+    LINE_ALPHA_WHITE_POINT: 248,
+    LINE_ALPHA_GAIN: 1.38,
+    HARD_LINE_LUMINANCE: 112,
+    LINE_CHROMA_LIMIT: 72,
+    FLOOD_FILL_TOLERANCE: 95
+  });
+  const {
+    LINE_ALPHA_WHITE_POINT,
+    LINE_ALPHA_GAIN,
+    HARD_LINE_LUMINANCE,
+    LINE_CHROMA_LIMIT,
+    FLOOD_FILL_TOLERANCE
+  } = PAINT_TUNING;
 
   function createImageDataLike(width, height, data = null) {
     const pixels = data || new Uint8ClampedArray(width * height * 4);
@@ -124,7 +135,7 @@
     return Boolean(color && Number.isFinite(color.r) && Number.isFinite(color.g) && Number.isFinite(color.b));
   }
 
-  function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95, baseData = null) {
+  function doFloodFill(imageData, startX, startY, fillColor, tolerance = FLOOD_FILL_TOLERANCE, baseData = null) {
     if (!isValidImageData(imageData) || !isValidRgbColor(fillColor)) return null;
     const width = imageData.width;
     const height = imageData.height;
@@ -497,7 +508,7 @@
 
   function fillConnectedRegion(imageData, baseData, seed, fillColor, options = {}) {
     if (!imageData || !seed || !fillColor) return null;
-    const tolerance = options.tolerance || 95;
+    const tolerance = options.tolerance || FLOOD_FILL_TOLERANCE;
     const shouldSmooth = options.smooth !== false;
     const shouldAbsorb = options.absorbIslands !== false;
     const shouldRestore = options.restoreBoundary !== false;
