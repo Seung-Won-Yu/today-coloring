@@ -40,6 +40,8 @@ const regionAnalysisCache = new Map();
 const REGION_ANALYSIS_CACHE_LIMIT = 12;
 const paintLayerStateCache = new Map();
 const PAINT_LAYER_STATE_CACHE_LIMIT = 6;
+const MAX_CANVAS_RENDER_DPR = 2;
+let composedPaintScratchCanvas = null;
 function getRegionAnalysisCacheKey(art, frameMode, width, height) {
   const artKey = art ? `${art.id || ""}@${art.version || ""}@${art.src || ""}` : "";
   return `${artKey}:${frameMode}:${width}x${height}`;
@@ -187,12 +189,65 @@ function buildPaintLayerState(baseImgData, fillsArray, frame, regionMap = null) 
   return { fillLayer, progressImgData };
 }
 
-function renderComposedPaintFrame(ctx, baseImgData, fillLayer, lineLayer) {
-  const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
+function getCanvasRenderPixelSize(canvas, sourceWidth, sourceHeight, smoothToDisplay) {
+  if (!smoothToDisplay || !canvas || !canvas.getBoundingClientRect) {
+    return { width: sourceWidth, height: sourceHeight };
+  }
+  const bounds = canvas.parentElement && canvas.parentElement.getBoundingClientRect
+    ? canvas.parentElement.getBoundingClientRect()
+    : canvas.getBoundingClientRect();
+  const sourceAspect = sourceWidth / sourceHeight;
+  let cssWidth = bounds && bounds.width > 0 ? bounds.width : sourceWidth;
+  let cssHeight = bounds && bounds.height > 0 ? bounds.height : sourceHeight;
+  if (cssWidth / cssHeight > sourceAspect) {
+    cssWidth = cssHeight * sourceAspect;
+  } else {
+    cssHeight = cssWidth / sourceAspect;
+  }
+  const dpr = Math.min(MAX_CANVAS_RENDER_DPR, Math.max(1, window.devicePixelRatio || 1));
+  return {
+    width: Math.max(1, Math.round(cssWidth * dpr)),
+    height: Math.max(1, Math.round(cssHeight * dpr))
+  };
+}
+
+function renderImageDataToCanvas(canvas, imageData, options = {}) {
+  const targetSize = getCanvasRenderPixelSize(canvas, imageData.width, imageData.height, options.smoothToDisplay);
+  if (!options.smoothToDisplay) {
+    if (canvas.width !== imageData.width) canvas.width = imageData.width;
+    if (canvas.height !== imageData.height) canvas.height = imageData.height;
+    canvas.getContext("2d", { willReadFrequently: true }).putImageData(imageData, 0, 0);
+    return;
+  }
+  if (!composedPaintScratchCanvas) {
+    composedPaintScratchCanvas = document.createElement("canvas");
+  }
+  if (composedPaintScratchCanvas.width !== imageData.width) composedPaintScratchCanvas.width = imageData.width;
+  if (composedPaintScratchCanvas.height !== imageData.height) composedPaintScratchCanvas.height = imageData.height;
+  const sourceCtx = composedPaintScratchCanvas.getContext("2d", { willReadFrequently: true });
+  sourceCtx.putImageData(imageData, 0, 0);
+  if (canvas.width !== targetSize.width) canvas.width = targetSize.width;
+  if (canvas.height !== targetSize.height) canvas.height = targetSize.height;
+  const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.putImageData(composed, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(composedPaintScratchCanvas, 0, 0, canvas.width, canvas.height);
+}
+
+function renderComposedPaintFrame(canvas, baseImgData, fillLayer, lineLayer, options = {}) {
+  const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
+  renderImageDataToCanvas(canvas, composed, options);
   return composed;
+}
+
+function getFillLayerColorDistance(fillLayer, pixelIndex, color) {
+  if (!fillLayer || !fillLayer.data || fillLayer.data[pixelIndex + 3] === 0) return Infinity;
+  return (
+    Math.abs(fillLayer.data[pixelIndex] - color.r) +
+    Math.abs(fillLayer.data[pixelIndex + 1] - color.g) +
+    Math.abs(fillLayer.data[pixelIndex + 2] - color.b)
+  );
 }
 
 function useInViewport(options = {}) {
@@ -328,9 +383,6 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   }, [art.src, frameMode, shouldAnalyzeRegions]);
   const redraw = (cw, ch) => {
     if (!canvasRef.current || !baseCanvasRef.current) return;
-    canvasRef.current.width = cw;
-    canvasRef.current.height = ch;
-    const ctx = canvasRef.current.getContext("2d", { willReadFrequently: true });
     const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
     const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
     const lineLayer = lineLayerImageDataRef.current || buildLineLayerImageData(baseImgData);
@@ -340,30 +392,33 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       cacheKey,
       () => buildPaintLayerState(baseImgData, fillsArray, frameRef.current, regionMapRef.current)
     );
-    renderComposedPaintFrame(ctx, baseImgData, fillLayer, lineLayer);
+    renderComposedPaintFrame(canvasRef.current, baseImgData, fillLayer, lineLayer, { smoothToDisplay: true });
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
   };
   React.useEffect(() => {
-    if (!canvasRef.current) return;
-    const cw = canvasRef.current.width;
-    const ch = canvasRef.current.height;
+    if (!canvasRef.current || !baseImageDataRef.current) return;
+    const cw = baseImageDataRef.current.width;
+    const ch = baseImageDataRef.current.height;
     if (cw === 0 || ch === 0) return;
     redraw(cw, ch);
   }, [fills]);
   const handlePointerUp = (e) => {
     if (!interactive || !onPaint) return;
     if (canPaint && !canPaint()) return;
+    if (!canvasRef.current || !baseCanvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = canvasRef.current.width / rect.width;
-    const scaleY = canvasRef.current.height / rect.height;
+    if (!rect.width || !rect.height) return;
+    const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
+    const sourceWidth = baseImageDataRef.current ? baseImageDataRef.current.width : baseCanvasRef.current.width;
+    const sourceHeight = baseImageDataRef.current ? baseImageDataRef.current.height : baseCanvasRef.current.height;
+    const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, sourceWidth, sourceHeight);
+    const scaleX = baseImgData.width / rect.width;
+    const scaleY = baseImgData.height / rect.height;
     const x = Math.floor((e.clientX - rect.left) * scaleX);
     const y = Math.floor((e.clientY - rect.top) * scaleY);
-    const cw = canvasRef.current.width;
-    const ch = canvasRef.current.height;
-    const ctx = canvasRef.current.getContext("2d", { willReadFrequently: true });
-    const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
-    const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
+    const cw = baseImgData.width;
+    const ch = baseImgData.height;
     const regionMap = canUsePaintRegionMap(regionMapRef.current, cw, ch) ? regionMapRef.current : null;
     let progressImgData = null;
     const cachedProgress = progressImageDataRef.current;
@@ -407,8 +462,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const isAlreadyColored = isProgressMarked(progressData, pIdx);
     const selectedRgb = hexToRgb(selected);
     if (isAlreadyColored) {
-      const pixel = ctx.getImageData(paintX, paintY, 1, 1).data;
-      const dist = Math.abs(pixel[0] - selectedRgb.r) + Math.abs(pixel[1] - selectedRgb.g) + Math.abs(pixel[2] - selectedRgb.b);
+      const dist = getFillLayerColorDistance(fillLayerImageDataRef.current, pIdx, selectedRgb);
       if (dist < 10) {
         return;
       }
@@ -431,7 +485,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     });
     const lineLayer = lineLayerImageDataRef.current || buildLineLayerImageData(baseImgData);
     lineLayerImageDataRef.current = lineLayer;
-    renderComposedPaintFrame(ctx, baseImgData, fillLayer, lineLayer);
+    renderComposedPaintFrame(canvasRef.current, baseImgData, fillLayer, lineLayer, { smoothToDisplay: true });
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
     rememberPaintLayerState(getPaintLayerStateCacheKey(art, frameMode, cw, ch, nextFills), { fillLayer, progressImgData });
@@ -449,7 +503,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     {
       ref: canvasRef,
       onPointerUp: handlePointerUp,
-      style: { maxWidth: "100%", maxHeight: "100%", objectFit: "contain", touchAction: "none" }
+      style: { width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%", objectFit: "contain", display: "block", touchAction: "none" }
     }
   ), paintPulse && /* @__PURE__ */ React.createElement("span", { key: paintPulse.id, className: "paint-feedback", style: { left: paintPulse.x + "%", top: paintPulse.y + "%" } }));
 }
@@ -1518,7 +1572,7 @@ function renderArtworkDataUrl(art, fills, options = {}) {
       cacheKey,
       () => buildPaintLayerState(immutableBaseImgData, fillsArray, frame, regionMap)
     );
-    renderComposedPaintFrame(ctx, immutableBaseImgData, fillLayer, lineLayer);
+    renderComposedPaintFrame(canvas, immutableBaseImgData, fillLayer, lineLayer);
     let outputCanvas = canvas;
     if (maxSide > 0 && Math.max(canvas.width, canvas.height) > maxSide) {
       const scale = maxSide / Math.max(canvas.width, canvas.height);
