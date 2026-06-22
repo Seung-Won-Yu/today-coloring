@@ -19,6 +19,10 @@
   });
   const VISUAL_FILL_UNDER_LINE_RADIUS = 2;
   const VISUAL_FILL_MIN_LINE_ALPHA = 18;
+  const VISUAL_HOLE_FILL_RADIUS = 1;
+  const VISUAL_HOLE_FILL_MIN_NEIGHBORS = 5;
+  const VISUAL_HOLE_FILL_PAINTABLE_MIN_NEIGHBORS = 8;
+  const VISUAL_HOLE_FILL_MAX_COLOR_DISTANCE = 42;
   const {
     MIN_VISIBLE_ALPHA,
     LINE_ALPHA_WHITE_POINT,
@@ -567,13 +571,85 @@
     return bestIdx;
   }
 
-  function getVisualFillPixelIndex(fillData, lineData, width, height, pixelOffset) {
+  function getFillPixelColorDistance(fillData, aIdx, bIdx) {
+    return (
+      Math.abs(fillData[aIdx] - fillData[bIdx]) +
+      Math.abs(fillData[aIdx + 1] - fillData[bIdx + 1]) +
+      Math.abs(fillData[aIdx + 2] - fillData[bIdx + 2])
+    );
+  }
+
+  function findSurroundedFillPixel(fillData, baseData, width, height, x, y, radius) {
+    const idx = (y * width + x) * 4;
+    const baseIsPaintable = isWhiteBaseColor(baseData[idx], baseData[idx + 1], baseData[idx + 2], baseData[idx + 3]);
+    const requiredNeighbors = baseIsPaintable ? VISUAL_HOLE_FILL_PAINTABLE_MIN_NEIGHBORS : VISUAL_HOLE_FILL_MIN_NEIGHBORS;
+    let candidateCount = 0;
+    for (let dy = -radius; dy <= radius; dy++) {
+      const py = y + dy;
+      if (py < 0 || py >= height) continue;
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const px = x + dx;
+        if (px < 0 || px >= width) continue;
+        const candidateIdx = (py * width + px) * 4;
+        if (fillData[candidateIdx + 3] === 0) continue;
+        candidateCount++;
+      }
+    }
+    if (candidateCount < requiredNeighbors) return -1;
+    let bestIdx = -1;
+    let bestCount = 0;
+    let bestDistance = Infinity;
+    for (let refDy = -radius; refDy <= radius; refDy++) {
+      const refY = y + refDy;
+      if (refY < 0 || refY >= height) continue;
+      for (let refDx = -radius; refDx <= radius; refDx++) {
+        if (refDx === 0 && refDy === 0) continue;
+        const refX = x + refDx;
+        if (refX < 0 || refX >= width) continue;
+        const refIdx = (refY * width + refX) * 4;
+        if (fillData[refIdx + 3] === 0) continue;
+        let count = 0;
+        let nearestIdx = refIdx;
+        let nearestDistance = refDx * refDx + refDy * refDy;
+        for (let dy = -radius; dy <= radius; dy++) {
+          const py = y + dy;
+          if (py < 0 || py >= height) continue;
+          for (let dx = -radius; dx <= radius; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const px = x + dx;
+            if (px < 0 || px >= width) continue;
+            const candidateIdx = (py * width + px) * 4;
+            if (fillData[candidateIdx + 3] === 0) continue;
+            if (getFillPixelColorDistance(fillData, refIdx, candidateIdx) > VISUAL_HOLE_FILL_MAX_COLOR_DISTANCE) continue;
+            count++;
+            const distance = dx * dx + dy * dy;
+            if (distance < nearestDistance) {
+              nearestIdx = candidateIdx;
+              nearestDistance = distance;
+            }
+          }
+        }
+        if (count < requiredNeighbors) continue;
+        if (count > bestCount || (count === bestCount && nearestDistance < bestDistance)) {
+          bestIdx = nearestIdx;
+          bestCount = count;
+          bestDistance = nearestDistance;
+        }
+      }
+    }
+    return bestIdx;
+  }
+
+  function getVisualFillPixelIndex(fillData, lineData, baseData, width, height, pixelOffset) {
     const idx = pixelOffset * 4;
     if (fillData[idx + 3] > 0) return idx;
-    if (!lineData || lineData[idx + 3] < VISUAL_FILL_MIN_LINE_ALPHA) return -1;
     const x = pixelOffset % width;
     const y = Math.floor(pixelOffset / width);
-    return findNearbyFillPixel(fillData, width, height, x, y, VISUAL_FILL_UNDER_LINE_RADIUS);
+    if (lineData && lineData[idx + 3] >= VISUAL_FILL_MIN_LINE_ALPHA) {
+      return findNearbyFillPixel(fillData, width, height, x, y, VISUAL_FILL_UNDER_LINE_RADIUS);
+    }
+    return findSurroundedFillPixel(fillData, baseData, width, height, x, y, VISUAL_HOLE_FILL_RADIUS);
   }
 
   function composePaintLayers(baseImageData, fillLayerImageData, lineLayerImageData = null) {
@@ -585,7 +661,7 @@
     const data = new Uint8ClampedArray(width * height * 4);
     for (let idx = 0, pixelOffset = 0; idx < data.length; idx += 4, pixelOffset++) {
       const lineAlpha = lineData[idx + 3] / 255;
-      const fillIdx = getVisualFillPixelIndex(fillData, lineData, width, height, pixelOffset);
+      const fillIdx = getVisualFillPixelIndex(fillData, lineData, baseData, width, height, pixelOffset);
       if (fillIdx < 0) {
         data[idx] = baseData[idx];
         data[idx + 1] = baseData[idx + 1];
