@@ -132,6 +132,15 @@ function run() {
   assert.strictEqual(regionCacheHooks.getCachedRegionAnalysis("region-0"), null, "region analysis cache should evict the oldest entry first");
   assert.strictEqual(regionCacheHooks.getCachedRegionAnalysis(`region-${regionCacheLimit}`)[0].x, regionCacheLimit, "region analysis cache should keep the newest entry");
 
+  const regionRecencyHooks = loadAppHooks();
+  for (let idx = 0; idx < regionCacheLimit; idx += 1) {
+    regionRecencyHooks.rememberRegionAnalysis(`region-recency-${idx}`, [{ x: idx, y: idx + 1, size: 20, isBackground: false }]);
+  }
+  regionRecencyHooks.rememberRegionAnalysis("region-recency-0", [{ x: 99, y: 100, size: 20, isBackground: false }]);
+  regionRecencyHooks.rememberRegionAnalysis("region-recency-new", [{ x: 200, y: 201, size: 20, isBackground: false }]);
+  assert.strictEqual(regionRecencyHooks.getCachedRegionAnalysis("region-recency-0")[0].x, 99, "updated region cache entries should become the newest entries");
+  assert.strictEqual(regionRecencyHooks.getCachedRegionAnalysis("region-recency-1"), null, "region cache should evict the oldest untouched entry after a refresh");
+
   const firstThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "20", src: "art.webp?v=20" }, 80);
   const nextThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "21", src: "art.webp?v=21" }, 80);
   assert.notStrictEqual(firstThumbKey, nextThumbKey, "finished thumbnail cache keys should include artwork version changes");
@@ -153,6 +162,15 @@ function run() {
   assert.strictEqual(cacheLimitHooks.getFinishedThumbCacheSize(), thumbCacheLimit, "finished thumbnail cache should stay within its limit");
   assert.strictEqual(cacheLimitHooks.getCachedFinishedThumbFills("thumb-0"), null, "finished thumbnail cache should evict the oldest entry first");
   assert.strictEqual(cacheLimitHooks.getCachedFinishedThumbFills(`thumb-${thumbCacheLimit}`)[0].x, thumbCacheLimit, "finished thumbnail cache should keep the newest entry");
+
+  const thumbRecencyHooks = loadAppHooks();
+  for (let idx = 0; idx < thumbCacheLimit; idx += 1) {
+    thumbRecencyHooks.rememberFinishedThumbFills(`thumb-recency-${idx}`, [{ x: idx, y: idx + 1, color: "#ABCDEF", v: 2 }]);
+  }
+  thumbRecencyHooks.rememberFinishedThumbFills("thumb-recency-0", [{ x: 99, y: 100, color: "#ABCDEF", v: 2 }]);
+  thumbRecencyHooks.rememberFinishedThumbFills("thumb-recency-new", [{ x: 200, y: 201, color: "#ABCDEF", v: 2 }]);
+  assert.strictEqual(thumbRecencyHooks.getCachedFinishedThumbFills("thumb-recency-0")[0].x, 99, "updated finished thumbnail cache entries should become the newest entries");
+  assert.strictEqual(thumbRecencyHooks.getCachedFinishedThumbFills("thumb-recency-1"), null, "finished thumbnail cache should evict the oldest untouched entry after a refresh");
 
   const noMatchMediaHooks = loadAppHooks({ matchMedia: false });
   assert.strictEqual(noMatchMediaHooks.isAppDisplayMode(), false);

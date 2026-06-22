@@ -48,7 +48,9 @@ function getCachedRegionAnalysis(cacheKey) {
 
 function rememberRegionAnalysis(cacheKey, regions) {
   if (!cacheKey) return;
-  if (!regionAnalysisCache.has(cacheKey) && regionAnalysisCache.size >= REGION_ANALYSIS_CACHE_LIMIT) {
+  if (regionAnalysisCache.has(cacheKey)) {
+    regionAnalysisCache.delete(cacheKey);
+  } else if (regionAnalysisCache.size >= REGION_ANALYSIS_CACHE_LIMIT) {
     const oldestKey = regionAnalysisCache.keys().next().value;
     if (oldestKey) regionAnalysisCache.delete(oldestKey);
   }
@@ -422,7 +424,9 @@ function getCachedFinishedThumbFills(cacheKey) {
 
 function rememberFinishedThumbFills(cacheKey, fills) {
   if (!cacheKey) return;
-  if (!finishedThumbCache.has(cacheKey) && finishedThumbCache.size >= FINISHED_THUMB_CACHE_LIMIT) {
+  if (finishedThumbCache.has(cacheKey)) {
+    finishedThumbCache.delete(cacheKey);
+  } else if (finishedThumbCache.size >= FINISHED_THUMB_CACHE_LIMIT) {
     const oldestKey = finishedThumbCache.keys().next().value;
     if (oldestKey) finishedThumbCache.delete(oldestKey);
   }
