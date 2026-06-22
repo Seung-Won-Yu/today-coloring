@@ -94,6 +94,12 @@ async function run() {
   assert.strictEqual(retryable.createdImages.length, 2, "failed image loads should create a fresh Image on retry");
   await resolveImageLoad(retryLoad, retryable.createdImages[1]);
 
+  const invalid = loadAssetLoader();
+  const invalidLoad = invalid.AssetLoader.loadArtworkBitmap("");
+  assert.strictEqual(invalid.createdImages.length, 0, "empty image sources should not create an Image instance");
+  await assert.rejects(invalidLoad, /source/i);
+  assert.strictEqual(invalid.testHooks.getArtworkImageCacheSize(), 0, "empty image sources should not be cached");
+
   console.log("asset-loader.test.js passed");
 }
 

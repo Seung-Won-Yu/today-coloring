@@ -22,6 +22,7 @@
   }
 
   function loadArtworkBitmap(src) {
+    if (!src) return Promise.reject(new Error("Artwork image source is required"));
     const cached = getArtworkImageCacheEntry(src);
     if (cached?.image) return Promise.resolve(cached.image);
     if (cached?.promise) return cached.promise;
