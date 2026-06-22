@@ -838,10 +838,16 @@
     for (let idx = 0; idx < data.length; idx += 4) {
       const fillAlpha = fillData[idx + 3] / 255;
       const lineAlpha = lineData[idx + 3] / 255;
-      const useOriginalBase = fillAlpha === 0 && lineAlpha === 0 && !isPaintableBasePixel(baseData, idx);
-      const baseR = useOriginalBase ? baseData[idx] : 255;
-      const baseG = useOriginalBase ? baseData[idx + 1] : 255;
-      const baseB = useOriginalBase ? baseData[idx + 2] : 255;
+      if (fillAlpha === 0) {
+        data[idx] = baseData[idx];
+        data[idx + 1] = baseData[idx + 1];
+        data[idx + 2] = baseData[idx + 2];
+        data[idx + 3] = baseData[idx + 3] || 255;
+        continue;
+      }
+      const baseR = 255;
+      const baseG = 255;
+      const baseB = 255;
       let r = Math.round(fillData[idx] * fillAlpha + baseR * (1 - fillAlpha));
       let g = Math.round(fillData[idx + 1] * fillAlpha + baseG * (1 - fillAlpha));
       let b = Math.round(fillData[idx + 2] * fillAlpha + baseB * (1 - fillAlpha));

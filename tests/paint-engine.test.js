@@ -123,6 +123,10 @@ function run() {
   assert.deepStrictEqual(pixelAt(fillLayer, 4, 1), [0, 0, 0, 0]);
 
   const lineLayer = PaintEngine.buildLineLayerImageData(base);
+  const emptyFillLayer = PaintEngine.createFillLayerImageData(base.width, base.height);
+  const unpaintedComposed = PaintEngine.composePaintLayers(base, emptyFillLayer, lineLayer);
+  assert.deepStrictEqual(pixelAt(unpaintedComposed, 1, 1), [168, 168, 168, 255], "unpainted shaded pixels should preserve the original artwork tone");
+
   const composed = PaintEngine.composePaintLayers(base, fillLayer, lineLayer);
   const fringePixel = pixelAt(composed, 1, 1);
   const linePixel = pixelAt(composed, 2, 1);
