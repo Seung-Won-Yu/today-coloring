@@ -1969,6 +1969,8 @@
 .tool--pill,
 .bigbtn,
 .bottom-nav__item,
+.completion__textbtn,
+.confirm-card__btn,
 .color-toolbelt__btn,
 .swatch {
   transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease, background-color .14s ease, color .14s ease;
@@ -1977,12 +1979,27 @@
 .artcard:focus-visible,
 .cat:focus-visible,
 .home-summary__start:focus-visible,
+.home-summary__gallery:focus-visible,
 .gallery-card:focus-visible,
 .color-toolbelt__btn:focus-visible,
 .swatch:focus-visible,
+.appbar__action:focus-visible,
+.appbar__back:focus-visible,
 .appbar__settings:focus-visible,
+.appbar__save:focus-visible,
+.tool--pill:focus-visible,
+.bigbtn:focus-visible,
+.bottom-nav__item:focus-visible,
+.completion__textbtn:focus-visible,
+.confirm-card__btn:focus-visible,
 .settings-card__close:focus-visible,
 .settings-segment__btn:focus-visible {
+  outline:3px solid rgba(255, 210, 63, .72);
+  outline-offset:3px;
+}
+
+.confirm-card__btn:focus,
+.settings-card__close:focus {
   outline:3px solid rgba(255, 210, 63, .72);
   outline-offset:3px;
 }

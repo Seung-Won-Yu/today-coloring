@@ -775,17 +775,70 @@ function GalleryScreen({ items, onBack, onView }) {
     }))
   );
 }
-function ConfirmDialog({ title, message, confirmLabel = "확인", cancelLabel = "취소", danger = false, onConfirm, onCancel }) {
-  const e = React.createElement;
+const DIALOG_FOCUS_SELECTOR = [
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "a[href]",
+  "[tabindex]:not([tabindex='-1'])"
+].join(",");
+function getDialogFocusables(root) {
+  if (!root) return [];
+  return Array.from(root.querySelectorAll(DIALOG_FOCUS_SELECTOR)).filter((el) => {
+    return !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true";
+  });
+}
+function useDialogKeyboard(dialogRef, onClose) {
   React.useEffect(() => {
+    const previousFocus = document.activeElement;
+    const focusTimer = window.setTimeout(() => {
+      const focusables = getDialogFocusables(dialogRef.current);
+      const target = focusables[0] || dialogRef.current;
+      if (target && typeof target.focus === "function") target.focus();
+    }, 0);
     const onKeyDown = (event) => {
-      if (event.key === "Escape") onCancel();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusables = getDialogFocusables(dialogRef.current);
+      if (!focusables.length) {
+        event.preventDefault();
+        dialogRef.current?.focus();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (!dialogRef.current?.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onCancel]);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", onKeyDown);
+      if (previousFocus && document.contains(previousFocus) && typeof previousFocus.focus === "function") {
+        previousFocus.focus();
+      }
+    };
+  }, [dialogRef, onClose]);
+}
+function ConfirmDialog({ title, message, confirmLabel = "확인", cancelLabel = "취소", danger = false, onConfirm, onCancel }) {
+  const e = React.createElement;
+  const dialogRef = React.useRef(null);
+  useDialogKeyboard(dialogRef, onCancel);
   return e("div", { className: "confirm-layer", role: "presentation", onClick: onCancel },
-    e("section", { className: "confirm-card", role: "dialog", "aria-modal": "true", "aria-label": title, onClick: (event) => event.stopPropagation() },
+    e("section", { ref: dialogRef, tabIndex: -1, className: "confirm-card", role: "dialog", "aria-modal": "true", "aria-label": title, onClick: (event) => event.stopPropagation() },
       e("div", { className: "confirm-card__icon " + (danger ? "confirm-card__icon--danger" : "") },
         e(Icon, { name: danger ? "trash" : "check", size: 24 })
       ),
@@ -810,21 +863,16 @@ const THEME_OPTIONS = [
 ];
 function SettingsDialog({ settings, onChange, onClose }) {
   const e = React.createElement;
+  const dialogRef = React.useRef(null);
   const fontScale = settings && settings.fontScale ? settings.fontScale : 1;
   const theme = settings && settings.theme ? settings.theme : "따뜻";
   const paintFeedback = !settings || settings.paintFeedback !== false;
-  React.useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  useDialogKeyboard(dialogRef, onClose);
   return e("div", { className: "confirm-layer settings-layer", role: "presentation", onClick: onClose },
-    e("section", { className: "settings-card", role: "dialog", "aria-modal": "true", "aria-labelledby": "settings-title", onClick: (event) => event.stopPropagation() },
+    e("section", { ref: dialogRef, tabIndex: -1, className: "settings-card", role: "dialog", "aria-modal": "true", "aria-labelledby": "settings-title", onClick: (event) => event.stopPropagation() },
       e("div", { className: "settings-card__top" },
         e("h2", { id: "settings-title", className: "settings-card__title" }, "설정"),
-        e("button", { type: "button", className: "settings-card__close", onClick: onClose, "aria-label": "설정 닫기", autoFocus: true },
+        e("button", { type: "button", className: "settings-card__close", onClick: onClose, "aria-label": "설정 닫기" },
           e(Icon, { name: "check", size: 20 })
         )
       ),
