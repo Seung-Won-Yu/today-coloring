@@ -52,7 +52,7 @@ function run() {
     sori_progress_v12: JSON.stringify({
       "vertical-15": { fills: [{ x: 1, y: 1, color: "#fff" }], artworkVersion: "old" },
       "vertical-17": {
-        fills: [{ x: 2, y: 2, color: "#000" }],
+        fills: [{ x: 2, y: 2, color: "#000" }, { x: "bad", y: 4, color: "#123456" }, { x: 4, y: 4, color: "red" }],
         undoHistory: [[{ x: 1, y: 1, color: "#fff" }]],
         artworkVersion: "20"
       },
@@ -61,7 +61,7 @@ function run() {
     }),
     sori_gallery_v12: JSON.stringify([
       { id: "old", artId: "vertical-15", fills: [{ x: 1 }], artworkVersion: "old" },
-      { id: "current", artId: "vertical-17", fills: [{ x: 2 }], artworkVersion: "20" },
+      { id: "current", artId: "vertical-17", fills: [{ x: 2, y: 2, color: "#000" }, { x: 2, y: 2, color: "blue" }], artworkVersion: "20" },
       { id: "legacy", artId: "vertical-40", fills: [{ x: 3 }] },
       { id: "legacy-stale", artId: "vertical-60", fills: [{ x: 4 }] }
     ]),
@@ -74,6 +74,7 @@ function run() {
   const progress = AppStorage.loadProgress();
   assert.strictEqual(progress["vertical-15"], undefined);
   assert.strictEqual(progress["vertical-17"].artworkVersion, "20");
+  assertJsonEqual(progress["vertical-17"].fills, [{ x: 2, y: 2, color: "#000" }]);
   assertJsonEqual(progress["vertical-17"].undoHistory, [[{ x: 1, y: 1, color: "#fff" }]]);
   assert.strictEqual(progress["vertical-40"].artworkVersion, "20");
   assertJsonEqual(progress["vertical-40"].undoHistory, []);
@@ -83,6 +84,7 @@ function run() {
   const gallery = AppStorage.loadGallery();
   assert.strictEqual(JSON.stringify(gallery.map((item) => item.id)), JSON.stringify(["current", "legacy"]));
   assert(gallery.every((item) => item.artworkVersion === "20"));
+  assertJsonEqual(gallery[0].fills, [{ x: 2, y: 2, color: "#000" }]);
 
   const newProgress = AppStorage.createProgressEntry("vertical-15", [{ x: 4, y: 4, color: "#abc" }], [
     [{ x: 3, y: 3, color: "#def" }]

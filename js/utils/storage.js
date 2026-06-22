@@ -59,9 +59,28 @@
     writeJson(SETTINGS_KEY, createSettings(settings));
   }
 
+  function isValidFill(fill) {
+    return Boolean(
+      fill &&
+      Number.isFinite(fill.x) &&
+      Number.isFinite(fill.y) &&
+      typeof fill.color === "string" &&
+      /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(fill.color)
+    );
+  }
+
+  function normalizeFills(fills) {
+    if (!Array.isArray(fills)) return { value: [], changed: fills !== undefined };
+    const next = fills.filter(isValidFill);
+    return {
+      value: next.length === fills.length ? fills : next,
+      changed: next.length !== fills.length
+    };
+  }
+
   function getSavedFills(saved) {
-    if (Array.isArray(saved)) return saved;
-    return saved && Array.isArray(saved.fills) ? saved.fills : [];
+    if (Array.isArray(saved)) return normalizeFills(saved).value;
+    return normalizeFills(saved && saved.fills).value;
   }
 
   function normalizeUndoHistory(history) {
@@ -104,9 +123,10 @@
   }
 
   function createProgressEntry(artId, fills, undoHistory) {
+    const normalizedFills = normalizeFills(fills);
     const normalizedHistory = normalizeUndoHistory(undoHistory);
     return {
-      fills: Array.isArray(fills) ? fills : [],
+      fills: normalizedFills.value,
       undoHistory: normalizedHistory.value,
       artworkVersion: getArtworkVersion(artId)
     };
@@ -114,9 +134,10 @@
 
   function createGalleryItem(item) {
     if (!item || !item.artId) return item;
+    const normalizedFills = normalizeFills(item.fills);
     const normalized = {
       ...item,
-      fills: Array.isArray(item.fills) ? item.fills : [],
+      fills: normalizedFills.value,
       artworkVersion: getArtworkVersion(item.artId)
     };
     const snapshotDataUrl = normalizeSnapshotDataUrl(item.snapshotDataUrl);
@@ -130,7 +151,9 @@
     let changed = !progress || typeof progress !== "object" || Array.isArray(progress);
     Object.keys(changed ? {} : progress).forEach((artId) => {
       const saved = progress[artId];
-      const fills = getSavedFills(saved);
+      const rawFills = Array.isArray(saved) ? saved : saved && saved.fills;
+      const normalizedFills = normalizeFills(rawFills);
+      const fills = normalizedFills.value;
       const savedHistory = getSavedHistory(saved);
       if (!getArtworkById(artId) || !versionMatches(saved, artId) || !Array.isArray(fills) || fills.length === 0) {
         changed = true;
@@ -138,7 +161,7 @@
       }
       const normalized = createProgressEntry(artId, fills, savedHistory);
       next[artId] = normalized;
-      if (!saved || Array.isArray(saved) || saved.artworkVersion !== normalized.artworkVersion || saved.fills !== fills || !Array.isArray(saved.undoHistory) || saved.undoHistory !== savedHistory) changed = true;
+      if (!saved || Array.isArray(saved) || saved.artworkVersion !== normalized.artworkVersion || saved.fills !== fills || normalizedFills.changed || !Array.isArray(saved.undoHistory) || saved.undoHistory !== savedHistory) changed = true;
     });
     return { value: next, changed };
   }
@@ -154,7 +177,7 @@
       }
       const normalized = createGalleryItem(item);
       next.push(normalized);
-      if (!Array.isArray(item.fills) || item.artworkVersion !== normalized.artworkVersion || item.snapshotDataUrl !== normalized.snapshotDataUrl) changed = true;
+      if (!Array.isArray(item.fills) || item.fills !== normalized.fills || item.artworkVersion !== normalized.artworkVersion || item.snapshotDataUrl !== normalized.snapshotDataUrl) changed = true;
     });
     return { value: next, changed };
   }
