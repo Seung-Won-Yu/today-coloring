@@ -1395,10 +1395,13 @@ const TWEAK_DEFAULTS = {
   "paintFeedback": true
 };
 function isAppDisplayMode() {
+  const matchesDisplayMode = (query) => {
+    return typeof window.matchMedia === "function" && window.matchMedia(query).matches;
+  };
   return Boolean(
     window.navigator.standalone ||
-    window.matchMedia("(display-mode: fullscreen)").matches ||
-    window.matchMedia("(display-mode: standalone)").matches
+    matchesDisplayMode("(display-mode: fullscreen)") ||
+    matchesDisplayMode("(display-mode: standalone)")
   );
 }
 function shouldLockPortraitOrientation() {
@@ -1446,6 +1449,9 @@ function requestAppFullscreen() {
   } catch (_) {
     return applyOrientationPolicy();
   }
+}
+if (window.__COLORING_TEST_HOOKS__) {
+  window.__COLORING_TEST_HOOKS__.isAppDisplayMode = isAppDisplayMode;
 }
 function App() {
   const [screen, setScreen] = React.useState("lobby");

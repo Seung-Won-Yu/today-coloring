@@ -5,10 +5,9 @@ const vm = require("vm");
 
 const rootDir = path.resolve(__dirname, "..");
 
-function loadAppHooks() {
+function loadAppHooks(options = {}) {
   const testHooks = {};
-  const context = {
-    window: {
+  const windowStub = {
       __COLORING_TEST_HOOKS__: testHooks,
       AppStorage: {},
       PaintEngine: {
@@ -50,12 +49,16 @@ function loadAppHooks() {
       performance: { now: () => 0 },
       navigator: {},
       screen: {},
-      matchMedia: () => ({ matches: false }),
       setTimeout,
       clearTimeout,
       addEventListener: () => null,
       removeEventListener: () => null
-    },
+  };
+  if (options.matchMedia !== false) {
+    windowStub.matchMedia = () => ({ matches: false });
+  }
+  const context = {
+    window: windowStub,
     React: {
       createElement: (type, props, ...children) => ({ type, props, children }),
       useRef: (value) => ({ current: value || null }),
@@ -85,6 +88,7 @@ function loadAppHooks() {
 function run() {
   const hooks = loadAppHooks();
   assert.strictEqual(typeof hooks.buildShowcaseFills, "function");
+  assert.strictEqual(typeof hooks.isAppDisplayMode, "function");
 
   const fills = hooks.buildShowcaseFills([
     { x: 44, y: 52, size: 24, isBackground: true },
@@ -95,6 +99,9 @@ function run() {
   assert(fills.every((fill) => fill.v === 2), "showcase fills should be stored as frame-space seeds");
   assert.strictEqual(fills[0].x, 44);
   assert.strictEqual(fills[0].y, 52);
+
+  const noMatchMediaHooks = loadAppHooks({ matchMedia: false });
+  assert.strictEqual(noMatchMediaHooks.isAppDisplayMode(), false);
 
   console.log("app-showcase-fills.test.js passed");
 }
