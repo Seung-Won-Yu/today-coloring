@@ -50,16 +50,30 @@ function getArtworkSaveVersion() {
   return context.window.ARTWORK_SAVE_VERSION;
 }
 
+function getStorageContract() {
+  const context = loadStorage({});
+  return {
+    version: context.window.AppStorage.storageVersion,
+    keys: context.window.AppStorage.storageKeys
+  };
+}
+
 function assertJsonEqual(actual, expected) {
   assert.strictEqual(JSON.stringify(actual), JSON.stringify(expected));
 }
 
 function run() {
   const artworkSaveVersion = getArtworkSaveVersion();
+  const storageContract = getStorageContract();
+  const storageKeys = storageContract.keys;
   assert.strictEqual(typeof artworkSaveVersion, "string", "artworks should expose the save data version");
+  assert(/^v\d+$/.test(storageContract.version), "storage should expose a schema version");
+  assert.strictEqual(storageKeys.progress, "sori_progress_" + storageContract.version);
+  assert.strictEqual(storageKeys.gallery, "sori_gallery_" + storageContract.version);
+  assert.strictEqual(storageKeys.settings, "sori_settings_v1");
 
   const context = loadStorage({
-    sori_progress_v12: JSON.stringify({
+    [storageKeys.progress]: JSON.stringify({
       "vertical-15": { fills: [{ x: 1, y: 1, color: "#fff" }], artworkVersion: "old" },
       "vertical-17": {
         fills: [{ x: 2, y: 2, color: "#000" }, { x: "bad", y: 4, color: "#123456" }, { x: 4, y: 4, color: "red" }, { x: -1, y: 2, color: "#123456" }, { x: 2.5, y: 2, color: "#123456" }],
@@ -69,7 +83,7 @@ function run() {
       "vertical-40": [{ x: 3, y: 3, color: "#f00" }],
       "vertical-60": [{ x: 4, y: 4, color: "#0f0" }]
     }),
-    sori_gallery_v12: JSON.stringify([
+    [storageKeys.gallery]: JSON.stringify([
       { id: "old", artId: "vertical-15", fills: [{ x: 1 }], artworkVersion: "old" },
       { id: "current", artId: "vertical-17", fills: [{ x: 2, y: 2, color: "#000" }, { x: 2, y: 2, color: "blue" }], artworkVersion: artworkSaveVersion },
       { id: "legacy", artId: "vertical-40", fills: [{ x: 3 }] },
@@ -100,7 +114,7 @@ function run() {
     [{ x: 3, y: 3, color: "#def" }, { x: 3, y: 3, color: "bad" }]
   ]);
   AppStorage.saveProgress({ "vertical-15": newProgress });
-  const savedProgress = JSON.parse(context.localStorage.getItem("sori_progress_v12"));
+  const savedProgress = JSON.parse(context.localStorage.getItem(storageKeys.progress));
   assert.strictEqual(savedProgress["vertical-15"].artworkVersion, artworkSaveVersion);
   assertJsonEqual(savedProgress["vertical-15"].fills, [{ x: 4, y: 4, color: "#AABBCC" }]);
   assertJsonEqual(savedProgress["vertical-15"].undoHistory, [[{ x: 3, y: 3, color: "#DDEEFF" }]]);
@@ -109,7 +123,7 @@ function run() {
   const newGalleryItem = AppStorage.createGalleryItem({ id: "new", artId: "vertical-15", fills: [], date: 1, snapshotDataUrl });
   const invalidSnapshotItem = AppStorage.createGalleryItem({ id: "bad-snapshot", artId: "vertical-17", fills: [], date: 2, snapshotDataUrl: "not-an-image" });
   AppStorage.saveGallery([newGalleryItem, invalidSnapshotItem]);
-  const savedGallery = JSON.parse(context.localStorage.getItem("sori_gallery_v12"));
+  const savedGallery = JSON.parse(context.localStorage.getItem(storageKeys.gallery));
   assert.strictEqual(savedGallery[0].artworkVersion, artworkSaveVersion);
   assert.strictEqual(savedGallery[0].snapshotDataUrl, snapshotDataUrl);
   assert.strictEqual(savedGallery[1].snapshotDataUrl, undefined);
@@ -118,20 +132,20 @@ function run() {
   assert.strictEqual(AppStorage.loadSettings().theme, "따뜻");
   assert.strictEqual(AppStorage.loadSettings().paintFeedback, true);
   AppStorage.saveSettings({ fontScale: 1.24, theme: "고대비", paintFeedback: false });
-  const savedSettings = JSON.parse(context.localStorage.getItem("sori_settings_v1"));
+  const savedSettings = JSON.parse(context.localStorage.getItem(storageKeys.settings));
   assert.strictEqual(savedSettings.fontScale, 1.24);
   assert.strictEqual(savedSettings.theme, "고대비");
   assert.strictEqual(savedSettings.paintFeedback, false);
 
   const settingsContext = loadStorage({
-    sori_settings_v1: JSON.stringify({ fontScale: 1.12, theme: "차분", paintFeedback: false })
+    [storageKeys.settings]: JSON.stringify({ fontScale: 1.12, theme: "차분", paintFeedback: false })
   });
   assert.strictEqual(settingsContext.window.AppStorage.loadSettings().fontScale, 1.12);
   assert.strictEqual(settingsContext.window.AppStorage.loadSettings().theme, "차분");
   assert.strictEqual(settingsContext.window.AppStorage.loadSettings().paintFeedback, false);
 
   const invalidSettingsContext = loadStorage({
-    sori_settings_v1: JSON.stringify({ fontScale: 3, theme: "번쩍", paintFeedback: "꺼짐" })
+    [storageKeys.settings]: JSON.stringify({ fontScale: 3, theme: "번쩍", paintFeedback: "꺼짐" })
   });
   assert.strictEqual(invalidSettingsContext.window.AppStorage.loadSettings().fontScale, 1);
   assert.strictEqual(invalidSettingsContext.window.AppStorage.loadSettings().theme, "따뜻");

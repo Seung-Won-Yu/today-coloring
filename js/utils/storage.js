@@ -230,6 +230,12 @@
   }
 
   window.AppStorage = {
+    storageVersion: STORAGE_VERSION,
+    storageKeys: {
+      progress: PROGRESS_KEY,
+      gallery: GALLERY_KEY,
+      settings: SETTINGS_KEY
+    },
     loadGallery,
     saveGallery,
     loadProgress,
