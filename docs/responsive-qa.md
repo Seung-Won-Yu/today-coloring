@@ -40,6 +40,7 @@ python3 -m http.server 4173
 기본 테스트:
 
 ```bash
+node tests/cache-version-consistency.test.js
 node tests/manifest-policy.test.js
 node tests/storage-version.test.js
 node tests/paint-engine.test.js
