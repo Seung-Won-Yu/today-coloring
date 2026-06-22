@@ -594,6 +594,137 @@
     return seeds;
   }
 
+  function isValidRegionMap(regionMap) {
+    return Boolean(
+      regionMap &&
+      Number.isInteger(regionMap.width) &&
+      Number.isInteger(regionMap.height) &&
+      regionMap.width > 0 &&
+      regionMap.height > 0 &&
+      regionMap.labels &&
+      regionMap.labels.length >= regionMap.width * regionMap.height &&
+      Array.isArray(regionMap.regions)
+    );
+  }
+
+  function buildPaintRegionMap(baseImageData, width = null, height = null) {
+    if (!baseImageData) return null;
+    const data = baseImageData.data || baseImageData;
+    const sourceWidth = width || baseImageData.width;
+    const sourceHeight = height || baseImageData.height;
+    if (!data || !sourceWidth || !sourceHeight) return null;
+    const labels = new Uint32Array(sourceWidth * sourceHeight);
+    const queue = new Int32Array(sourceWidth * sourceHeight);
+    const regions = [];
+    const getPixelIndex = (x, y) => (y * sourceWidth + x) * 4;
+    let nextLabel = 1;
+    for (let y = 0; y < sourceHeight; y++) {
+      for (let x = 0; x < sourceWidth; x++) {
+        const startPos = y * sourceWidth + x;
+        if (labels[startPos] !== 0) continue;
+        if (!isFloodFillBasePixel(data, sourceWidth, sourceHeight, x, y)) continue;
+        const label = nextLabel++;
+        let head = 0;
+        let tail = 1;
+        let size = 0;
+        let isBackground = false;
+        let minX = x;
+        let minY = y;
+        let maxX = x;
+        let maxY = y;
+        queue[0] = startPos;
+        labels[startPos] = label;
+        while (head < tail) {
+          const pos = queue[head++];
+          const cx = pos % sourceWidth;
+          const cy = Math.floor(pos / sourceWidth);
+          size++;
+          if (cx < minX) minX = cx;
+          if (cy < minY) minY = cy;
+          if (cx > maxX) maxX = cx;
+          if (cy > maxY) maxY = cy;
+          if (cx <= 35 || cy <= 35 || cx >= sourceWidth - 36 || cy >= sourceHeight - 36) {
+            isBackground = true;
+          }
+          const neighbors = [pos + 1, pos - 1, pos + sourceWidth, pos - sourceWidth];
+          for (let i = 0; i < neighbors.length; i++) {
+            const next = neighbors[i];
+            if (next < 0 || next >= labels.length || labels[next] !== 0) continue;
+            const nx = next % sourceWidth;
+            const ny = Math.floor(next / sourceWidth);
+            if ((i === 0 && nx === 0) || (i === 1 && nx === sourceWidth - 1)) continue;
+            if (!isFloodFillBasePixel(data, sourceWidth, sourceHeight, nx, ny)) continue;
+            labels[next] = label;
+            queue[tail++] = next;
+          }
+        }
+        regions.push({ label, x, y, size, isBackground, minX, minY, maxX, maxY });
+      }
+    }
+    return { width: sourceWidth, height: sourceHeight, labels, regions };
+  }
+
+  function getPaintRegionLabel(regionMap, x, y) {
+    if (!isValidRegionMap(regionMap)) return 0;
+    if (!Number.isInteger(x) || !Number.isInteger(y)) return 0;
+    if (x < 0 || x >= regionMap.width || y < 0 || y >= regionMap.height) return 0;
+    return regionMap.labels[y * regionMap.width + x] || 0;
+  }
+
+  function getPaintRegionByLabel(regionMap, label) {
+    if (!isValidRegionMap(regionMap) || !label) return null;
+    return regionMap.regions.find((region) => region.label === label) || null;
+  }
+
+  function getPaintRegionMapSeeds(regionMap) {
+    if (!isValidRegionMap(regionMap)) return [];
+    return regionMap.regions
+      .filter((region) => region.size > 5)
+      .map((region) => ({
+        x: region.x,
+        y: region.y,
+        size: region.size,
+        isBackground: region.isBackground,
+        label: region.label
+      }));
+  }
+
+  function fillRegionMapLabel(imageData, regionMap, label, fillColor) {
+    if (!isValidImageData(imageData) || !isValidRegionMap(regionMap) || !isValidRgbColor(fillColor) || !label) return null;
+    if (imageData.width !== regionMap.width || imageData.height !== regionMap.height) return null;
+    const region = getPaintRegionByLabel(regionMap, label);
+    if (!region) return null;
+    const data = imageData.data;
+    const labels = regionMap.labels;
+    const bounds = { painted: 0, minX: regionMap.width, minY: regionMap.height, maxX: 0, maxY: 0 };
+    for (let y = region.minY; y <= region.maxY; y++) {
+      for (let x = region.minX; x <= region.maxX; x++) {
+        const pos = y * regionMap.width + x;
+        if (labels[pos] !== label) continue;
+        const idx = pos * 4;
+        data[idx] = fillColor.r;
+        data[idx + 1] = fillColor.g;
+        data[idx + 2] = fillColor.b;
+        data[idx + 3] = 255;
+        bounds.painted++;
+        if (x < bounds.minX) bounds.minX = x;
+        if (y < bounds.minY) bounds.minY = y;
+        if (x > bounds.maxX) bounds.maxX = x;
+        if (y > bounds.maxY) bounds.maxY = y;
+      }
+    }
+    return bounds.painted > 0 ? bounds : null;
+  }
+
+  function paintRegionMapSeed(fillLayerImageData, regionMap, seed, fillColor) {
+    if (!seed) return null;
+    return fillRegionMapLabel(fillLayerImageData, regionMap, getPaintRegionLabel(regionMap, seed.x, seed.y), fillColor);
+  }
+
+  function markProgressRegionMap(imageData, regionMap, x, y) {
+    return fillRegionMapLabel(imageData, regionMap, getPaintRegionLabel(regionMap, x, y), PROGRESS_MARKER);
+  }
+
   function findNearestUnpaintedStart(baseData, progressData, width, height, x, y, radius) {
     const canPaint = (px, py) => {
       if (px < 0 || px >= width || py < 0 || py >= height) return false;
@@ -803,6 +934,11 @@
     isLinePixelColor,
     isPaintableBasePixel,
     analyzePaintRegions,
+    buildPaintRegionMap,
+    getPaintRegionLabel,
+    getPaintRegionMapSeeds,
+    paintRegionMapSeed,
+    markProgressRegionMap,
     findNearestUnpaintedStart,
     findNearestPaintedStart,
     markProgressRegion,

@@ -139,6 +139,36 @@ function run() {
   assert(regions.every((region) => !region.isBackground), "center paint island should not be classified as background");
   assert(regions.some((region) => region.size > 5), "center paint island should be large enough for showcase fills");
 
+  const regionMapBase = createImageData(7, 3, [
+    [255, 255, 255, 255], [255, 255, 255, 255], [168, 168, 168, 255], [24, 24, 24, 255], [168, 168, 168, 255], [255, 255, 255, 255], blueSky,
+    [255, 255, 255, 255], [255, 255, 255, 255], [168, 168, 168, 255], [24, 24, 24, 255], [168, 168, 168, 255], [255, 255, 255, 255], blueSky,
+    [255, 255, 255, 255], [255, 255, 255, 255], [168, 168, 168, 255], [24, 24, 24, 255], [168, 168, 168, 255], [255, 255, 255, 255], blueSky
+  ]);
+  const regionMap = PaintEngine.buildPaintRegionMap(regionMapBase);
+  assert.strictEqual(regionMap.width, 7);
+  assert.strictEqual(regionMap.height, 3);
+  assert.strictEqual(PaintEngine.getPaintRegionLabel(regionMap, 0, 1), PaintEngine.getPaintRegionLabel(regionMap, 2, 1), "soft line fringe should belong to the fillable region");
+  assert.notStrictEqual(PaintEngine.getPaintRegionLabel(regionMap, 0, 1), PaintEngine.getPaintRegionLabel(regionMap, 5, 1), "hard line should split fillable regions");
+  assert.strictEqual(PaintEngine.getPaintRegionLabel(regionMap, 3, 1), 0, "hard line core should not receive a region label");
+  assert.strictEqual(PaintEngine.getPaintRegionLabel(regionMap, 6, 1), 0, "colored background should not receive a paint region");
+
+  const mappedFillLayer = PaintEngine.createFillLayerImageData(regionMapBase.width, regionMapBase.height);
+  const mappedBounds = PaintEngine.paintRegionMapSeed(mappedFillLayer, regionMap, { x: 0, y: 1 }, fillColor);
+  assert(mappedBounds);
+  assert.deepStrictEqual(pixelAt(mappedFillLayer, 0, 1), [36, 126, 238, 255]);
+  assert.deepStrictEqual(pixelAt(mappedFillLayer, 2, 1), [36, 126, 238, 255]);
+  assert.deepStrictEqual(pixelAt(mappedFillLayer, 3, 1), [0, 0, 0, 0]);
+  assert.deepStrictEqual(pixelAt(mappedFillLayer, 5, 1), [0, 0, 0, 0]);
+
+  const mappedProgress = { data: new Uint8ClampedArray(regionMapBase.data), width: regionMapBase.width, height: regionMapBase.height };
+  const mappedProgressBounds = PaintEngine.markProgressRegionMap(mappedProgress, regionMap, 0, 1);
+  assert(mappedProgressBounds);
+  assert.strictEqual(PaintEngine.isProgressMarked(mappedProgress.data, (1 * regionMapBase.width + 0) * 4), true);
+  assert.strictEqual(PaintEngine.isProgressMarked(mappedProgress.data, (1 * regionMapBase.width + 5) * 4), false);
+
+  const mappedSeeds = PaintEngine.getPaintRegionMapSeeds(regionMap);
+  assert(mappedSeeds.some((seed) => seed.x === 0 && seed.y === 0 && seed.size >= 6), "region map should expose showcase-compatible seeds");
+
   console.log("paint-engine.test.js passed");
 }
 
