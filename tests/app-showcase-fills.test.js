@@ -105,6 +105,12 @@ function run() {
   assert.strictEqual(typeof hooks.getCachedFinishedThumbFills, "function");
   assert.strictEqual(typeof hooks.getFinishedThumbCacheLimit, "function");
   assert.strictEqual(typeof hooks.getFinishedThumbCacheSize, "function");
+  assert.strictEqual(typeof hooks.getPaintLayerStateCacheKey, "function");
+  assert.strictEqual(typeof hooks.rememberPaintLayerState, "function");
+  assert.strictEqual(typeof hooks.getCachedPaintLayerState, "function");
+  assert.strictEqual(typeof hooks.getOrBuildPaintLayerState, "function");
+  assert.strictEqual(typeof hooks.getPaintLayerStateCacheLimit, "function");
+  assert.strictEqual(typeof hooks.getPaintLayerStateCacheSize, "function");
 
   const fills = hooks.buildShowcaseFills([
     { x: 44, y: 52, size: 24, isBackground: true },
@@ -177,6 +183,66 @@ function run() {
   thumbRecencyHooks.rememberFinishedThumbFills("thumb-recency-new", [{ x: 200, y: 201, color: "#ABCDEF", v: 2 }]);
   assert.strictEqual(thumbRecencyHooks.getCachedFinishedThumbFills("thumb-recency-0")[0].x, 99, "updated finished thumbnail cache entries should become the newest entries");
   assert.strictEqual(thumbRecencyHooks.getCachedFinishedThumbFills("thumb-recency-1"), null, "finished thumbnail cache should evict the oldest untouched entry after a refresh");
+
+  const paintKey = hooks.getPaintLayerStateCacheKey(
+    { id: "vertical-40", version: "22", src: "art.webp?v=22", regionMapSrc: "map.png?v=22" },
+    "paint",
+    768,
+    1024,
+    [{ x: 1, y: 2, color: "#ABCDEF", v: 2 }]
+  );
+  const paintKeyDifferentFill = hooks.getPaintLayerStateCacheKey(
+    { id: "vertical-40", version: "22", src: "art.webp?v=22", regionMapSrc: "map.png?v=22" },
+    "paint",
+    768,
+    1024,
+    [{ x: 1, y: 2, color: "#123456", v: 2 }]
+  );
+  assert.notStrictEqual(paintKey, paintKeyDifferentFill, "paint layer cache keys should include the fill signature");
+
+  const paintState = {
+    fillLayer: { width: 1, height: 1, data: new Uint8ClampedArray([1, 2, 3, 4]) },
+    progressImgData: { width: 1, height: 1, data: new Uint8ClampedArray([5, 6, 7, 8]) }
+  };
+  hooks.rememberPaintLayerState(paintKey, paintState);
+  paintState.fillLayer.data[0] = 99;
+  paintState.progressImgData.data[0] = 99;
+  const cachedPaintState = hooks.getCachedPaintLayerState(paintKey);
+  assert.strictEqual(cachedPaintState.fillLayer.data[0], 1, "paint layer cache should not retain caller image data references");
+  assert.strictEqual(cachedPaintState.progressImgData.data[0], 5, "paint progress cache should not retain caller image data references");
+  cachedPaintState.fillLayer.data[0] = 42;
+  cachedPaintState.progressImgData.data[0] = 42;
+  assert.strictEqual(hooks.getCachedPaintLayerState(paintKey).fillLayer.data[0], 1, "paint layer cache reads should return defensive copies");
+  assert.strictEqual(hooks.getCachedPaintLayerState(paintKey).progressImgData.data[0], 5, "paint progress cache reads should return defensive copies");
+
+  const buildKey = `${paintKey}:build-once`;
+  let buildCount = 0;
+  const builtPaintState = hooks.getOrBuildPaintLayerState(buildKey, () => {
+    buildCount += 1;
+    return {
+      fillLayer: { width: 1, height: 1, data: new Uint8ClampedArray([9, 9, 9, 9]) },
+      progressImgData: { width: 1, height: 1, data: new Uint8ClampedArray([8, 8, 8, 8]) }
+    };
+  });
+  builtPaintState.fillLayer.data[0] = 0;
+  const reusedPaintState = hooks.getOrBuildPaintLayerState(buildKey, () => {
+    throw new Error("paint layer state should be served from cache");
+  });
+  assert.strictEqual(buildCount, 1, "paint layer state should only be built once for the same key");
+  assert.strictEqual(reusedPaintState.fillLayer.data[0], 9, "cached paint layer state should survive caller mutations");
+
+  const paintCacheHooks = loadAppHooks();
+  const paintCacheLimit = paintCacheHooks.getPaintLayerStateCacheLimit();
+  assert(paintCacheLimit > 0, "paint layer state cache should have a positive limit");
+  for (let idx = 0; idx <= paintCacheLimit; idx += 1) {
+    paintCacheHooks.rememberPaintLayerState(`paint-${idx}`, {
+      fillLayer: { width: 1, height: 1, data: new Uint8ClampedArray([idx, 0, 0, 0]) },
+      progressImgData: { width: 1, height: 1, data: new Uint8ClampedArray([idx, 1, 1, 1]) }
+    });
+  }
+  assert.strictEqual(paintCacheHooks.getPaintLayerStateCacheSize(), paintCacheLimit, "paint layer state cache should stay within its limit");
+  assert.strictEqual(paintCacheHooks.getCachedPaintLayerState("paint-0"), null, "paint layer state cache should evict the oldest entry first");
+  assert.strictEqual(paintCacheHooks.getCachedPaintLayerState(`paint-${paintCacheLimit}`).fillLayer.data[0], paintCacheLimit, "paint layer state cache should keep the newest entry");
 
   const noMatchMediaHooks = loadAppHooks({ matchMedia: false });
   assert.strictEqual(noMatchMediaHooks.isAppDisplayMode(), false);

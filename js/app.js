@@ -49,9 +49,24 @@ function rememberBoundedCacheValue(cache, cacheKey, value, cloneValue, limit) {
 
 const regionAnalysisCache = new Map();
 const REGION_ANALYSIS_CACHE_LIMIT = 12;
+const paintLayerStateCache = new Map();
+const PAINT_LAYER_STATE_CACHE_LIMIT = 6;
 function getRegionAnalysisCacheKey(art, frameMode, width, height) {
   const artKey = art ? `${art.id || ""}@${art.version || ""}@${art.src || ""}` : "";
   return `${artKey}:${frameMode}:${width}x${height}`;
+}
+
+function getFillsCacheSignature(fillsArray) {
+  if (!Array.isArray(fillsArray) || fillsArray.length === 0) return "0";
+  return fillsArray.map((fill) => {
+    const item = fill || {};
+    return `${item.x || 0},${item.y || 0},${item.color || ""},${item.v || ""}`;
+  }).join(";");
+}
+
+function getPaintLayerStateCacheKey(art, frameMode, width, height, fillsArray) {
+  const artKey = art ? `${art.id || ""}@${art.version || ""}@${art.src || ""}@${art.regionMapSrc || ""}` : "";
+  return `${artKey}:${frameMode}:${width}x${height}:${getFillsCacheSignature(fillsArray)}`;
 }
 
 function cloneRegionAnalysis(regions) {
@@ -114,6 +129,41 @@ function cloneFillLayerImageData(imageData) {
   const clone = createFillLayerImageData(imageData.width, imageData.height);
   clone.data.set(imageData.data);
   return clone;
+}
+
+function cloneProgressImageData(imageData) {
+  if (!imageData) return null;
+  return {
+    data: new Uint8ClampedArray(imageData.data),
+    width: imageData.width,
+    height: imageData.height
+  };
+}
+
+function clonePaintLayerState(state) {
+  if (!state) return null;
+  return {
+    fillLayer: cloneFillLayerImageData(state.fillLayer),
+    progressImgData: cloneProgressImageData(state.progressImgData)
+  };
+}
+
+function rememberPaintLayerState(cacheKey, state) {
+  if (!cacheKey || !state || !state.fillLayer || !state.progressImgData) return;
+  rememberBoundedCacheValue(paintLayerStateCache, cacheKey, state, clonePaintLayerState, PAINT_LAYER_STATE_CACHE_LIMIT);
+}
+
+function getCachedPaintLayerState(cacheKey) {
+  const cached = paintLayerStateCache.get(cacheKey);
+  return cached ? clonePaintLayerState(cached) : null;
+}
+
+function getOrBuildPaintLayerState(cacheKey, buildState) {
+  const cached = getCachedPaintLayerState(cacheKey);
+  if (cached) return cached;
+  const state = buildState();
+  rememberPaintLayerState(cacheKey, state);
+  return state;
 }
 
 function buildPaintLayerState(baseImgData, fillsArray, frame, regionMap = null) {
@@ -267,7 +317,11 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
     const lineLayer = lineLayerImageDataRef.current || buildLineLayerImageData(baseImgData);
     lineLayerImageDataRef.current = lineLayer;
-    const { fillLayer, progressImgData } = buildPaintLayerState(baseImgData, fillsArray, frameRef.current, regionMapRef.current);
+    const cacheKey = getPaintLayerStateCacheKey(art, frameMode, cw, ch, fillsArray);
+    const { fillLayer, progressImgData } = getOrBuildPaintLayerState(
+      cacheKey,
+      () => buildPaintLayerState(baseImgData, fillsArray, frameRef.current, regionMapRef.current)
+    );
     const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
     ctx.putImageData(composed, 0, 0);
     fillLayerImageDataRef.current = fillLayer;
@@ -385,6 +439,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     metric.putImageData += nowMs() - t0;
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
+    rememberPaintLayerState(getPaintLayerStateCacheKey(art, frameMode, cw, ch, nextFills), { fillLayer, progressImgData });
     requestAnimationFrame(() => recordPaintMetric({
       ...metric,
       total: nowMs() - paintStartedAt,
@@ -468,6 +523,12 @@ if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.getCachedRegionAnalysis = getCachedRegionAnalysis;
   window.__COLORING_TEST_HOOKS__.getRegionAnalysisCacheLimit = () => REGION_ANALYSIS_CACHE_LIMIT;
   window.__COLORING_TEST_HOOKS__.getRegionAnalysisCacheSize = () => regionAnalysisCache.size;
+  window.__COLORING_TEST_HOOKS__.getPaintLayerStateCacheKey = getPaintLayerStateCacheKey;
+  window.__COLORING_TEST_HOOKS__.rememberPaintLayerState = rememberPaintLayerState;
+  window.__COLORING_TEST_HOOKS__.getCachedPaintLayerState = getCachedPaintLayerState;
+  window.__COLORING_TEST_HOOKS__.getOrBuildPaintLayerState = getOrBuildPaintLayerState;
+  window.__COLORING_TEST_HOOKS__.getPaintLayerStateCacheLimit = () => PAINT_LAYER_STATE_CACHE_LIMIT;
+  window.__COLORING_TEST_HOOKS__.getPaintLayerStateCacheSize = () => paintLayerStateCache.size;
 }
 const finishedThumbCache = new Map();
 const FINISHED_THUMB_CACHE_LIMIT = 48;
@@ -1454,7 +1515,11 @@ function renderArtworkDataUrl(art, fills, options = {}) {
       const lineLayer = buildLineLayerImageData(immutableBaseImgData);
       const fillsArray = Array.isArray(fills) ? fills : [];
       const regionMap = buildPaintRegionMap(immutableBaseImgData);
-      const { fillLayer } = buildPaintLayerState(immutableBaseImgData, fillsArray, frame, regionMap);
+      const cacheKey = getPaintLayerStateCacheKey(art, "paint", frame.width, frame.height, fillsArray);
+      const { fillLayer } = getOrBuildPaintLayerState(
+        cacheKey,
+        () => buildPaintLayerState(immutableBaseImgData, fillsArray, frame, regionMap)
+      );
       const composed = composePaintLayers(immutableBaseImgData, fillLayer, lineLayer);
       ctx.putImageData(composed, 0, 0);
       let outputCanvas = canvas;
