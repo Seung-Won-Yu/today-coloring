@@ -61,6 +61,16 @@ function run() {
   assert.strictEqual(shortHex.g, 187);
   assert.strictEqual(shortHex.b, 204);
 
+  const invalidHex = PaintEngine.hexToRgb("not-a-color");
+  assert.strictEqual(invalidHex.r, 0);
+  assert.strictEqual(invalidHex.g, 0);
+  assert.strictEqual(invalidHex.b, 0);
+
+  const malformedHex = PaintEngine.hexToRgb("#12345z");
+  assert.strictEqual(malformedHex.r, 0);
+  assert.strictEqual(malformedHex.g, 0);
+  assert.strictEqual(malformedHex.b, 0);
+
   const blueSky = [142, 210, 239, 255];
   const base = createImageData(5, 3, [
     [255, 255, 255, 255], [168, 168, 168, 255], [24, 24, 24, 255], [168, 168, 168, 255], blueSky,

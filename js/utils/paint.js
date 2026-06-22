@@ -503,8 +503,9 @@
   const PROGRESS_MARKER = { r: 18, g: 52, b: 86 };
 
   function hexToRgb(hex) {
-    const raw = String(hex || "").replace("#", "");
+    const raw = String(hex || "").trim().replace(/^#/, "");
     const normalized = raw.length === 3 ? raw.split("").map(function(char) { return char + char; }).join("") : raw;
+    if (!/^[0-9a-f]{6}$/i.test(normalized)) return { r: 0, g: 0, b: 0 };
     const bigint = parseInt(normalized, 16);
     return { r: bigint >> 16 & 255, g: bigint >> 8 & 255, b: bigint & 255 };
   }
