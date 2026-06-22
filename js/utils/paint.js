@@ -5,18 +5,30 @@
 
   // Tuned thresholds for separating fillable paper, soft line edges, and hard ink.
   const PAINT_TUNING = Object.freeze({
+    MIN_VISIBLE_ALPHA: 50,
     LINE_ALPHA_WHITE_POINT: 248,
     LINE_ALPHA_GAIN: 1.38,
     HARD_LINE_LUMINANCE: 112,
     LINE_CHROMA_LIMIT: 72,
-    FLOOD_FILL_TOLERANCE: 95
+    FLOOD_FILL_TOLERANCE: 95,
+    REPAINT_DISTANCE_LIMIT: 10,
+    DIRECT_LINE_CHANNEL_LIMIT: 75,
+    BRIGHT_TARGET_CHANNEL_MIN: 215,
+    BRIGHT_GRAYSCALE_MIN: 185,
+    GRAYSCALE_CHANNEL_DELTA: 50
   });
   const {
+    MIN_VISIBLE_ALPHA,
     LINE_ALPHA_WHITE_POINT,
     LINE_ALPHA_GAIN,
     HARD_LINE_LUMINANCE,
     LINE_CHROMA_LIMIT,
-    FLOOD_FILL_TOLERANCE
+    FLOOD_FILL_TOLERANCE,
+    REPAINT_DISTANCE_LIMIT,
+    DIRECT_LINE_CHANNEL_LIMIT,
+    BRIGHT_TARGET_CHANNEL_MIN,
+    BRIGHT_GRAYSCALE_MIN,
+    GRAYSCALE_CHANNEL_DELTA
   } = PAINT_TUNING;
 
   function createImageDataLike(width, height, data = null) {
@@ -39,19 +51,19 @@
   }
 
   function isWhiteBaseColor(r, g, b, a) {
-    if (a < 50) return false;
+    if (a < MIN_VISIBLE_ALPHA) return false;
     const stats = getPixelStats(r, g, b);
     return stats.min > 238 && stats.luminance > 247 && stats.chroma < 28;
   }
 
   function isHardLineCoreColor(r, g, b, a) {
-    if (a < 50) return false;
+    if (a < MIN_VISIBLE_ALPHA) return false;
     const stats = getPixelStats(r, g, b);
     return stats.luminance <= HARD_LINE_LUMINANCE && stats.chroma <= LINE_CHROMA_LIMIT;
   }
 
   function getLineAlphaFromColor(r, g, b, a) {
-    if (a < 50) return 0;
+    if (a < MIN_VISIBLE_ALPHA) return 0;
     const stats = getPixelStats(r, g, b);
     return Math.max(0, Math.min(255, Math.round((LINE_ALPHA_WHITE_POINT - stats.luminance) * LINE_ALPHA_GAIN)));
   }
@@ -130,6 +142,27 @@
     return Boolean(color && Number.isFinite(color.r) && Number.isFinite(color.g) && Number.isFinite(color.b));
   }
 
+  function isDirectFloodLinePixel(r, g, b, a) {
+    if (a < MIN_VISIBLE_ALPHA) return false;
+    return r < DIRECT_LINE_CHANNEL_LIMIT && g < DIRECT_LINE_CHANNEL_LIMIT && b < DIRECT_LINE_CHANNEL_LIMIT;
+  }
+
+  function isBrightFloodTarget(r, g, b) {
+    return r > BRIGHT_TARGET_CHANNEL_MIN && g > BRIGHT_TARGET_CHANNEL_MIN && b > BRIGHT_TARGET_CHANNEL_MIN;
+  }
+
+  function isNearGrayscale(r, g, b) {
+    return (
+      Math.abs(r - g) < GRAYSCALE_CHANNEL_DELTA &&
+      Math.abs(g - b) < GRAYSCALE_CHANNEL_DELTA &&
+      Math.abs(r - b) < GRAYSCALE_CHANNEL_DELTA
+    );
+  }
+
+  function isBrightGrayscaleMatch(r, g, b) {
+    return r > BRIGHT_GRAYSCALE_MIN && g > BRIGHT_GRAYSCALE_MIN && b > BRIGHT_GRAYSCALE_MIN;
+  }
+
   function doFloodFill(imageData, startX, startY, fillColor, tolerance = FLOOD_FILL_TOLERANCE, baseData = null) {
     if (!isValidImageData(imageData) || !isValidRgbColor(fillColor)) return null;
     const width = imageData.width;
@@ -152,21 +185,16 @@
     const fillG = fillColor.g;
     const fillB = fillColor.b;
     const colorDist = Math.abs(targetR - fillR) + Math.abs(targetG - fillG) + Math.abs(targetB - fillB);
-    if (targetA >= 50 && colorDist < 10) return null;
-    const isLinePixel = (r, g, b, a) => {
-      if (a < 50) return false;
-      return r < 75 && g < 75 && b < 75;
-    };
-    if (isLinePixel(targetR, targetG, targetB, targetA)) {
+    if (targetA >= MIN_VISIBLE_ALPHA && colorDist < REPAINT_DISTANCE_LIMIT) return null;
+    if (isDirectFloodLinePixel(targetR, targetG, targetB, targetA)) {
       return null;
     }
     const colorMatch = (r, g, b, a, x, y) => {
       if (!canUseBasePixel(x, y)) return false;
-      if (isLinePixel(r, g, b, a)) return false;
-      if (targetA < 50 || a < 50) return targetA < 50 && a < 50;
-      if (targetR > 215 && targetG > 215 && targetB > 215) {
-        const isGrayscale = Math.abs(r - g) < 50 && Math.abs(g - b) < 50 && Math.abs(r - b) < 50;
-        if (isGrayscale) return r > 185 && g > 185 && b > 185;
+      if (isDirectFloodLinePixel(r, g, b, a)) return false;
+      if (targetA < MIN_VISIBLE_ALPHA || a < MIN_VISIBLE_ALPHA) return targetA < MIN_VISIBLE_ALPHA && a < MIN_VISIBLE_ALPHA;
+      if (isBrightFloodTarget(targetR, targetG, targetB)) {
+        if (isNearGrayscale(r, g, b)) return isBrightGrayscaleMatch(r, g, b);
       }
       return Math.abs(r - targetR) <= tolerance && Math.abs(g - targetG) <= tolerance && Math.abs(b - targetB) <= tolerance;
     };
