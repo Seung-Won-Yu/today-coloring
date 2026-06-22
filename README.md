@@ -28,6 +28,12 @@ python3 -m http.server 8002
 
 반응형 검증 기준은 [docs/responsive-qa.md](docs/responsive-qa.md)에 정리되어 있습니다.
 
+## 테스트
+
+```bash
+node tests/run-all.js
+```
+
 ## 폴더 구조
 
 ```text

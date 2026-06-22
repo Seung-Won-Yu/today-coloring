@@ -48,14 +48,7 @@ python3 -m http.server 4173
 기본 테스트:
 
 ```bash
-node tests/cache-version-consistency.test.js
-node tests/service-worker-fetch.test.js
-node tests/save-image-bridge.test.js
-node tests/artwork-assets.test.js
-node tests/manifest-policy.test.js
-node tests/storage-version.test.js
-node tests/paint-engine.test.js
-node tests/app-showcase-fills.test.js
+node tests/run-all.js
 ```
 
 브라우저 QA는 Playwright CLI로 수행한다. 검증할 때는 다음 조건을 확인한다.
