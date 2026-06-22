@@ -2905,17 +2905,29 @@
   min-height:86px;
   height:86px;
   padding:10px 14px;
+  flex-direction:row;
+  gap:12px;
   border-radius:26px;
 }
 
 .color--side .curcolor__brush {
-  width:30px;
-  height:30px;
+  width:32px;
+  height:32px;
 }
 
 .color--side .curcolor__name {
-  max-width:100%;
-  font-size:22px !important;
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  min-width:max-content;
+  min-height:34px;
+  max-width:calc(100% - 48px);
+  padding-inline:2px;
+  overflow:visible;
+  text-overflow:clip;
+  white-space:nowrap;
+  font-size:28px !important;
+  line-height:1.12;
 }
 
 .color--side .color-toolbelt {
