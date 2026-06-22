@@ -3060,6 +3060,75 @@
   }
 }
 
+@media (max-width: 520px) and (orientation: portrait) {
+  .color--bottom .canvaswrap {
+    padding-bottom:244px;
+  }
+
+  .color--bottom .canvaswrap::after {
+    bottom:228px;
+  }
+
+  .color--bottom .palettezone--bottom {
+    min-height:232px;
+    grid-template-rows:112px minmax(0, 96px);
+    gap:8px;
+    padding:10px 10px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .color--bottom .color-controls {
+    grid-template-columns:minmax(0, 1fr);
+    grid-template-rows:52px 52px;
+    align-items:stretch;
+    gap:8px;
+  }
+
+  .color--bottom .curcolor {
+    grid-column:1;
+    grid-row:1;
+    justify-self:center;
+    width:min(100%, 220px);
+    height:52px;
+    padding:8px 18px;
+    gap:10px;
+    border-radius:24px;
+  }
+
+  .color--bottom .curcolor__brush {
+    width:26px;
+    height:26px;
+  }
+
+  .color--bottom .curcolor__name {
+    max-width:150px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:20px !important;
+    line-height:1.1;
+  }
+
+  .color--bottom .color-toolbelt {
+    grid-column:1;
+    grid-row:2;
+    width:100%;
+    justify-self:stretch;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:7px;
+    padding:5px;
+    border-radius:22px;
+  }
+
+  .color--bottom .color-toolbelt__btn {
+    min-width:0;
+    height:48px;
+  }
+
+  .color-toolbelt__label {
+    font-size:10px;
+  }
+}
+
 @media (max-height: 430px) and (orientation: landscape) {
   .color--side .palettezone--side {
     gap:10px;
