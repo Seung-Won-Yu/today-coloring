@@ -1610,7 +1610,7 @@ function requestAppFullscreen() {
 if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.isAppDisplayMode = isAppDisplayMode;
 }
-function App() {
+const App = function App() {
   const [screen, setScreen] = React.useState("lobby");
   const [artId, setArtId] = React.useState(null);
   const [fills, setFills] = React.useState([]);
@@ -1822,6 +1822,5 @@ function App() {
       onGallery: () => setScreen("gallery")
     }
   ), settingsOpen && /* @__PURE__ */ React.createElement(SettingsDialog, { settings, onChange: updateSettings, onClose: () => setSettingsOpen(false) }));
-}
-window.App = App;
+};
 ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));

@@ -1,4 +1,5 @@
-var PALETTE_GROUPS = [
+(function() {
+const PALETTE_GROUPS = [
   {
     name: '따뜻한 색',
     colors: [
@@ -52,9 +53,9 @@ var PALETTE_GROUPS = [
   }
 ];
 
-var PALETTE = PALETTE_GROUPS.reduce(function(colors, group) {
+const PALETTE = PALETTE_GROUPS.reduce(function(colors, group) {
   return colors.concat(group.colors);
 }, []);
 
-window.PALETTE_GROUPS = PALETTE_GROUPS;
 window.PALETTE = PALETTE;
+})();
