@@ -69,14 +69,15 @@ function createVerticalArtwork(num) {
   var label = padArtworkNumber(num);
   var file = 'vertical-' + label + '.webp';
   var meta = ARTWORK_META[label] || { title: '작품 ' + label, category: '꽃과 식물' };
+  var version = meta.version || ARTWORK_SAVE_VERSION;
   return {
     id: 'vertical-' + label,
     title: meta.title,
     category: meta.category,
-    version: meta.version || ARTWORK_SAVE_VERSION,
+    version: version,
     requiresVersionedSave: Boolean(meta.requiresVersionedSave),
-    src: 'assets/images/artworks/' + file + '?v=' + ARTWORK_VERSION,
-    thumbSrc: 'assets/images/thumbs/' + file + '?v=' + ARTWORK_VERSION,
+    src: 'assets/images/artworks/' + file + '?v=' + (meta.version || ARTWORK_VERSION),
+    thumbSrc: 'assets/images/thumbs/' + file + '?v=' + (meta.version || ARTWORK_VERSION),
     isCanvas: true,
     layout: 'portrait',
     guide: []

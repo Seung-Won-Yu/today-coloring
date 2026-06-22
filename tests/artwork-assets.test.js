@@ -9,7 +9,11 @@ function loadArtworkData() {
   const context = { window: {}, console };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(rootDir, "js/data/artworks.js"), "utf8"), context);
-  return context.window;
+  return {
+    ...context.window,
+    ARTWORK_META: context.ARTWORK_META,
+    createVerticalArtwork: context.createVerticalArtwork
+  };
 }
 
 function stripQuery(src) {
@@ -40,6 +44,12 @@ function run() {
   assert.strictEqual(typeof saveVersion, "string", "artworks should expose the save data version");
   assert(saveVersion.length > 0, "artwork save data version should not be empty");
   assert.strictEqual(artworks.length, 40, "the app should expose 40 coloring artworks");
+
+  artworkData.ARTWORK_META["17"].version = saveVersion + "-17";
+  const individuallyVersionedArtwork = artworkData.createVerticalArtwork(17);
+  assert.strictEqual(individuallyVersionedArtwork.version, saveVersion + "-17");
+  assert(individuallyVersionedArtwork.src.includes("?v=" + individuallyVersionedArtwork.version), "individual artwork versions should bust original image cache");
+  assert(individuallyVersionedArtwork.thumbSrc.includes("?v=" + individuallyVersionedArtwork.version), "individual artwork versions should bust thumbnail cache");
 
   const seenIds = new Set();
   artworks.forEach((art) => {
