@@ -1,4 +1,4 @@
-const CACHE_NAME = 'today-coloring-shell-v137';
+const CACHE_NAME = 'today-coloring-shell-v138';
 const APP_SHELL = [
   './',
   './index.html',
@@ -74,6 +74,7 @@ self.addEventListener('fetch', function(event) {
       if (cachedResponse) return cachedResponse;
 
       return fetch(event.request).then(function(networkResponse) {
+        if (!networkResponse || !networkResponse.ok) return networkResponse;
         var responseCopy = networkResponse.clone();
         caches.open(CACHE_NAME).then(function(cache) {
           cache.put(event.request, responseCopy);
