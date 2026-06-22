@@ -59,24 +59,39 @@
     writeJson(SETTINGS_KEY, createSettings(settings));
   }
 
-  function isValidFill(fill) {
-    return Boolean(
-      fill &&
-      Number.isInteger(fill.x) &&
-      fill.x >= 0 &&
-      Number.isInteger(fill.y) &&
-      fill.y >= 0 &&
-      typeof fill.color === "string" &&
-      /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(fill.color)
-    );
+  function normalizeFillColor(color) {
+    if (typeof color !== "string") return null;
+    const shortMatch = color.match(/^#([0-9a-f]{3})$/i);
+    if (shortMatch) {
+      return "#" + shortMatch[1].split("").map((char) => char + char).join("").toUpperCase();
+    }
+    const fullMatch = color.match(/^#([0-9a-f]{6})$/i);
+    return fullMatch ? "#" + fullMatch[1].toUpperCase() : null;
+  }
+
+  function normalizeFill(fill) {
+    if (!fill || !Number.isInteger(fill.x) || fill.x < 0 || !Number.isInteger(fill.y) || fill.y < 0) return null;
+    const color = normalizeFillColor(fill.color);
+    if (!color) return null;
+    return fill.color === color ? fill : { ...fill, color };
   }
 
   function normalizeFills(fills) {
     if (!Array.isArray(fills)) return { value: [], changed: fills !== undefined };
-    const next = fills.filter(isValidFill);
+    let changed = false;
+    const next = [];
+    fills.forEach((fill) => {
+      const normalized = normalizeFill(fill);
+      if (!normalized) {
+        changed = true;
+        return;
+      }
+      next.push(normalized);
+      if (normalized !== fill) changed = true;
+    });
     return {
-      value: next.length === fills.length ? fills : next,
-      changed: next.length !== fills.length
+      value: changed ? next : fills,
+      changed
     };
   }
 

@@ -74,17 +74,17 @@ function run() {
   const progress = AppStorage.loadProgress();
   assert.strictEqual(progress["vertical-15"], undefined);
   assert.strictEqual(progress["vertical-17"].artworkVersion, "20");
-  assertJsonEqual(progress["vertical-17"].fills, [{ x: 2, y: 2, color: "#000" }]);
-  assertJsonEqual(progress["vertical-17"].undoHistory, [[{ x: 1, y: 1, color: "#fff" }], []]);
+  assertJsonEqual(progress["vertical-17"].fills, [{ x: 2, y: 2, color: "#000000" }]);
+  assertJsonEqual(progress["vertical-17"].undoHistory, [[{ x: 1, y: 1, color: "#FFFFFF" }], []]);
   assert.strictEqual(progress["vertical-40"].artworkVersion, "20");
   assertJsonEqual(progress["vertical-40"].undoHistory, []);
   assert.strictEqual(progress["vertical-60"], undefined);
-  assertJsonEqual(AppStorage.getSavedHistory(progress["vertical-17"]), [[{ x: 1, y: 1, color: "#fff" }], []]);
+  assertJsonEqual(AppStorage.getSavedHistory(progress["vertical-17"]), [[{ x: 1, y: 1, color: "#FFFFFF" }], []]);
 
   const gallery = AppStorage.loadGallery();
   assert.strictEqual(JSON.stringify(gallery.map((item) => item.id)), JSON.stringify(["current", "legacy"]));
   assert(gallery.every((item) => item.artworkVersion === "20"));
-  assertJsonEqual(gallery[0].fills, [{ x: 2, y: 2, color: "#000" }]);
+  assertJsonEqual(gallery[0].fills, [{ x: 2, y: 2, color: "#000000" }]);
 
   const newProgress = AppStorage.createProgressEntry("vertical-15", [{ x: 4, y: 4, color: "#abc" }], [
     [{ x: 3, y: 3, color: "#def" }, { x: 3, y: 3, color: "bad" }]
@@ -92,7 +92,8 @@ function run() {
   AppStorage.saveProgress({ "vertical-15": newProgress });
   const savedProgress = JSON.parse(context.localStorage.getItem("sori_progress_v12"));
   assert.strictEqual(savedProgress["vertical-15"].artworkVersion, "20");
-  assertJsonEqual(savedProgress["vertical-15"].undoHistory, [[{ x: 3, y: 3, color: "#def" }]]);
+  assertJsonEqual(savedProgress["vertical-15"].fills, [{ x: 4, y: 4, color: "#AABBCC" }]);
+  assertJsonEqual(savedProgress["vertical-15"].undoHistory, [[{ x: 3, y: 3, color: "#DDEEFF" }]]);
 
   const snapshotDataUrl = "data:image/webp;base64,abc123";
   const newGalleryItem = AppStorage.createGalleryItem({ id: "new", artId: "vertical-15", fills: [], date: 1, snapshotDataUrl });
