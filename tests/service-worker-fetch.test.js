@@ -126,6 +126,17 @@ async function run() {
   assert.strictEqual(offlineArtworkResponse, cachedArtwork, "artwork images should fall back to cache when offline");
   assert.strictEqual(offlineArtworkWorker.cacheMatches.length, 1, "offline artwork requests should check cache once");
 
+  const freshRegionMap = createResponse(200);
+  const regionMapWorker = loadServiceWorker(() => Promise.resolve(freshRegionMap), { cachedResponse: staleArtwork });
+  const regionMapResponse = await dispatchFetch(regionMapWorker.listeners.fetch, {
+    method: "GET",
+    mode: "cors",
+    url: "https://example.test/assets/regionmaps/paint/vertical-15.png?v=22"
+  });
+  await Promise.resolve();
+  assert.strictEqual(regionMapResponse, freshRegionMap, "region maps should prefer the network over stale cache entries");
+  assert.strictEqual(regionMapWorker.cacheMatches.length, 0, "region maps should skip cache lookup when network succeeds");
+
   console.log("service-worker-fetch.test.js passed");
 }
 

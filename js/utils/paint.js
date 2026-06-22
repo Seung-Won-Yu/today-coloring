@@ -664,6 +664,37 @@
     return { width: sourceWidth, height: sourceHeight, labels, regions };
   }
 
+  function decodePaintRegionMapImageData(regionMapImageData) {
+    if (!isValidImageData(regionMapImageData)) return null;
+    const width = regionMapImageData.width;
+    const height = regionMapImageData.height;
+    const source = regionMapImageData.data;
+    const labels = new Uint32Array(width * height);
+    const regionByLabel = new Map();
+    for (let pos = 0; pos < labels.length; pos++) {
+      const idx = pos * 4;
+      const label = source[idx] + (source[idx + 1] << 8) + (source[idx + 2] << 16);
+      if (!label) continue;
+      labels[pos] = label;
+      const x = pos % width;
+      const y = Math.floor(pos / width);
+      let region = regionByLabel.get(label);
+      if (!region) {
+        region = { label, x, y, size: 0, isBackground: false, minX: x, minY: y, maxX: x, maxY: y };
+        regionByLabel.set(label, region);
+      }
+      region.size++;
+      if (x < region.minX) region.minX = x;
+      if (y < region.minY) region.minY = y;
+      if (x > region.maxX) region.maxX = x;
+      if (y > region.maxY) region.maxY = y;
+      if (x <= 35 || y <= 35 || x >= width - 36 || y >= height - 36) {
+        region.isBackground = true;
+      }
+    }
+    return { width, height, labels, regions: Array.from(regionByLabel.values()).sort((a, b) => a.label - b.label) };
+  }
+
   function getPaintRegionLabel(regionMap, x, y) {
     if (!isValidRegionMap(regionMap)) return 0;
     if (!Number.isInteger(x) || !Number.isInteger(y)) return 0;
@@ -935,6 +966,7 @@
     isPaintableBasePixel,
     analyzePaintRegions,
     buildPaintRegionMap,
+    decodePaintRegionMapImageData,
     getPaintRegionLabel,
     getPaintRegionMapSeeds,
     paintRegionMapSeed,

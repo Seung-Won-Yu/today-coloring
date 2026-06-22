@@ -11,6 +11,7 @@ const tests = [
   "storage-version.test.js",
   "asset-loader.test.js",
   "paint-engine.test.js",
+  "region-map-assets.test.js",
   "app-showcase-fills.test.js"
 ];
 

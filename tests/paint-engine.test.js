@@ -169,6 +169,20 @@ function run() {
   const mappedSeeds = PaintEngine.getPaintRegionMapSeeds(regionMap);
   assert(mappedSeeds.some((seed) => seed.x === 0 && seed.y === 0 && seed.size >= 6), "region map should expose showcase-compatible seeds");
 
+  const encodedRegionMap = createImageData(4, 2, [
+    [1, 0, 0, 255], [1, 0, 0, 255], [0, 0, 0, 255], [2, 0, 0, 255],
+    [1, 0, 0, 255], [0, 0, 0, 255], [2, 0, 0, 255], [2, 0, 0, 255]
+  ]);
+  const decodedRegionMap = PaintEngine.decodePaintRegionMapImageData(encodedRegionMap);
+  assert.strictEqual(decodedRegionMap.width, 4);
+  assert.strictEqual(decodedRegionMap.height, 2);
+  assert.strictEqual(PaintEngine.getPaintRegionLabel(decodedRegionMap, 0, 0), 1);
+  assert.strictEqual(PaintEngine.getPaintRegionLabel(decodedRegionMap, 2, 0), 0);
+  assert.strictEqual(PaintEngine.getPaintRegionLabel(decodedRegionMap, 3, 1), 2);
+  assert.strictEqual(decodedRegionMap.regions.length, 2);
+  assert(decodedRegionMap.regions.some((region) => region.label === 1 && region.size === 3 && region.minX === 0 && region.maxX === 1));
+  assert(decodedRegionMap.regions.some((region) => region.label === 2 && region.size === 3 && region.minX === 2 && region.maxX === 3));
+
   console.log("paint-engine.test.js passed");
 }
 

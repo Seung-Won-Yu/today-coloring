@@ -18,6 +18,7 @@ function loadAppHooks(options = {}) {
         buildLineLayerImageData: () => null,
         buildPaintRegionMap: () => null,
         createFillLayerImageData: () => ({ width: 1, height: 1, data: new Uint8ClampedArray(4) }),
+        decodePaintRegionMapImageData: () => null,
         getPaintRegionLabel: () => 0,
         getPaintRegionMapSeeds: () => [],
         paintFillLayerSeed: () => null,

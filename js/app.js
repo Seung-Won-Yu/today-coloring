@@ -7,6 +7,7 @@ const {
   buildLineLayerImageData,
   buildPaintRegionMap,
   createFillLayerImageData,
+  decodePaintRegionMapImageData,
   getPaintRegionLabel,
   getPaintRegionMapSeeds,
   paintFillLayerSeed,
@@ -95,6 +96,19 @@ function markProgressForSeed(progressImgData, baseData, fill, frame, regionMap =
   return markProgressRegion(progressImgData, normalizedFill.x, normalizedFill.y, baseData);
 }
 
+function loadPrecomputedPaintRegionMap(art, width, height, frameMode) {
+  if (frameMode !== "paint" || !art || !art.regionMapSrc) return Promise.resolve(null);
+  return loadArtworkBitmap(art.regionMapSrc).then((img) => {
+    if (!img || img.width !== width || img.height !== height) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    return decodePaintRegionMapImageData(ctx.getImageData(0, 0, img.width, img.height));
+  }).catch(() => null);
+}
+
 function cloneFillLayerImageData(imageData) {
   if (!imageData) return null;
   const clone = createFillLayerImageData(imageData.width, imageData.height);
@@ -181,12 +195,13 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     cancelRegionAnalysis();
     setImageReady(false);
     setPaintPulse(null);
-    loadArtworkBitmap(art.src).then((img) => {
+    loadArtworkBitmap(art.src).then(async (img) => {
       if (cancelled) return;
       const frame = createSafeArtworkCanvas(img, art.src, art.layout, { mode: frameMode });
       const cw = frame.width;
       const ch = frame.height;
       frameRef.current = frame;
+      const needsRegionMap = interactive || fillsArray.length > 0 || shouldAnalyzeRegions;
       if (baseCanvasRef.current) {
         baseCanvasRef.current.width = cw;
         baseCanvasRef.current.height = ch;
@@ -194,7 +209,11 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         ctx.drawImage(frame.canvas, 0, 0);
         baseImageDataRef.current = ctx.getImageData(0, 0, cw, ch);
         lineLayerImageDataRef.current = buildLineLayerImageData(baseImageDataRef.current);
-        regionMapRef.current = interactive || fillsArray.length > 0 || shouldAnalyzeRegions ? buildPaintRegionMap(baseImageDataRef.current) : null;
+        regionMapRef.current = needsRegionMap ? await loadPrecomputedPaintRegionMap(art, cw, ch, frameMode) : null;
+        if (cancelled) return;
+        if (needsRegionMap && !regionMapRef.current) {
+          regionMapRef.current = buildPaintRegionMap(baseImageDataRef.current);
+        }
         fillLayerImageDataRef.current = null;
         if (!shouldAnalyzeRegions) {
           regionsRef.current = null;

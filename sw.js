@@ -1,4 +1,4 @@
-const CACHE_NAME = 'today-coloring-shell-v166';
+const CACHE_NAME = 'today-coloring-shell-v167';
 const APP_SHELL = [
   './',
   './index.html',
@@ -21,14 +21,14 @@ const APP_SHELL = [
   './css/screens/lobby/landing.css',
   './js/vendor/react.production.min.js',
   './js/vendor/react-dom.production.min.js',
-  './js/data/artworks.js?v=33',
+  './js/data/artworks.js?v=34',
   './js/data/palette.js?v=2',
   './js/utils/storage.js?v=26',
-  './js/utils/paint.js?v=33',
+  './js/utils/paint.js?v=34',
   './js/utils/assets.js?v=17',
   './js/utils/save-image.js?v=1',
   './js/ui/components.js?v=15',
-  './js/app.js?v=84'
+  './js/app.js?v=85'
 ];
 
 self.addEventListener('install', function(event) {
@@ -57,7 +57,8 @@ self.addEventListener('activate', function(event) {
 function isArtworkImageRequest(requestUrl) {
   return (
     requestUrl.pathname.indexOf('/assets/images/artworks/') !== -1 ||
-    requestUrl.pathname.indexOf('/assets/images/thumbs/') !== -1
+    requestUrl.pathname.indexOf('/assets/images/thumbs/') !== -1 ||
+    requestUrl.pathname.indexOf('/assets/regionmaps/') !== -1
   );
 }
 
