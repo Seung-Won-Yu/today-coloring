@@ -24,13 +24,17 @@
   // 앱 버전 변경 시 localStorage 초기화 (이전 테스트 데이터 제거)
   (function() {
     var APP_VER = 'v9.1';
-    if (localStorage.getItem('sori_app_ver') !== APP_VER) {
-      Object.keys(localStorage).forEach(function(key) {
-        if (key.indexOf('sori_progress_') === 0 || key.indexOf('sori_gallery_') === 0) {
-          localStorage.removeItem(key);
-        }
-      });
-      localStorage.setItem('sori_app_ver', APP_VER);
+    try {
+      if (localStorage.getItem('sori_app_ver') !== APP_VER) {
+        Object.keys(localStorage).forEach(function(key) {
+          if (key.indexOf('sori_progress_') === 0 || key.indexOf('sori_gallery_') === 0) {
+            localStorage.removeItem(key);
+          }
+        });
+        localStorage.setItem('sori_app_ver', APP_VER);
+      }
+    } catch (_) {
+      // 저장소가 막힌 WebView/브라우저에서도 앱 부팅은 계속한다.
     }
   })();
 </script>
@@ -38,7 +42,7 @@
   (function() {
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('./sw.js?v=147').catch(function() {});
+      navigator.serviceWorker.register('./sw.js?v=148').catch(function() {});
     });
   })();
 </script>

@@ -7,6 +7,7 @@ const tests = [
   "save-image-bridge.test.js",
   "artwork-assets.test.js",
   "manifest-policy.test.js",
+  "index-boot.test.js",
   "storage-version.test.js",
   "paint-engine.test.js",
   "app-showcase-fills.test.js"
