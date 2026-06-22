@@ -30,6 +30,17 @@ function recordPaintMetric(sample) {
   window.__COLORING_PAINT_METRICS__ = metrics.slice(-80);
 }
 
+function rememberBoundedCacheValue(cache, cacheKey, value, cloneValue, limit) {
+  if (!cacheKey) return;
+  if (cache.has(cacheKey)) {
+    cache.delete(cacheKey);
+  } else if (cache.size >= limit) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey !== undefined) cache.delete(oldestKey);
+  }
+  cache.set(cacheKey, cloneValue(value));
+}
+
 const regionAnalysisCache = new Map();
 const REGION_ANALYSIS_CACHE_LIMIT = 12;
 function getRegionAnalysisCacheKey(art, frameMode, width, height) {
@@ -47,14 +58,7 @@ function getCachedRegionAnalysis(cacheKey) {
 }
 
 function rememberRegionAnalysis(cacheKey, regions) {
-  if (!cacheKey) return;
-  if (regionAnalysisCache.has(cacheKey)) {
-    regionAnalysisCache.delete(cacheKey);
-  } else if (regionAnalysisCache.size >= REGION_ANALYSIS_CACHE_LIMIT) {
-    const oldestKey = regionAnalysisCache.keys().next().value;
-    if (oldestKey) regionAnalysisCache.delete(oldestKey);
-  }
-  regionAnalysisCache.set(cacheKey, cloneRegionAnalysis(regions));
+  rememberBoundedCacheValue(regionAnalysisCache, cacheKey, regions, cloneRegionAnalysis, REGION_ANALYSIS_CACHE_LIMIT);
 }
 
 function replayFillOnFillLayer(fillLayerImageData, baseData, fill, frame) {
@@ -423,14 +427,7 @@ function getCachedFinishedThumbFills(cacheKey) {
 }
 
 function rememberFinishedThumbFills(cacheKey, fills) {
-  if (!cacheKey) return;
-  if (finishedThumbCache.has(cacheKey)) {
-    finishedThumbCache.delete(cacheKey);
-  } else if (finishedThumbCache.size >= FINISHED_THUMB_CACHE_LIMIT) {
-    const oldestKey = finishedThumbCache.keys().next().value;
-    if (oldestKey) finishedThumbCache.delete(oldestKey);
-  }
-  finishedThumbCache.set(cacheKey, cloneShowcaseFills(fills));
+  rememberBoundedCacheValue(finishedThumbCache, cacheKey, fills, cloneShowcaseFills, FINISHED_THUMB_CACHE_LIMIT);
 }
 
 if (window.__COLORING_TEST_HOOKS__) {
