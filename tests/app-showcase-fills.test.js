@@ -95,6 +95,8 @@ function run() {
   assert.strictEqual(typeof hooks.getFinishedThumbCacheKey, "function");
   assert.strictEqual(typeof hooks.rememberFinishedThumbFills, "function");
   assert.strictEqual(typeof hooks.getCachedFinishedThumbFills, "function");
+  assert.strictEqual(typeof hooks.getFinishedThumbCacheLimit, "function");
+  assert.strictEqual(typeof hooks.getFinishedThumbCacheSize, "function");
 
   const fills = hooks.buildShowcaseFills([
     { x: 44, y: 52, size: 24, isBackground: true },
@@ -129,6 +131,16 @@ function run() {
   assert.strictEqual(cachedThumbFills[0].x, 1, "finished thumbnail cache should not retain caller fill references");
   cachedThumbFills[0].x = 7;
   assert.strictEqual(hooks.getCachedFinishedThumbFills(firstThumbKey)[0].x, 1, "finished thumbnail cache reads should return defensive copies");
+
+  const cacheLimitHooks = loadAppHooks();
+  const thumbCacheLimit = cacheLimitHooks.getFinishedThumbCacheLimit();
+  assert(thumbCacheLimit >= 40, "finished thumbnail cache should fit the current artwork set");
+  for (let idx = 0; idx <= thumbCacheLimit; idx += 1) {
+    cacheLimitHooks.rememberFinishedThumbFills(`thumb-${idx}`, [{ x: idx, y: idx + 1, color: "#ABCDEF", v: 2 }]);
+  }
+  assert.strictEqual(cacheLimitHooks.getFinishedThumbCacheSize(), thumbCacheLimit, "finished thumbnail cache should stay within its limit");
+  assert.strictEqual(cacheLimitHooks.getCachedFinishedThumbFills("thumb-0"), null, "finished thumbnail cache should evict the oldest entry first");
+  assert.strictEqual(cacheLimitHooks.getCachedFinishedThumbFills(`thumb-${thumbCacheLimit}`)[0].x, thumbCacheLimit, "finished thumbnail cache should keep the newest entry");
 
   const noMatchMediaHooks = loadAppHooks({ matchMedia: false });
   assert.strictEqual(noMatchMediaHooks.isAppDisplayMode(), false);

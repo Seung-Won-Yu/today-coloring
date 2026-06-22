@@ -403,6 +403,7 @@ if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.getCachedRegionAnalysis = getCachedRegionAnalysis;
 }
 const finishedThumbCache = new Map();
+const FINISHED_THUMB_CACHE_LIMIT = 48;
 function getFinishedThumbCacheKey(art, limit) {
   if (!art) return "";
   return `${art.id || ""}@${art.version || ""}@${art.src || ""}:${limit}`;
@@ -419,6 +420,10 @@ function getCachedFinishedThumbFills(cacheKey) {
 
 function rememberFinishedThumbFills(cacheKey, fills) {
   if (!cacheKey) return;
+  if (!finishedThumbCache.has(cacheKey) && finishedThumbCache.size >= FINISHED_THUMB_CACHE_LIMIT) {
+    const oldestKey = finishedThumbCache.keys().next().value;
+    if (oldestKey) finishedThumbCache.delete(oldestKey);
+  }
   finishedThumbCache.set(cacheKey, cloneShowcaseFills(fills));
 }
 
@@ -426,6 +431,8 @@ if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.getFinishedThumbCacheKey = getFinishedThumbCacheKey;
   window.__COLORING_TEST_HOOKS__.rememberFinishedThumbFills = rememberFinishedThumbFills;
   window.__COLORING_TEST_HOOKS__.getCachedFinishedThumbFills = getCachedFinishedThumbFills;
+  window.__COLORING_TEST_HOOKS__.getFinishedThumbCacheLimit = () => FINISHED_THUMB_CACHE_LIMIT;
+  window.__COLORING_TEST_HOOKS__.getFinishedThumbCacheSize = () => finishedThumbCache.size;
 }
 
 function FinishedThumb({ art, className = "", limit = 80 }) {
