@@ -128,6 +128,18 @@ function run() {
   assert.strictEqual(savedGallery[0].snapshotDataUrl, snapshotDataUrl);
   assert.strictEqual(savedGallery[1].snapshotDataUrl, undefined);
 
+  const perArtworkVersionContext = loadStorage({
+    [storageKeys.progress]: JSON.stringify({
+      "vertical-40": [{ x: 3, y: 3, color: "#f00" }]
+    }),
+    [storageKeys.gallery]: JSON.stringify([
+      { id: "legacy-per-artwork", artId: "vertical-40", fills: [{ x: 3, y: 3, color: "#f00" }] }
+    ])
+  });
+  perArtworkVersionContext.window.ARTWORKS.find((art) => art.id === "vertical-40").version = artworkSaveVersion + "-40";
+  assert.strictEqual(perArtworkVersionContext.window.AppStorage.loadProgress()["vertical-40"], undefined);
+  assertJsonEqual(perArtworkVersionContext.window.AppStorage.loadGallery(), []);
+
   assert.strictEqual(AppStorage.loadSettings().fontScale, 1);
   assert.strictEqual(AppStorage.loadSettings().theme, "따뜻");
   assert.strictEqual(AppStorage.loadSettings().paintFeedback, true);

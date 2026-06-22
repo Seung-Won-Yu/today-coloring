@@ -143,9 +143,11 @@
     const art = getArtworkById(artId);
     const currentVersion = art && art.version ? String(art.version) : "";
     if (!currentVersion) return false;
-    if (Array.isArray(saved)) return !art.requiresVersionedSave;
+    const defaultVersion = window.ARTWORK_SAVE_VERSION ? String(window.ARTWORK_SAVE_VERSION) : "";
+    const acceptsLegacySave = !art.requiresVersionedSave && (!defaultVersion || currentVersion === defaultVersion);
+    if (Array.isArray(saved)) return acceptsLegacySave;
     if (!saved || typeof saved !== "object") return true;
-    if (!saved.artworkVersion) return !art.requiresVersionedSave;
+    if (!saved.artworkVersion) return acceptsLegacySave;
     return String(saved.artworkVersion) === currentVersion;
   }
 
