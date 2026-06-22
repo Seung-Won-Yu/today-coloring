@@ -3,11 +3,6 @@
     return r * 0.299 + g * 0.587 + b * 0.114;
   }
 
-  function isDarkFillColor(fillColor) {
-    if (!fillColor) return false;
-    return getColorLuminance(fillColor.r, fillColor.g, fillColor.b) < 118;
-  }
-
   // Tuned thresholds for separating fillable paper, soft line edges, and hard ink.
   const PAINT_TUNING = Object.freeze({
     LINE_ALPHA_WHITE_POINT: 248,
@@ -217,315 +212,10 @@
     return { painted, minX, minY, maxX, maxY };
   }
 
-  function smoothFillEdges(imageData, baseData, fillColor, passes = 2, bounds = null) {
-    if (!imageData || !baseData || !fillColor) return;
-    const width = imageData.width;
-    const height = imageData.height;
-    const data = imageData.data;
-    const getPixelIndex = (x, y) => (y * width + x) * 4;
-    const paintedSize = bounds && bounds.painted ? bounds.painted : 0;
-    const isTinyFill = paintedSize > 0 && paintedSize <= 360;
-    const isSmallFill = paintedSize > 0 && paintedSize <= 1400;
-    const scanPad = isTinyFill ? 2 : isSmallFill ? 4 : 6;
-    const minX = Math.max(1, (bounds ? bounds.minX : 1) - scanPad);
-    const minY = Math.max(1, (bounds ? bounds.minY : 1) - scanPad);
-    const maxX = Math.min(width - 2, (bounds ? bounds.maxX : width - 2) + scanPad);
-    const maxY = Math.min(height - 2, (bounds ? bounds.maxY : height - 2) + scanPad);
-    const isFillPixel = (idx) => {
-      return Math.abs(data[idx] - fillColor.r) + Math.abs(data[idx + 1] - fillColor.g) + Math.abs(data[idx + 2] - fillColor.b) <= 22;
-    };
-    const isSoftEdgeFringe = (idx, darkNeighbors) => {
-      const r = baseData[idx];
-      const g = baseData[idx + 1];
-      const b = baseData[idx + 2];
-      const a = baseData[idx + 3];
-      if (isLinePixelColor(r, g, b, a)) return false;
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      const luminance = getColorLuminance(r, g, b);
-      const chroma = max - min;
-      if (min >= 224 && luminance >= 228 && chroma <= 42) return true;
-      return darkNeighbors > 0 && luminance >= 218 && chroma <= 72;
-    };
-    const countDarkBoundaryNeighbors = (x, y) => {
-      let count = 0;
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) continue;
-          const idx = getPixelIndex(x + dx, y + dy);
-          if (isLinePixelColor(baseData[idx], baseData[idx + 1], baseData[idx + 2], baseData[idx + 3])) count++;
-        }
-      }
-      return count;
-    };
-    const neighborOffsets = [
-      [-1, -1], [0, -1], [1, -1],
-      [-1, 0],           [1, 0],
-      [-1, 1],  [0, 1],  [1, 1]
-    ];
-    const totalPasses = isTinyFill ? 0 : isSmallFill ? Math.min(1, passes) : Math.max(3, passes);
-    for (let pass = 0; pass < totalPasses; pass++) {
-      const candidates = [];
-      for (let y = minY; y <= maxY; y++) {
-        for (let x = minX; x <= maxX; x++) {
-          const idx = getPixelIndex(x, y);
-          if (isFillPixel(idx)) continue;
-          const darkNeighbors = countDarkBoundaryNeighbors(x, y);
-          if (!isSoftEdgeFringe(idx, darkNeighbors)) continue;
-          let fillNeighbors = 0;
-          for (const [dx, dy] of neighborOffsets) {
-            if (isFillPixel(getPixelIndex(x + dx, y + dy))) {
-              fillNeighbors++;
-            }
-          }
-          const neededNeighbors = isSmallFill ? 3 : darkNeighbors >= 4 ? 3 : darkNeighbors > 0 ? (pass === 0 ? 1 : 2) : pass === 0 ? 1 : 3;
-          if (fillNeighbors >= neededNeighbors) candidates.push(idx);
-        }
-      }
-      if (candidates.length === 0) break;
-      for (const idx of candidates) {
-        data[idx] = fillColor.r;
-        data[idx + 1] = fillColor.g;
-        data[idx + 2] = fillColor.b;
-        data[idx + 3] = 255;
-      }
-    }
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
-        const idx = getPixelIndex(x, y);
-        if (isFillPixel(idx)) continue;
-        const r = baseData[idx];
-        const g = baseData[idx + 1];
-        const b = baseData[idx + 2];
-        const a = baseData[idx + 3];
-        if (isLinePixelColor(r, g, b, a)) continue;
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        const luminance = getColorLuminance(r, g, b);
-        if (luminance < 92 || luminance > 224 || max - min > 72) continue;
-        const darkNeighbors = countDarkBoundaryNeighbors(x, y);
-        if (darkNeighbors === 0) continue;
-        let fillNeighbors = 0;
-        for (const [dx, dy] of neighborOffsets) {
-          if (isFillPixel(getPixelIndex(x + dx, y + dy))) fillNeighbors++;
-        }
-        if (fillNeighbors < (isSmallFill ? 2 : 1)) continue;
-        const inkAlpha = Math.max(0.14, Math.min(0.74, (238 - luminance) / 172 + Math.min(darkNeighbors, 3) * 0.035));
-        const fillAlpha = 1 - inkAlpha;
-        data[idx] = Math.round(fillColor.r * fillAlpha + r * inkAlpha);
-        data[idx + 1] = Math.round(fillColor.g * fillAlpha + g * inkAlpha);
-        data[idx + 2] = Math.round(fillColor.b * fillAlpha + b * inkAlpha);
-        data[idx + 3] = 255;
-      }
-    }
-  }
-
-  function mergeFillBounds(baseBounds, extraBounds, extraPainted) {
-    if (!baseBounds) return extraBounds || null;
-    if (!extraBounds) return baseBounds;
-    return {
-      painted: (baseBounds.painted || 0) + (extraPainted || extraBounds.painted || 0),
-      minX: Math.min(baseBounds.minX, extraBounds.minX),
-      minY: Math.min(baseBounds.minY, extraBounds.minY),
-      maxX: Math.max(baseBounds.maxX, extraBounds.maxX),
-      maxY: Math.max(baseBounds.maxY, extraBounds.maxY)
-    };
-  }
-
-  function isRestorableBoundaryPixel(baseData, getPixelIndex, x, y) {
-    const idx = getPixelIndex(x, y);
-    const r = baseData[idx];
-    const g = baseData[idx + 1];
-    const b = baseData[idx + 2];
-    const a = baseData[idx + 3];
-    if (isLinePixelColor(r, g, b, a)) return true;
-    if (a < 50) return false;
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const luminance = getColorLuminance(r, g, b);
-    if (min > 238 && luminance > 247 && max - min < 28) return false;
-    if (luminance >= 228 || max - min >= 86) return false;
-    let coreLineNeighbors = 0;
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        const neighborIdx = getPixelIndex(x + dx, y + dy);
-        if (isLinePixelColor(baseData[neighborIdx], baseData[neighborIdx + 1], baseData[neighborIdx + 2], baseData[neighborIdx + 3])) {
-          coreLineNeighbors++;
-        }
-      }
-    }
-    return coreLineNeighbors >= 1;
-  }
-
-  function restoreBoundaryPixels(imageData, baseData, bounds) {
-    if (!imageData || !baseData || !bounds) return;
-    const width = imageData.width;
-    const height = imageData.height;
-    const data = imageData.data;
-    const getPixelIndex = (x, y) => (y * width + x) * 4;
-    const minX = Math.max(1, bounds.minX - 3);
-    const minY = Math.max(1, bounds.minY - 3);
-    const maxX = Math.min(width - 2, bounds.maxX + 3);
-    const maxY = Math.min(height - 2, bounds.maxY + 3);
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
-        const idx = getPixelIndex(x, y);
-        if (!isRestorableBoundaryPixel(baseData, getPixelIndex, x, y)) continue;
-        const r = baseData[idx];
-        const g = baseData[idx + 1];
-        const b = baseData[idx + 2];
-        const a = baseData[idx + 3];
-        data[idx] = r;
-        data[idx + 1] = g;
-        data[idx + 2] = b;
-        data[idx + 3] = a;
-      }
-    }
-  }
-
-  function absorbNearbyPaintableIslands(imageData, baseData, fillColor, bounds) {
-    if (!imageData || !baseData || !fillColor || !bounds) return bounds;
-    const width = imageData.width;
-    const height = imageData.height;
-    const data = imageData.data;
-    const getPixelIndex = (x, y) => (y * width + x) * 4;
-    const paintedSize = bounds.painted || 0;
-    const isTinyFill = paintedSize > 0 && paintedSize <= 420;
-    const isSmallFill = paintedSize > 0 && paintedSize <= 1600;
-    const isDarkFill = isDarkFillColor(fillColor);
-    if (isDarkFill) return bounds;
-    const scanPad = isTinyFill ? 72 : isSmallFill ? 52 : 18;
-    const joinRadius = isTinyFill ? 10 : isSmallFill ? 8 : 5;
-    const maxIslandSize = isTinyFill ? 1200 : isSmallFill ? 1800 : Math.min(1100, Math.max(220, Math.round(paintedSize * 0.07)));
-    const passes = isTinyFill ? 5 : isSmallFill ? 4 : 2;
-    const minX = Math.max(1, bounds.minX - scanPad);
-    const minY = Math.max(1, bounds.minY - scanPad);
-    const maxX = Math.min(width - 2, bounds.maxX + scanPad);
-    const maxY = Math.min(height - 2, bounds.maxY + scanPad);
-    const scanW = maxX - minX + 1;
-    const scanH = maxY - minY + 1;
-    if (scanW <= 0 || scanH <= 0) return bounds;
-
-    const isFillPixel = (idx) => {
-      return Math.abs(data[idx] - fillColor.r) + Math.abs(data[idx + 1] - fillColor.g) + Math.abs(data[idx + 2] - fillColor.b) <= 24;
-    };
-    const hasNearbyFill = (x, y) => {
-      for (let dy = -joinRadius; dy <= joinRadius; dy++) {
-        const py = y + dy;
-        if (py < 0 || py >= height) continue;
-        for (let dx = -joinRadius; dx <= joinRadius; dx++) {
-          const px = x + dx;
-          if (px < 0 || px >= width || dx * dx + dy * dy > joinRadius * joinRadius) continue;
-          if (isFillPixel(getPixelIndex(px, py))) return true;
-        }
-      }
-      return false;
-    };
-
-    let mergedBounds = bounds;
-    for (let pass = 0; pass < passes; pass++) {
-      const visited = new Uint8Array(scanW * scanH);
-      let absorbedThisPass = 0;
-      for (let y = minY; y <= maxY; y++) {
-        for (let x = minX; x <= maxX; x++) {
-          const localStart = (y - minY) * scanW + (x - minX);
-          if (visited[localStart]) continue;
-          const startIdx = getPixelIndex(x, y);
-          if (isFillPixel(startIdx) || !isPaintableBasePixel(baseData, startIdx)) {
-            visited[localStart] = 1;
-            continue;
-          }
-          const queue = [y * width + x];
-          const pixels = [];
-          const edgePixels = [];
-          visited[localStart] = 1;
-          let head = 0;
-          let nearFill = false;
-          let tooLarge = false;
-          let islandBounds = { painted: 0, minX: x, minY: y, maxX: x, maxY: y };
-          while (head < queue.length) {
-            const pos = queue[head++];
-            const cx = pos % width;
-            const cy = Math.floor(pos / width);
-            islandBounds.painted++;
-            if (cx < islandBounds.minX) islandBounds.minX = cx;
-            if (cy < islandBounds.minY) islandBounds.minY = cy;
-            if (cx > islandBounds.maxX) islandBounds.maxX = cx;
-            if (cy > islandBounds.maxY) islandBounds.maxY = cy;
-            const pixelNearFill = (isTinyFill || isSmallFill || !tooLarge) && hasNearbyFill(cx, cy);
-            if (pixelNearFill) {
-              nearFill = true;
-              if (edgePixels.length < maxIslandSize) edgePixels.push(pos);
-            }
-            if (!tooLarge) {
-              pixels.push(pos);
-              if (pixels.length > maxIslandSize) tooLarge = true;
-            }
-            const neighbors = [pos + 1, pos - 1, pos + width, pos - width];
-            for (let i = 0; i < neighbors.length; i++) {
-              const next = neighbors[i];
-              if (next < 0 || next >= width * height) continue;
-              const nx = next % width;
-              const ny = Math.floor(next / width);
-              if (nx < minX || nx > maxX || ny < minY || ny > maxY) continue;
-              if ((i === 0 && nx === 0) || (i === 1 && nx === width - 1)) continue;
-              const localIdx = (ny - minY) * scanW + (nx - minX);
-              if (visited[localIdx]) continue;
-              const nIdx = next * 4;
-              if (isFillPixel(nIdx) || !isPaintableBasePixel(baseData, nIdx)) continue;
-              visited[localIdx] = 1;
-              queue.push(next);
-            }
-          }
-          if (!nearFill) continue;
-          if (tooLarge && !isTinyFill && !isSmallFill) continue;
-          const fillPixels = tooLarge ? edgePixels : pixels;
-          if (fillPixels.length === 0) continue;
-          const absorbedBounds = { painted: 0, minX: width, minY: height, maxX: 0, maxY: 0 };
-          for (const pos of fillPixels) {
-            const px = pos % width;
-            const py = Math.floor(pos / width);
-            const idx = pos * 4;
-            data[idx] = fillColor.r;
-            data[idx + 1] = fillColor.g;
-            data[idx + 2] = fillColor.b;
-            data[idx + 3] = 255;
-            absorbedBounds.painted++;
-            if (px < absorbedBounds.minX) absorbedBounds.minX = px;
-            if (py < absorbedBounds.minY) absorbedBounds.minY = py;
-            if (px > absorbedBounds.maxX) absorbedBounds.maxX = px;
-            if (py > absorbedBounds.maxY) absorbedBounds.maxY = py;
-          }
-          absorbedThisPass += fillPixels.length;
-          mergedBounds = mergeFillBounds(mergedBounds, absorbedBounds, fillPixels.length);
-        }
-      }
-      if (absorbedThisPass === 0) break;
-    }
-    return mergedBounds;
-  }
-
   function fillConnectedRegion(imageData, baseData, seed, fillColor, options = {}) {
     if (!imageData || !seed || !fillColor) return null;
     const tolerance = options.tolerance || FLOOD_FILL_TOLERANCE;
-    const shouldSmooth = options.smooth !== false;
-    const shouldAbsorb = options.absorbIslands !== false;
-    const shouldRestore = options.restoreBoundary !== false;
-    const isDarkFill = isDarkFillColor(fillColor);
-    const fillBounds = doFloodFill(imageData, seed.x, seed.y, fillColor, tolerance, baseData);
-    if (!fillBounds) return null;
-    let mergedBounds = fillBounds;
-    if (shouldSmooth && !isDarkFill) smoothFillEdges(imageData, baseData, fillColor, options.smoothPasses || 3, mergedBounds);
-    if (shouldAbsorb) mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
-    if (shouldSmooth && !isDarkFill && mergedBounds !== fillBounds) {
-      smoothFillEdges(imageData, baseData, fillColor, Math.min(2, options.smoothPasses || 2), mergedBounds);
-      if (shouldAbsorb) mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
-      smoothFillEdges(imageData, baseData, fillColor, 1, mergedBounds);
-      if (shouldAbsorb) mergedBounds = absorbNearbyPaintableIslands(imageData, baseData, fillColor, mergedBounds);
-    }
-    if (shouldRestore) restoreBoundaryPixels(imageData, baseData, mergedBounds);
-    return mergedBounds;
+    return doFloodFill(imageData, seed.x, seed.y, fillColor, tolerance, baseData);
   }
 
   const PROGRESS_MARKER = { r: 18, g: 52, b: 86 };
@@ -824,19 +514,11 @@
   }
 
   function markProgressRegion(imageData, x, y, baseData = null) {
-    fillConnectedRegion(imageData, baseData, { x, y }, PROGRESS_MARKER, {
-      smooth: false,
-      absorbIslands: false,
-      restoreBoundary: false
-    });
+    fillConnectedRegion(imageData, baseData, { x, y }, PROGRESS_MARKER);
   }
 
   function paintFillLayerSeed(fillLayerImageData, baseData, seed, fillColor) {
-    return fillConnectedRegion(fillLayerImageData, baseData, seed, fillColor, {
-      smooth: false,
-      absorbIslands: false,
-      restoreBoundary: false
-    });
+    return fillConnectedRegion(fillLayerImageData, baseData, seed, fillColor);
   }
 
   function composePaintLayers(baseImageData, fillLayerImageData, lineLayerImageData = null) {
@@ -972,7 +654,6 @@
   window.PaintEngine = {
     doFloodFill,
     fillConnectedRegion,
-    smoothFillEdges,
     buildLineLayerImageData,
     createFillLayerImageData,
     paintFillLayerSeed,
