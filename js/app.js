@@ -124,6 +124,13 @@ function loadPrecomputedPaintRegionMap(art, width, height, frameMode) {
   }).catch(() => null);
 }
 
+function loadPaintRegionMapForFrame(art, width, height, frameMode, baseImgData) {
+  return loadPrecomputedPaintRegionMap(art, width, height, frameMode).then((precomputedRegionMap) => {
+    if (precomputedRegionMap) return precomputedRegionMap;
+    return baseImgData ? buildPaintRegionMap(baseImgData) : null;
+  });
+}
+
 function loadPrecomputedPaintLineLayer(art, width, height, frameMode) {
   if (frameMode !== "paint" || !art || !art.lineLayerSrc) return Promise.resolve(null);
   return loadArtworkBitmap(art.lineLayerSrc).then((img) => {
@@ -273,14 +280,11 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         baseImageDataRef.current = ctx.getImageData(0, 0, cw, ch);
         const [precomputedLineLayer, precomputedRegionMap] = await Promise.all([
           loadPrecomputedPaintLineLayer(art, cw, ch, frameMode),
-          needsRegionMap ? loadPrecomputedPaintRegionMap(art, cw, ch, frameMode) : Promise.resolve(null)
+          needsRegionMap ? loadPaintRegionMapForFrame(art, cw, ch, frameMode, baseImageDataRef.current) : Promise.resolve(null)
         ]);
         if (cancelled) return;
         lineLayerImageDataRef.current = precomputedLineLayer || buildLineLayerImageData(baseImageDataRef.current);
         regionMapRef.current = precomputedRegionMap;
-        if (needsRegionMap && !regionMapRef.current) {
-          regionMapRef.current = buildPaintRegionMap(baseImageDataRef.current);
-        }
         fillLayerImageDataRef.current = null;
         if (!shouldAnalyzeRegions) {
           regionsRef.current = null;
@@ -546,6 +550,7 @@ if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.getOrBuildPaintLayerState = getOrBuildPaintLayerState;
   window.__COLORING_TEST_HOOKS__.getPaintLayerStateCacheLimit = () => PAINT_LAYER_STATE_CACHE_LIMIT;
   window.__COLORING_TEST_HOOKS__.getPaintLayerStateCacheSize = () => paintLayerStateCache.size;
+  window.__COLORING_TEST_HOOKS__.loadPaintRegionMapForFrame = loadPaintRegionMapForFrame;
 }
 const finishedThumbCache = new Map();
 const FINISHED_THUMB_CACHE_LIMIT = 48;
@@ -1531,7 +1536,7 @@ function renderArtworkDataUrl(art, fills, options = {}) {
     const precomputedLineLayer = await loadPrecomputedPaintLineLayer(art, frame.width, frame.height, "paint");
     const lineLayer = precomputedLineLayer || buildLineLayerImageData(immutableBaseImgData);
     const fillsArray = Array.isArray(fills) ? fills : [];
-    const regionMap = buildPaintRegionMap(immutableBaseImgData);
+    const regionMap = await loadPaintRegionMapForFrame(art, frame.width, frame.height, "paint", immutableBaseImgData);
     const cacheKey = getPaintLayerStateCacheKey(art, "paint", frame.width, frame.height, fillsArray);
     const { fillLayer } = getOrBuildPaintLayerState(
       cacheKey,

@@ -7,35 +7,39 @@ const rootDir = path.resolve(__dirname, "..");
 
 function loadAppHooks(options = {}) {
   const testHooks = {};
+  const paintEngine = {
+    hexToRgb: () => ({ r: 0, g: 0, b: 0 }),
+    isProgressMarked: () => false,
+    isPaintableBasePixel: () => false,
+    isLinePixelColor: () => false,
+    buildLineLayerImageData: () => null,
+    buildPaintRegionMap: () => null,
+    createFillLayerImageData: () => ({ width: 1, height: 1, data: new Uint8ClampedArray(4) }),
+    decodePaintRegionMapImageData: () => null,
+    getPaintRegionLabel: () => 0,
+    getPaintRegionMapSeeds: () => [],
+    paintFillLayerSeed: () => null,
+    paintRegionMapSeed: () => null,
+    composePaintLayers: () => null,
+    analyzePaintRegions: () => [],
+    findNearestUnpaintedStart: () => null,
+    findNearestPaintedStart: () => null,
+    markProgressRegion: () => null,
+    markProgressRegionMap: () => null,
+    createSafeArtworkCanvas: () => null,
+    normalizeFillForFrame: (fill) => fill,
+    ...(options.paintEngineOverrides || {})
+  };
+  const assetLoader = {
+    loadArtworkBitmap: () => Promise.resolve(null),
+    preloadArtworkBitmaps: () => null,
+    ...(options.assetLoaderOverrides || {})
+  };
   const windowStub = {
       __COLORING_TEST_HOOKS__: testHooks,
       AppStorage: {},
-      PaintEngine: {
-        hexToRgb: () => ({ r: 0, g: 0, b: 0 }),
-        isProgressMarked: () => false,
-        isPaintableBasePixel: () => false,
-        isLinePixelColor: () => false,
-        buildLineLayerImageData: () => null,
-        buildPaintRegionMap: () => null,
-        createFillLayerImageData: () => ({ width: 1, height: 1, data: new Uint8ClampedArray(4) }),
-        decodePaintRegionMapImageData: () => null,
-        getPaintRegionLabel: () => 0,
-        getPaintRegionMapSeeds: () => [],
-        paintFillLayerSeed: () => null,
-        paintRegionMapSeed: () => null,
-        composePaintLayers: () => null,
-        analyzePaintRegions: () => [],
-        findNearestUnpaintedStart: () => null,
-        findNearestPaintedStart: () => null,
-        markProgressRegion: () => null,
-        markProgressRegionMap: () => null,
-        createSafeArtworkCanvas: () => null,
-        normalizeFillForFrame: (fill) => fill
-      },
-      AssetLoader: {
-        loadArtworkBitmap: () => Promise.resolve(null),
-        preloadArtworkBitmaps: () => null
-      },
+      PaintEngine: paintEngine,
+      AssetLoader: assetLoader,
       UIComponents: {
         Icon: () => null,
         BigButton: () => null,
@@ -77,7 +81,8 @@ function loadAppHooks(options = {}) {
     },
     document: {
       getElementById: () => ({}),
-      documentElement: {}
+      documentElement: {},
+      ...(options.documentOverrides || {})
     },
     console,
     setTimeout,
@@ -91,7 +96,7 @@ function loadAppHooks(options = {}) {
   return testHooks;
 }
 
-function run() {
+async function run() {
   const hooks = loadAppHooks();
   assert.strictEqual(typeof hooks.buildShowcaseFills, "function");
   assert.strictEqual(typeof hooks.isAppDisplayMode, "function");
@@ -111,6 +116,7 @@ function run() {
   assert.strictEqual(typeof hooks.getOrBuildPaintLayerState, "function");
   assert.strictEqual(typeof hooks.getPaintLayerStateCacheLimit, "function");
   assert.strictEqual(typeof hooks.getPaintLayerStateCacheSize, "function");
+  assert.strictEqual(typeof hooks.loadPaintRegionMapForFrame, "function");
 
   const fills = hooks.buildShowcaseFills([
     { x: 44, y: 52, size: 24, isBackground: true },
@@ -244,10 +250,92 @@ function run() {
   assert.strictEqual(paintCacheHooks.getCachedPaintLayerState("paint-0"), null, "paint layer state cache should evict the oldest entry first");
   assert.strictEqual(paintCacheHooks.getCachedPaintLayerState(`paint-${paintCacheLimit}`).fillLayer.data[0], paintCacheLimit, "paint layer state cache should keep the newest entry");
 
+  let runtimeBuildCount = 0;
+  const decodedRegionMap = { width: 2, height: 2, labels: new Uint32Array(4), regions: [{ label: 1 }] };
+  const precomputedMapHooks = loadAppHooks({
+    assetLoaderOverrides: {
+      loadArtworkBitmap: () => Promise.resolve({ width: 2, height: 2 })
+    },
+    paintEngineOverrides: {
+      decodePaintRegionMapImageData: () => decodedRegionMap,
+      buildPaintRegionMap: () => {
+        runtimeBuildCount += 1;
+        return { source: "runtime" };
+      }
+    },
+    documentOverrides: {
+      createElement(tagName) {
+        assert.strictEqual(tagName, "canvas");
+        return {
+          width: 0,
+          height: 0,
+          getContext() {
+            return {
+              drawImage() {},
+              getImageData() {
+                return { data: new Uint8ClampedArray(16), width: 2, height: 2 };
+              }
+            };
+          }
+        };
+      }
+    }
+  });
+  const precomputedMap = await precomputedMapHooks.loadPaintRegionMapForFrame(
+    { id: "vertical-15", regionMapSrc: "assets/regionmaps/paint/vertical-15.png?v=22" },
+    2,
+    2,
+    "paint",
+    { data: new Uint8ClampedArray(16), width: 2, height: 2 }
+  );
+  assert.strictEqual(precomputedMap, decodedRegionMap, "paint export should reuse the precomputed region map when it matches");
+  assert.strictEqual(runtimeBuildCount, 0, "runtime region map build should be skipped when a precomputed map is available");
+
+  const fallbackMapHooks = loadAppHooks({
+    assetLoaderOverrides: {
+      loadArtworkBitmap: () => Promise.resolve({ width: 1, height: 1 })
+    },
+    paintEngineOverrides: {
+      decodePaintRegionMapImageData: () => decodedRegionMap,
+      buildPaintRegionMap: () => {
+        runtimeBuildCount += 1;
+        return { source: "runtime" };
+      }
+    },
+    documentOverrides: {
+      createElement() {
+        return {
+          width: 0,
+          height: 0,
+          getContext() {
+            return {
+              drawImage() {},
+              getImageData() {
+                return { data: new Uint8ClampedArray(4), width: 1, height: 1 };
+              }
+            };
+          }
+        };
+      }
+    }
+  });
+  const fallbackMap = await fallbackMapHooks.loadPaintRegionMapForFrame(
+    { id: "vertical-15", regionMapSrc: "assets/regionmaps/paint/vertical-15.png?v=22" },
+    2,
+    2,
+    "paint",
+    { data: new Uint8ClampedArray(16), width: 2, height: 2 }
+  );
+  assert.deepStrictEqual(fallbackMap, { source: "runtime" }, "paint export should fall back to runtime maps when the asset size is wrong");
+  assert.strictEqual(runtimeBuildCount, 1, "runtime region map build should run only for the fallback case");
+
   const noMatchMediaHooks = loadAppHooks({ matchMedia: false });
   assert.strictEqual(noMatchMediaHooks.isAppDisplayMode(), false);
 
   console.log("app-showcase-fills.test.js passed");
 }
 
-run();
+run().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
