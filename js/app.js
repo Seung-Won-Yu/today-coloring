@@ -940,12 +940,14 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
   const containerRef = React.useRef(null);
   const [scale, setScale] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = React.useState(false);
   const historyStack = Array.isArray(history) ? history : [];
   const [aspect, setAspect] = React.useState(1);
   const [resetConfirmOpen, setResetConfirmOpen] = React.useState(false);
   React.useEffect(() => {
     if (scale === 1) {
       setOffset({ x: 0, y: 0 });
+      setIsPanning(false);
     }
   }, [scale]);
   const getPanBounds = (nextScale) => {
@@ -1117,6 +1119,7 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
     const handleMouseDown = (e) => {
       if (scale > 1) {
         isMouseDown = true;
+        setIsPanning(true);
         startMousePos = { x: e.clientX, y: e.clientY };
         startMouseOffset = { ...offset };
       }
@@ -1136,6 +1139,7 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
     };
     const handleMouseUp = () => {
       isMouseDown = false;
+      setIsPanning(false);
     };
     const handleWheel = (e) => {
       e.preventDefault();
@@ -1216,7 +1220,7 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
       e("div", {
         className: "canvaswrap",
         ref: containerRef,
-        style: { width: "100%", height: "100%", touchAction: "none", overflow: "hidden", cursor: scale > 1 ? "grab" : "crosshair" }
+        style: { width: "100%", height: "100%", touchAction: "none", overflow: "hidden", cursor: scale > 1 ? (isPanning ? "grabbing" : "grab") : "crosshair" }
       },
         e("div", {
           className: "canvasinner",
