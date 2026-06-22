@@ -36,15 +36,23 @@ function run() {
 
   artworks.forEach((art) => {
     assert.strictEqual(typeof art.regionMapSrc, "string", `${art.id} should expose a region map source`);
+    assert.strictEqual(typeof art.lineLayerSrc, "string", `${art.id} should expose a line layer source`);
     assert(art.regionMapSrc.includes("?v=" + artworkData.ARTWORK_VERSION), `${art.id} region map should use the artwork asset version`);
+    assert(art.lineLayerSrc.includes("?v=" + artworkData.ARTWORK_VERSION), `${art.id} line layer should use the artwork asset version`);
     assert(stripQuery(art.regionMapSrc).endsWith(".png"), `${art.id} region map should be a PNG label map`);
+    assert(stripQuery(art.lineLayerSrc).endsWith(".png"), `${art.id} line layer should be a PNG alpha overlay`);
     assert(fs.existsSync(path.join(rootDir, stripQuery(art.regionMapSrc))), `${art.id} region map file should exist`);
+    assert(fs.existsSync(path.join(rootDir, stripQuery(art.lineLayerSrc))), `${art.id} line layer file should exist`);
 
     const manifestEntry = manifestById.get(art.id);
     assert(manifestEntry, `${art.id} should be listed in the region map manifest`);
     const size = readPngSize(stripQuery(art.regionMapSrc));
+    const lineLayerSize = readPngSize(stripQuery(art.lineLayerSrc));
     assert.strictEqual(size.width, manifestEntry.width, `${art.id} manifest width should match PNG`);
     assert.strictEqual(size.height, manifestEntry.height, `${art.id} manifest height should match PNG`);
+    assert.strictEqual(lineLayerSize.width, manifestEntry.width, `${art.id} line layer width should match manifest`);
+    assert.strictEqual(lineLayerSize.height, manifestEntry.height, `${art.id} line layer height should match manifest`);
+    assert.strictEqual(manifestEntry.lineLayerFile, path.basename(stripQuery(art.lineLayerSrc)), `${art.id} manifest should list the line layer file`);
     assert(manifestEntry.regions > 0, `${art.id} should have at least one paint region`);
     assert(manifestEntry.paintablePixels > 0, `${art.id} should have paintable pixels`);
   });

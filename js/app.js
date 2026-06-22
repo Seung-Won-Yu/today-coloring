@@ -65,7 +65,7 @@ function getFillsCacheSignature(fillsArray) {
 }
 
 function getPaintLayerStateCacheKey(art, frameMode, width, height, fillsArray) {
-  const artKey = art ? `${art.id || ""}@${art.version || ""}@${art.src || ""}@${art.regionMapSrc || ""}` : "";
+  const artKey = art ? `${art.id || ""}@${art.version || ""}@${art.src || ""}@${art.regionMapSrc || ""}@${art.lineLayerSrc || ""}` : "";
   return `${artKey}:${frameMode}:${width}x${height}:${getFillsCacheSignature(fillsArray)}`;
 }
 
@@ -121,6 +121,19 @@ function loadPrecomputedPaintRegionMap(art, width, height, frameMode) {
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.drawImage(img, 0, 0);
     return decodePaintRegionMapImageData(ctx.getImageData(0, 0, img.width, img.height));
+  }).catch(() => null);
+}
+
+function loadPrecomputedPaintLineLayer(art, width, height, frameMode) {
+  if (frameMode !== "paint" || !art || !art.lineLayerSrc) return Promise.resolve(null);
+  return loadArtworkBitmap(art.lineLayerSrc).then((img) => {
+    if (!img || img.width !== width || img.height !== height) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    return ctx.getImageData(0, 0, img.width, img.height);
   }).catch(() => null);
 }
 
@@ -258,9 +271,13 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         const ctx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
         ctx.drawImage(frame.canvas, 0, 0);
         baseImageDataRef.current = ctx.getImageData(0, 0, cw, ch);
-        lineLayerImageDataRef.current = buildLineLayerImageData(baseImageDataRef.current);
-        regionMapRef.current = needsRegionMap ? await loadPrecomputedPaintRegionMap(art, cw, ch, frameMode) : null;
+        const [precomputedLineLayer, precomputedRegionMap] = await Promise.all([
+          loadPrecomputedPaintLineLayer(art, cw, ch, frameMode),
+          needsRegionMap ? loadPrecomputedPaintRegionMap(art, cw, ch, frameMode) : Promise.resolve(null)
+        ]);
         if (cancelled) return;
+        lineLayerImageDataRef.current = precomputedLineLayer || buildLineLayerImageData(baseImageDataRef.current);
+        regionMapRef.current = precomputedRegionMap;
         if (needsRegionMap && !regionMapRef.current) {
           regionMapRef.current = buildPaintRegionMap(baseImageDataRef.current);
         }
@@ -1501,48 +1518,45 @@ function renderArtworkDataUrl(art, fills, options = {}) {
   const mimeType = options.mimeType || "image/png";
   const quality = options.quality;
   const maxSide = options.maxSide || 0;
-  return loadArtworkBitmap(art.src).then((img) => new Promise((resolve, reject) => {
-    try {
-      const canvas = document.createElement("canvas");
-      const frame = createSafeArtworkCanvas(img, art.src, art.layout, { mode: "paint" });
-      canvas.width = frame.width;
-      canvas.height = frame.height;
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      ctx.drawImage(frame.canvas, 0, 0);
-      const baseImgData = ctx.getImageData(0, 0, frame.width, frame.height);
-      const baseData = new Uint8ClampedArray(baseImgData.data);
-      const immutableBaseImgData = { data: baseData, width: frame.width, height: frame.height };
-      const lineLayer = buildLineLayerImageData(immutableBaseImgData);
-      const fillsArray = Array.isArray(fills) ? fills : [];
-      const regionMap = buildPaintRegionMap(immutableBaseImgData);
-      const cacheKey = getPaintLayerStateCacheKey(art, "paint", frame.width, frame.height, fillsArray);
-      const { fillLayer } = getOrBuildPaintLayerState(
-        cacheKey,
-        () => buildPaintLayerState(immutableBaseImgData, fillsArray, frame, regionMap)
-      );
-      const composed = composePaintLayers(immutableBaseImgData, fillLayer, lineLayer);
-      ctx.putImageData(composed, 0, 0);
-      let outputCanvas = canvas;
-      if (maxSide > 0 && Math.max(canvas.width, canvas.height) > maxSide) {
-        const scale = maxSide / Math.max(canvas.width, canvas.height);
-        const scaledCanvas = document.createElement("canvas");
-        scaledCanvas.width = Math.max(1, Math.round(canvas.width * scale));
-        scaledCanvas.height = Math.max(1, Math.round(canvas.height * scale));
-        const scaledCtx = scaledCanvas.getContext("2d");
-        scaledCtx.imageSmoothingEnabled = true;
-        scaledCtx.imageSmoothingQuality = "high";
-        scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-        outputCanvas = scaledCanvas;
-      }
-      resolve({
-        dataUrl: quality ? outputCanvas.toDataURL(mimeType, quality) : outputCanvas.toDataURL(mimeType),
-        width: outputCanvas.width,
-        height: outputCanvas.height
-      });
-    } catch (e) {
-      reject(e);
+  return loadArtworkBitmap(art.src).then(async (img) => {
+    const canvas = document.createElement("canvas");
+    const frame = createSafeArtworkCanvas(img, art.src, art.layout, { mode: "paint" });
+    canvas.width = frame.width;
+    canvas.height = frame.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(frame.canvas, 0, 0);
+    const baseImgData = ctx.getImageData(0, 0, frame.width, frame.height);
+    const baseData = new Uint8ClampedArray(baseImgData.data);
+    const immutableBaseImgData = { data: baseData, width: frame.width, height: frame.height };
+    const precomputedLineLayer = await loadPrecomputedPaintLineLayer(art, frame.width, frame.height, "paint");
+    const lineLayer = precomputedLineLayer || buildLineLayerImageData(immutableBaseImgData);
+    const fillsArray = Array.isArray(fills) ? fills : [];
+    const regionMap = buildPaintRegionMap(immutableBaseImgData);
+    const cacheKey = getPaintLayerStateCacheKey(art, "paint", frame.width, frame.height, fillsArray);
+    const { fillLayer } = getOrBuildPaintLayerState(
+      cacheKey,
+      () => buildPaintLayerState(immutableBaseImgData, fillsArray, frame, regionMap)
+    );
+    const composed = composePaintLayers(immutableBaseImgData, fillLayer, lineLayer);
+    ctx.putImageData(composed, 0, 0);
+    let outputCanvas = canvas;
+    if (maxSide > 0 && Math.max(canvas.width, canvas.height) > maxSide) {
+      const scale = maxSide / Math.max(canvas.width, canvas.height);
+      const scaledCanvas = document.createElement("canvas");
+      scaledCanvas.width = Math.max(1, Math.round(canvas.width * scale));
+      scaledCanvas.height = Math.max(1, Math.round(canvas.height * scale));
+      const scaledCtx = scaledCanvas.getContext("2d");
+      scaledCtx.imageSmoothingEnabled = true;
+      scaledCtx.imageSmoothingQuality = "high";
+      scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+      outputCanvas = scaledCanvas;
     }
-  }));
+    return {
+      dataUrl: quality ? outputCanvas.toDataURL(mimeType, quality) : outputCanvas.toDataURL(mimeType),
+      width: outputCanvas.width,
+      height: outputCanvas.height
+    };
+  });
 }
 function createGallerySnapshotDataUrl(art, fills) {
   return renderArtworkDataUrl(art, fills, { maxSide: 420, mimeType: "image/webp", quality: 0.74 }).then((snapshot) => snapshot.dataUrl);

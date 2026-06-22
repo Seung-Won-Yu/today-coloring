@@ -79,6 +79,7 @@ function createVerticalArtwork(num) {
     src: 'assets/images/artworks/' + file + '?v=' + (meta.version || ARTWORK_VERSION),
     thumbSrc: 'assets/images/thumbs/' + file + '?v=' + (meta.version || ARTWORK_VERSION),
     regionMapSrc: 'assets/regionmaps/paint/' + file.replace('.webp', '.png') + '?v=' + (meta.version || ARTWORK_VERSION),
+    lineLayerSrc: 'assets/linelayers/paint/' + file.replace('.webp', '.png') + '?v=' + (meta.version || ARTWORK_VERSION),
     isCanvas: true,
     layout: 'portrait',
     guide: []

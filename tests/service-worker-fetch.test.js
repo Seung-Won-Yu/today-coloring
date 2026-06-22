@@ -137,6 +137,17 @@ async function run() {
   assert.strictEqual(regionMapResponse, freshRegionMap, "region maps should prefer the network over stale cache entries");
   assert.strictEqual(regionMapWorker.cacheMatches.length, 0, "region maps should skip cache lookup when network succeeds");
 
+  const freshLineLayer = createResponse(200);
+  const lineLayerWorker = loadServiceWorker(() => Promise.resolve(freshLineLayer), { cachedResponse: staleArtwork });
+  const lineLayerResponse = await dispatchFetch(lineLayerWorker.listeners.fetch, {
+    method: "GET",
+    mode: "cors",
+    url: "https://example.test/assets/linelayers/paint/vertical-15.png?v=22"
+  });
+  await Promise.resolve();
+  assert.strictEqual(lineLayerResponse, freshLineLayer, "line layers should prefer the network over stale cache entries");
+  assert.strictEqual(lineLayerWorker.cacheMatches.length, 0, "line layers should skip cache lookup when network succeeds");
+
   console.log("service-worker-fetch.test.js passed");
 }
 

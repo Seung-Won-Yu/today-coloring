@@ -50,6 +50,8 @@ function run() {
   assert.strictEqual(individuallyVersionedArtwork.version, saveVersion + "-17");
   assert(individuallyVersionedArtwork.src.includes("?v=" + individuallyVersionedArtwork.version), "individual artwork versions should bust original image cache");
   assert(individuallyVersionedArtwork.thumbSrc.includes("?v=" + individuallyVersionedArtwork.version), "individual artwork versions should bust thumbnail cache");
+  assert(individuallyVersionedArtwork.regionMapSrc.includes("?v=" + individuallyVersionedArtwork.version), "individual artwork versions should bust region map cache");
+  assert(individuallyVersionedArtwork.lineLayerSrc.includes("?v=" + individuallyVersionedArtwork.version), "individual artwork versions should bust line layer cache");
 
   const seenIds = new Set();
   artworks.forEach((art) => {
@@ -64,10 +66,16 @@ function run() {
     assert.strictEqual(art.layout, "portrait", `${art.id} should keep the portrait layout contract`);
     assert(art.src.includes("?v=" + assetVersion), `${art.id} artwork src should be cache-busted with the artwork asset version`);
     assert(art.thumbSrc.includes("?v=" + assetVersion), `${art.id} thumb src should be cache-busted with the artwork asset version`);
+    assert(art.regionMapSrc.includes("?v=" + assetVersion), `${art.id} region map src should be cache-busted with the artwork asset version`);
+    assert(art.lineLayerSrc.includes("?v=" + assetVersion), `${art.id} line layer src should be cache-busted with the artwork asset version`);
     assert(stripQuery(art.src).endsWith(".webp"), `${art.id} artwork should use WebP`);
     assert(stripQuery(art.thumbSrc).endsWith(".webp"), `${art.id} thumbnail should use WebP`);
+    assert(stripQuery(art.regionMapSrc).endsWith(".png"), `${art.id} region map should use PNG`);
+    assert(stripQuery(art.lineLayerSrc).endsWith(".png"), `${art.id} line layer should use PNG`);
     assertFileExists(stripQuery(art.src));
     assertFileExists(stripQuery(art.thumbSrc));
+    assertFileExists(stripQuery(art.regionMapSrc));
+    assertFileExists(stripQuery(art.lineLayerSrc));
   });
 
   assertNoLegacyPngs("assets/images/artworks");
