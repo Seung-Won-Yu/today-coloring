@@ -1,4 +1,4 @@
-const CACHE_NAME = 'today-coloring-shell-v164';
+const CACHE_NAME = 'today-coloring-shell-v165';
 const APP_SHELL = [
   './',
   './index.html',
@@ -21,7 +21,7 @@ const APP_SHELL = [
   './css/screens/lobby/landing.css',
   './js/vendor/react.production.min.js',
   './js/vendor/react-dom.production.min.js',
-  './js/data/artworks.js?v=32',
+  './js/data/artworks.js?v=33',
   './js/data/palette.js?v=2',
   './js/utils/storage.js?v=26',
   './js/utils/paint.js?v=32',
@@ -54,6 +54,24 @@ self.addEventListener('activate', function(event) {
   );
 });
 
+function isArtworkImageRequest(requestUrl) {
+  return (
+    requestUrl.pathname.indexOf('/assets/images/artworks/') !== -1 ||
+    requestUrl.pathname.indexOf('/assets/images/thumbs/') !== -1
+  );
+}
+
+function fetchAndCache(request) {
+  return fetch(request).then(function(networkResponse) {
+    if (!networkResponse || !networkResponse.ok) return networkResponse;
+    var responseCopy = networkResponse.clone();
+    caches.open(CACHE_NAME).then(function(cache) {
+      cache.put(request, responseCopy);
+    });
+    return networkResponse;
+  });
+}
+
 self.addEventListener('fetch', function(event) {
   if (event.request.method !== 'GET') return;
 
@@ -69,18 +87,23 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
+  if (isArtworkImageRequest(requestUrl)) {
+    event.respondWith(
+      fetchAndCache(event.request).catch(function(error) {
+        return caches.match(event.request).then(function(cachedResponse) {
+          if (cachedResponse) return cachedResponse;
+          throw error;
+        });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(function(cachedResponse) {
       if (cachedResponse) return cachedResponse;
 
-      return fetch(event.request).then(function(networkResponse) {
-        if (!networkResponse || !networkResponse.ok) return networkResponse;
-        var responseCopy = networkResponse.clone();
-        caches.open(CACHE_NAME).then(function(cache) {
-          cache.put(event.request, responseCopy);
-        });
-        return networkResponse;
-      });
+      return fetchAndCache(event.request);
     })
   );
 });
