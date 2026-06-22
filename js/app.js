@@ -1427,10 +1427,6 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
           }
         },
           e(CanvasArt, { art, fills, onPaint: handleCanvasPaint, selected, interactive: true, frameMode: "paint", canPaint: canCanvasPaint, paintFeedback: tweaks.paintFeedback !== false, onImageLoad: ({ width, height }) => setAspect(width / height) })
-        ),
-        layout === "side" && e("button", { onClick: toggleZoom, className: "zoom-toggle-btn", "aria-label": "돋보기 토글" },
-          e(Icon, { name: "zoom", size: 22, color: "var(--ink)" }),
-          e("span", { className: "zoom-toggle-btn__label" }, scale > 1 ? "축소하기 (1x)" : "크게 보기 (2x)")
         )
       ),
       e("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } },
@@ -1438,6 +1434,10 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
         e("div", { className: "curcolor", "aria-label": "\uC120\uD0DD\uD55C \uC0C9 " + selectedColorName, style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } },
           e("span", { className: "curcolor__brush", "aria-hidden": "true" }, e(Icon, { name: "brush", size: 18, color: isLight(selected) ? "#4A4036" : "#fff" })),
           e("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, selectedColorName)
+        ),
+        layout === "side" && e("button", { onClick: toggleZoom, className: "zoom-toggle-btn", "aria-label": "돋보기 토글" },
+          e(Icon, { name: "zoom", size: 22, color: "var(--ink)" }),
+          e("span", { className: "zoom-toggle-btn__label" }, scale > 1 ? "축소하기 (1x)" : "크게 보기 (2x)")
         ),
         e(Palette, { selected, onSelect, layout })
       )
