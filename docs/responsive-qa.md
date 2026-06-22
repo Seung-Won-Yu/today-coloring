@@ -35,6 +35,7 @@
 - 저장 데이터: 깨진 fill/undoHistory 좌표·색상과 비정수/음수 좌표는 복원 전에 필터링하고, 3자리 hex는 6자리 hex로 정규화하도록 회귀 테스트로 확인
 - 페인트 엔진: 3자리 hex 색상도 6자리 기준 RGB로 해석하도록 회귀 테스트로 확인
 - 페인트 엔진: `NaN` 등 비정수 seed 좌표는 칠하지 않고 no-op 처리하도록 회귀 테스트로 확인
+- 홈 미리보기: 자동 완성 showcase fill은 frame 좌표(`v:2`)로 저장해 재변환되지 않도록 회귀 테스트로 확인
 
 ## 회귀 확인 명령
 
@@ -54,6 +55,7 @@ node tests/artwork-assets.test.js
 node tests/manifest-policy.test.js
 node tests/storage-version.test.js
 node tests/paint-engine.test.js
+node tests/app-showcase-fills.test.js
 ```
 
 브라우저 QA는 Playwright CLI로 수행한다. 검증할 때는 다음 조건을 확인한다.

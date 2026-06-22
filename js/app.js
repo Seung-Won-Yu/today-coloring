@@ -387,8 +387,12 @@ function buildShowcaseFills(seeds, limit = 80) {
   return [...backgrounds, ...regions].sort((a, b) => a.y - b.y || a.x - b.x).map((seed, idx) => ({
     x: seed.x,
     y: seed.y,
+    v: 2,
     color: seed.isBackground ? "#F6D977" : SHOWCASE_PALETTE[(idx + Math.floor(seed.x / 120) + Math.floor(seed.y / 120)) % SHOWCASE_PALETTE.length]
   }));
+}
+if (window.__COLORING_TEST_HOOKS__) {
+  window.__COLORING_TEST_HOOKS__.buildShowcaseFills = buildShowcaseFills;
 }
 const finishedThumbCache = new Map();
 function FinishedThumb({ art, className = "", limit = 80 }) {
