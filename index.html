@@ -38,7 +38,7 @@
   (function() {
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('./sw.js?v=135').catch(function() {});
+      navigator.serviceWorker.register('./sw.js?v=136').catch(function() {});
     });
   })();
 </script>
@@ -51,8 +51,9 @@
 <script src="js/utils/storage.js?v=20"></script>
 <script src="js/utils/paint.js?v=27"></script>
 <script src="js/utils/assets.js?v=14"></script>
+<script src="js/utils/save-image.js?v=1"></script>
 <script src="js/ui/components.js?v=15"></script>
 
-<script src="js/app.js?v=73"></script>
+<script src="js/app.js?v=74"></script>
 </body>
 </html>

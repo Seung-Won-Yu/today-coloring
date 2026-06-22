@@ -41,6 +41,7 @@ function run() {
     ["js/utils/storage.js", /src="js\/utils\/storage\.js\?v=(\d+)"/],
     ["js/utils/paint.js", /src="js\/utils\/paint\.js\?v=(\d+)"/],
     ["js/utils/assets.js", /src="js\/utils\/assets\.js\?v=(\d+)"/],
+    ["js/utils/save-image.js", /src="js\/utils\/save-image\.js\?v=(\d+)"/],
     ["js/ui/components.js", /src="js\/ui\/components\.js\?v=(\d+)"/],
     ["js/app.js", /src="js\/app\.js\?v=(\d+)"/]
   ];

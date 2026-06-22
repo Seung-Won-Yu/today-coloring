@@ -17,6 +17,7 @@ const {
 } = window.PaintEngine;
 const { loadArtworkBitmap, preloadArtworkBitmaps } = window.AssetLoader;
 const { Icon, BigButton, isLight, Palette, useOrientation, Confetti } = window.UIComponents;
+const { getArtworkFileName, postImageToNativeBridge, triggerBrowserDownload } = window.SaveImage;
 
 function nowMs() {
   return window.performance && window.performance.now ? window.performance.now() : Date.now();
@@ -1328,36 +1329,6 @@ function BottomNav({ active, galleryCount, onHome, onGallery }) {
     /* @__PURE__ */ React.createElement("span", { className: "bottom-nav__label" }, item.label),
     !!item.count && /* @__PURE__ */ React.createElement("span", { className: "bottom-nav__badge" }, item.count)
   )));
-}
-function getArtworkFileName(art) {
-  return `${art.title || "today-coloring"}_\uC644\uC131.png`;
-}
-function postImageToNativeBridge(dataUrl, fileName, art) {
-  const bridge = window.ReactNativeWebView;
-  if (!bridge || typeof bridge.postMessage !== "function") return false;
-  try {
-    bridge.postMessage(JSON.stringify({
-      type: "COLORING_SAVE_IMAGE",
-      payload: {
-        artId: art.id,
-        title: art.title,
-        fileName,
-        mimeType: "image/png",
-        base64: dataUrl.split(",")[1] || ""
-      }
-    }));
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
-function triggerBrowserDownload(dataUrl, fileName) {
-  const a = document.createElement("a");
-  a.href = dataUrl;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
 }
 function renderArtworkDataUrl(art, fills, options = {}) {
   const mimeType = options.mimeType || "image/png";
