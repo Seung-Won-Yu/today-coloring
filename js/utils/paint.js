@@ -212,12 +212,6 @@
     return { painted, minX, minY, maxX, maxY };
   }
 
-  function fillConnectedRegion(imageData, baseData, seed, fillColor, options = {}) {
-    if (!imageData || !seed || !fillColor) return null;
-    const tolerance = options.tolerance || FLOOD_FILL_TOLERANCE;
-    return doFloodFill(imageData, seed.x, seed.y, fillColor, tolerance, baseData);
-  }
-
   const PROGRESS_MARKER = { r: 18, g: 52, b: 86 };
 
   function hexToRgb(hex) {
@@ -514,11 +508,12 @@
   }
 
   function markProgressRegion(imageData, x, y, baseData = null) {
-    fillConnectedRegion(imageData, baseData, { x, y }, PROGRESS_MARKER);
+    doFloodFill(imageData, x, y, PROGRESS_MARKER, FLOOD_FILL_TOLERANCE, baseData);
   }
 
   function paintFillLayerSeed(fillLayerImageData, baseData, seed, fillColor) {
-    return fillConnectedRegion(fillLayerImageData, baseData, seed, fillColor);
+    if (!seed) return null;
+    return doFloodFill(fillLayerImageData, seed.x, seed.y, fillColor, FLOOD_FILL_TOLERANCE, baseData);
   }
 
   function composePaintLayers(baseImageData, fillLayerImageData, lineLayerImageData = null) {
@@ -653,7 +648,6 @@
 
   window.PaintEngine = {
     doFloodFill,
-    fillConnectedRegion,
     buildLineLayerImageData,
     createFillLayerImageData,
     paintFillLayerSeed,
