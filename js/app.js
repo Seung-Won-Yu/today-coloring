@@ -761,7 +761,6 @@ function LobbyScreen({ onStart }) {
   const e = React.createElement;
   const [showGuide, setShowGuide] = React.useState(false);
   const featuredArt = window.ARTWORKS[0];
-  const showcaseArts = [window.ARTWORKS[0], window.ARTWORKS[6], window.ARTWORKS[11]].filter(Boolean);
   const openGuide = () => setShowGuide(true);
   const closeGuide = () => setShowGuide(false);
 
@@ -777,9 +776,9 @@ function LobbyScreen({ onStart }) {
       ),
       e("div", { className: "lobby-showcase", "aria-hidden": "true" },
         e("div", { className: "lobby-showcase__glow" }),
-        showcaseArts.map((art, index) => e("div", { key: art.id, className: "lobby-showcase__card lobby-showcase__card--" + index },
-          e(ArtworkImage, { art, priority: index === 0 })
-        )),
+        featuredArt && e("div", { className: "lobby-showcase__card lobby-showcase__card--0" },
+          e(ArtworkImage, { art: featuredArt, priority: true })
+        ),
         e("div", { className: "lobby-showcase__badge" },
           e(Icon, { name: "star", size: 16, color: "#fff" }),
           e("span", null, "작품 ", window.ARTWORKS.length, "장")

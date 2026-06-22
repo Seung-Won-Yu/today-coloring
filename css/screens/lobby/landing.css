@@ -146,14 +146,6 @@
   transform:translateX(-50%);
 }
 
-.lobby-showcase__card--1 {
-  display:none;
-}
-
-.lobby-showcase__card--2 {
-  display:none;
-}
-
 .lobby-showcase__badge {
   position:absolute;
   z-index:4;
@@ -411,20 +403,6 @@
 
   .lobby-showcase__card--0 {
     width:96px;
-  }
-
-  .lobby-showcase__card--1 {
-    left:24px;
-  }
-
-  .lobby-showcase__card--2 {
-    right:24px;
-  }
-
-  .lobby-showcase__card--1,
-  .lobby-showcase__card--2 {
-    top:48px;
-    width:76px;
   }
 
   .lobby-showcase__badge {
