@@ -85,6 +85,11 @@ function run() {
   assert.strictEqual(invalidDirectResult, null);
   assert.deepStrictEqual(pixelAt(invalidDirectLayer, 0, 0), [0, 0, 0, 0]);
 
+  const missingSeedLayer = PaintEngine.createFillLayerImageData(base.width, base.height);
+  const missingSeedResult = PaintEngine.paintFillLayerSeed(missingSeedLayer, base.data, null, fillColor);
+  assert.strictEqual(missingSeedResult, null);
+  assert.deepStrictEqual(pixelAt(missingSeedLayer, 0, 0), [0, 0, 0, 0]);
+
   const fillLayer = PaintEngine.createFillLayerImageData(base.width, base.height);
   const result = PaintEngine.paintFillLayerSeed(fillLayer, base.data, { x: 0, y: 1 }, fillColor);
   assert(result);

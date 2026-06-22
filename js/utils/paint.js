@@ -479,6 +479,7 @@
   }
 
   function fillConnectedRegion(imageData, baseData, seed, fillColor, options = {}) {
+    if (!imageData || !seed || !fillColor) return null;
     const tolerance = options.tolerance || 95;
     const shouldSmooth = options.smooth !== false;
     const shouldAbsorb = options.absorbIslands !== false;
