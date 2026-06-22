@@ -4,6 +4,8 @@ function Icon({ name, size = 26, color = "currentColor", stroke = 2.4 }) {
   const p = { fill: "none", stroke: color, strokeWidth: stroke, strokeLinecap: "round", strokeLinejoin: "round" };
   const paths = {
     back: /* @__PURE__ */ React.createElement("g", { ...p, strokeWidth: Math.max(stroke, 3) }, /* @__PURE__ */ React.createElement("path", { d: "M13.5 5L6.5 12l7 7" }), /* @__PURE__ */ React.createElement("path", { d: "M7.5 12H20" })),
+    chevronLeft: /* @__PURE__ */ React.createElement("path", { ...p, d: "M15 6l-6 6 6 6" }),
+    chevronRight: /* @__PURE__ */ React.createElement("path", { ...p, d: "M9 6l6 6-6 6" }),
     grid: /* @__PURE__ */ React.createElement("g", { ...p }, /* @__PURE__ */ React.createElement("rect", { x: "4", y: "4", width: "7", height: "7", rx: "1.5" }), /* @__PURE__ */ React.createElement("rect", { x: "13", y: "4", width: "7", height: "7", rx: "1.5" }), /* @__PURE__ */ React.createElement("rect", { x: "4", y: "13", width: "7", height: "7", rx: "1.5" }), /* @__PURE__ */ React.createElement("rect", { x: "13", y: "13", width: "7", height: "7", rx: "1.5" })),
     undo: /* @__PURE__ */ React.createElement("path", { ...p, d: "M9 7H15a5 5 0 010 10H7M9 7L5 4M9 7L5 10" }),
     zoom: /* @__PURE__ */ React.createElement("g", { ...p }, /* @__PURE__ */ React.createElement("circle", { cx: "11", cy: "11", r: "7" }), /* @__PURE__ */ React.createElement("path", { d: "M16 16l4 4M11 8v6M8 11h6" })),
@@ -35,6 +37,48 @@ function Palette({ selected, onSelect, layout }) {
   const side = layout === "side";
   const isDraggingRef = React.useRef(false);
   const lastSelectedRef = React.useRef(null);
+  const trackRef = React.useRef(null);
+  const [scrollState, setScrollState] = React.useState({ canPrev: false, canNext: false });
+  const updateScrollState = React.useCallback(() => {
+    const track = trackRef.current;
+    if (!track || side) {
+      setScrollState({ canPrev: false, canNext: false });
+      return;
+    }
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    const nextState = {
+      canPrev: track.scrollLeft > 2,
+      canNext: track.scrollLeft < maxScroll - 2
+    };
+    setScrollState((prev) => prev.canPrev === nextState.canPrev && prev.canNext === nextState.canNext ? prev : nextState);
+  }, [side]);
+  React.useEffect(() => {
+    updateScrollState();
+    if (side) return;
+    const track = trackRef.current;
+    if (!track) return;
+    let frame = 0;
+    const scheduleUpdate = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        updateScrollState();
+      });
+    };
+    track.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    const resizeObserver = window.ResizeObserver ? new ResizeObserver(scheduleUpdate) : null;
+    if (resizeObserver) resizeObserver.observe(track);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      track.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [side, updateScrollState]);
+  React.useEffect(() => {
+    updateScrollState();
+  }, [selected, updateScrollState]);
   const selectColor = React.useCallback((color) => {
     if (!color || lastSelectedRef.current === color) return;
     lastSelectedRef.current = color;
@@ -49,7 +93,33 @@ function Palette({ selected, onSelect, layout }) {
     isDraggingRef.current = false;
     lastSelectedRef.current = null;
   };
-  return /* @__PURE__ */ React.createElement("div", { className: "palette " + (side ? "palette--side" : "palette--bottom") }, /* @__PURE__ */ React.createElement("div", {
+  const scrollPalette = (direction) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const amount = Math.max(120, Math.round(track.clientWidth * 0.72)) * direction;
+    if (track.scrollBy) {
+      track.scrollBy({ left: amount, behavior: "smooth" });
+    } else {
+      track.scrollLeft += amount;
+    }
+    window.setTimeout(updateScrollState, 220);
+  };
+  const paletteClass = [
+    "palette",
+    side ? "palette--side" : "palette--bottom",
+    scrollState.canPrev ? "palette--can-prev" : "",
+    scrollState.canNext ? "palette--can-next" : ""
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ React.createElement("div", { className: paletteClass },
+    !side && /* @__PURE__ */ React.createElement("button", {
+      type: "button",
+      className: "palette__nav palette__nav--prev",
+      onClick: () => scrollPalette(-1),
+      disabled: !scrollState.canPrev,
+      "aria-label": "\uC774\uC804 \uC0C9 \uBCF4\uAE30"
+    }, /* @__PURE__ */ React.createElement(Icon, { name: "chevronLeft", size: 20 })),
+    /* @__PURE__ */ React.createElement("div", {
+    ref: trackRef,
     className: "palette__track",
     onPointerMove: (ev) => {
       if (!isDraggingRef.current || ev.pointerType === "touch") return;
@@ -89,7 +159,15 @@ function Palette({ selected, onSelect, layout }) {
       },
       on && /* @__PURE__ */ React.createElement("span", { className: "swatch__check", style: { color: isLight(p.c) ? "#4A4036" : "#fff" } }, "\u2713")
     );
-  })));
+  })),
+    !side && /* @__PURE__ */ React.createElement("button", {
+      type: "button",
+      className: "palette__nav palette__nav--next",
+      onClick: () => scrollPalette(1),
+      disabled: !scrollState.canNext,
+      "aria-label": "\uB2E4\uC74C \uC0C9 \uBCF4\uAE30"
+    }, /* @__PURE__ */ React.createElement(Icon, { name: "chevronRight", size: 20 }))
+  );
 }
 function useOrientation() {
   const [orient, setOrient] = React.useState(window.innerWidth > window.innerHeight ? "landscape" : "portrait");
