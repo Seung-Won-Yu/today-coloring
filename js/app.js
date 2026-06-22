@@ -41,6 +41,11 @@ function cloneRegionAnalysis(regions) {
   return (regions || []).map((region) => ({ ...region }));
 }
 
+function getCachedRegionAnalysis(cacheKey) {
+  const cached = regionAnalysisCache.get(cacheKey);
+  return cached ? cloneRegionAnalysis(cached) : null;
+}
+
 function rememberRegionAnalysis(cacheKey, regions) {
   if (!cacheKey) return;
   if (!regionAnalysisCache.has(cacheKey) && regionAnalysisCache.size >= REGION_ANALYSIS_CACHE_LIMIT) {
@@ -165,7 +170,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       setImageReady(true);
       if (shouldAnalyzeRegions && baseImageDataRef.current) {
         const cacheKey = getRegionAnalysisCacheKey(art, frameMode, cw, ch);
-        const cachedRegions = regionAnalysisCache.get(cacheKey);
+        const cachedRegions = getCachedRegionAnalysis(cacheKey);
         if (cachedRegions) {
           publishRegions(cachedRegions);
           return;
@@ -393,6 +398,9 @@ function buildShowcaseFills(seeds, limit = 80) {
 }
 if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.buildShowcaseFills = buildShowcaseFills;
+  window.__COLORING_TEST_HOOKS__.getRegionAnalysisCacheKey = getRegionAnalysisCacheKey;
+  window.__COLORING_TEST_HOOKS__.rememberRegionAnalysis = rememberRegionAnalysis;
+  window.__COLORING_TEST_HOOKS__.getCachedRegionAnalysis = getCachedRegionAnalysis;
 }
 const finishedThumbCache = new Map();
 function FinishedThumb({ art, className = "", limit = 80 }) {

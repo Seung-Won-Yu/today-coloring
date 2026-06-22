@@ -89,6 +89,9 @@ function run() {
   const hooks = loadAppHooks();
   assert.strictEqual(typeof hooks.buildShowcaseFills, "function");
   assert.strictEqual(typeof hooks.isAppDisplayMode, "function");
+  assert.strictEqual(typeof hooks.getRegionAnalysisCacheKey, "function");
+  assert.strictEqual(typeof hooks.rememberRegionAnalysis, "function");
+  assert.strictEqual(typeof hooks.getCachedRegionAnalysis, "function");
 
   const fills = hooks.buildShowcaseFills([
     { x: 44, y: 52, size: 24, isBackground: true },
@@ -99,6 +102,18 @@ function run() {
   assert(fills.every((fill) => fill.v === 2), "showcase fills should be stored as frame-space seeds");
   assert.strictEqual(fills[0].x, 44);
   assert.strictEqual(fills[0].y, 52);
+
+  const firstVersionKey = hooks.getRegionAnalysisCacheKey({ id: "vertical-40", version: "20", src: "art.webp?v=20" }, "preview", 320, 420);
+  const nextVersionKey = hooks.getRegionAnalysisCacheKey({ id: "vertical-40", version: "21", src: "art.webp?v=21" }, "preview", 320, 420);
+  assert.notStrictEqual(firstVersionKey, nextVersionKey, "region cache keys should include artwork version changes");
+
+  const regions = [{ x: 8, y: 12, size: 20, isBackground: false }];
+  hooks.rememberRegionAnalysis(firstVersionKey, regions);
+  regions[0].x = 99;
+  const cachedRegions = hooks.getCachedRegionAnalysis(firstVersionKey);
+  assert.strictEqual(cachedRegions[0].x, 8, "cached region data should not retain caller object references");
+  cachedRegions[0].x = 42;
+  assert.strictEqual(hooks.getCachedRegionAnalysis(firstVersionKey)[0].x, 8, "region cache reads should return defensive copies");
 
   const noMatchMediaHooks = loadAppHooks({ matchMedia: false });
   assert.strictEqual(noMatchMediaHooks.isAppDisplayMode(), false);
