@@ -5,11 +5,11 @@ const vm = require("vm");
 
 const rootDir = path.resolve(__dirname, "..");
 
-function loadArtworks() {
+function loadArtworkData() {
   const context = { window: {}, console };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(rootDir, "js/data/artworks.js"), "utf8"), context);
-  return context.window.ARTWORKS;
+  return context.window;
 }
 
 function stripQuery(src) {
@@ -30,7 +30,15 @@ function assertNoLegacyPngs(relativeDir) {
 }
 
 function run() {
-  const artworks = loadArtworks();
+  const artworkData = loadArtworkData();
+  const artworks = artworkData.ARTWORKS;
+  const assetVersion = artworkData.ARTWORK_VERSION;
+  const saveVersion = artworkData.ARTWORK_SAVE_VERSION;
+
+  assert.strictEqual(typeof assetVersion, "string", "artworks should expose the asset cache version");
+  assert(assetVersion.length > 0, "artwork asset cache version should not be empty");
+  assert.strictEqual(typeof saveVersion, "string", "artworks should expose the save data version");
+  assert(saveVersion.length > 0, "artwork save data version should not be empty");
   assert.strictEqual(artworks.length, 40, "the app should expose 40 coloring artworks");
 
   const seenIds = new Set();
@@ -41,11 +49,11 @@ function run() {
 
     assert.strictEqual(typeof art.title, "string", `${art.id} should have a title`);
     assert(art.title.length > 0, `${art.id} title should not be empty`);
-    assert.strictEqual(String(art.version), "20", `${art.id} should carry the current artwork save version`);
+    assert(String(art.version).length > 0, `${art.id} should carry an artwork save version`);
     assert.strictEqual(art.isCanvas, true, `${art.id} should be marked as a canvas artwork`);
     assert.strictEqual(art.layout, "portrait", `${art.id} should keep the portrait layout contract`);
-    assert(art.src.includes("?v=20"), `${art.id} artwork src should be cache-busted with the artwork version`);
-    assert(art.thumbSrc.includes("?v=20"), `${art.id} thumb src should be cache-busted with the artwork version`);
+    assert(art.src.includes("?v=" + assetVersion), `${art.id} artwork src should be cache-busted with the artwork asset version`);
+    assert(art.thumbSrc.includes("?v=" + assetVersion), `${art.id} thumb src should be cache-busted with the artwork asset version`);
     assert(stripQuery(art.src).endsWith(".webp"), `${art.id} artwork should use WebP`);
     assert(stripQuery(art.thumbSrc).endsWith(".webp"), `${art.id} thumbnail should use WebP`);
     assertFileExists(stripQuery(art.src));

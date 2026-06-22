@@ -43,25 +43,35 @@ function loadStorage(initialStorage) {
   return context;
 }
 
+function getArtworkSaveVersion() {
+  const context = { window: {}, console };
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(path.join(rootDir, "js/data/artworks.js"), "utf8"), context);
+  return context.window.ARTWORK_SAVE_VERSION;
+}
+
 function assertJsonEqual(actual, expected) {
   assert.strictEqual(JSON.stringify(actual), JSON.stringify(expected));
 }
 
 function run() {
+  const artworkSaveVersion = getArtworkSaveVersion();
+  assert.strictEqual(typeof artworkSaveVersion, "string", "artworks should expose the save data version");
+
   const context = loadStorage({
     sori_progress_v12: JSON.stringify({
       "vertical-15": { fills: [{ x: 1, y: 1, color: "#fff" }], artworkVersion: "old" },
       "vertical-17": {
         fills: [{ x: 2, y: 2, color: "#000" }, { x: "bad", y: 4, color: "#123456" }, { x: 4, y: 4, color: "red" }, { x: -1, y: 2, color: "#123456" }, { x: 2.5, y: 2, color: "#123456" }],
         undoHistory: [[{ x: 1, y: 1, color: "#fff" }, { x: 1, y: "bad", color: "#fff" }, { x: 1, y: 1, color: "white" }, { x: -1, y: 1, color: "#fff" }, { x: 1.5, y: 1, color: "#fff" }], "bad-history", []],
-        artworkVersion: "20"
+        artworkVersion: artworkSaveVersion
       },
       "vertical-40": [{ x: 3, y: 3, color: "#f00" }],
       "vertical-60": [{ x: 4, y: 4, color: "#0f0" }]
     }),
     sori_gallery_v12: JSON.stringify([
       { id: "old", artId: "vertical-15", fills: [{ x: 1 }], artworkVersion: "old" },
-      { id: "current", artId: "vertical-17", fills: [{ x: 2, y: 2, color: "#000" }, { x: 2, y: 2, color: "blue" }], artworkVersion: "20" },
+      { id: "current", artId: "vertical-17", fills: [{ x: 2, y: 2, color: "#000" }, { x: 2, y: 2, color: "blue" }], artworkVersion: artworkSaveVersion },
       { id: "legacy", artId: "vertical-40", fills: [{ x: 3 }] },
       { id: "legacy-stale", artId: "vertical-60", fills: [{ x: 4 }] }
     ]),
@@ -69,21 +79,21 @@ function run() {
   });
 
   const { AppStorage, ARTWORKS } = context.window;
-  assert.strictEqual(ARTWORKS[0].version, "20");
+  assert.strictEqual(ARTWORKS[0].version, artworkSaveVersion);
 
   const progress = AppStorage.loadProgress();
   assert.strictEqual(progress["vertical-15"], undefined);
-  assert.strictEqual(progress["vertical-17"].artworkVersion, "20");
+  assert.strictEqual(progress["vertical-17"].artworkVersion, artworkSaveVersion);
   assertJsonEqual(progress["vertical-17"].fills, [{ x: 2, y: 2, color: "#000000" }]);
   assertJsonEqual(progress["vertical-17"].undoHistory, [[{ x: 1, y: 1, color: "#FFFFFF" }], []]);
-  assert.strictEqual(progress["vertical-40"].artworkVersion, "20");
+  assert.strictEqual(progress["vertical-40"].artworkVersion, artworkSaveVersion);
   assertJsonEqual(progress["vertical-40"].undoHistory, []);
   assert.strictEqual(progress["vertical-60"], undefined);
   assertJsonEqual(AppStorage.getSavedHistory(progress["vertical-17"]), [[{ x: 1, y: 1, color: "#FFFFFF" }], []]);
 
   const gallery = AppStorage.loadGallery();
   assert.strictEqual(JSON.stringify(gallery.map((item) => item.id)), JSON.stringify(["current", "legacy"]));
-  assert(gallery.every((item) => item.artworkVersion === "20"));
+  assert(gallery.every((item) => item.artworkVersion === artworkSaveVersion));
   assertJsonEqual(gallery[0].fills, [{ x: 2, y: 2, color: "#000000" }]);
 
   const newProgress = AppStorage.createProgressEntry("vertical-15", [{ x: 4, y: 4, color: "#abc" }], [
@@ -91,7 +101,7 @@ function run() {
   ]);
   AppStorage.saveProgress({ "vertical-15": newProgress });
   const savedProgress = JSON.parse(context.localStorage.getItem("sori_progress_v12"));
-  assert.strictEqual(savedProgress["vertical-15"].artworkVersion, "20");
+  assert.strictEqual(savedProgress["vertical-15"].artworkVersion, artworkSaveVersion);
   assertJsonEqual(savedProgress["vertical-15"].fills, [{ x: 4, y: 4, color: "#AABBCC" }]);
   assertJsonEqual(savedProgress["vertical-15"].undoHistory, [[{ x: 3, y: 3, color: "#DDEEFF" }]]);
 
@@ -100,7 +110,7 @@ function run() {
   const invalidSnapshotItem = AppStorage.createGalleryItem({ id: "bad-snapshot", artId: "vertical-17", fills: [], date: 2, snapshotDataUrl: "not-an-image" });
   AppStorage.saveGallery([newGalleryItem, invalidSnapshotItem]);
   const savedGallery = JSON.parse(context.localStorage.getItem("sori_gallery_v12"));
-  assert.strictEqual(savedGallery[0].artworkVersion, "20");
+  assert.strictEqual(savedGallery[0].artworkVersion, artworkSaveVersion);
   assert.strictEqual(savedGallery[0].snapshotDataUrl, snapshotDataUrl);
   assert.strictEqual(savedGallery[1].snapshotDataUrl, undefined);
 

@@ -87,5 +87,7 @@ window.ARTWORKS = ARTWORK_IDS.map(function(label) {
   return createVerticalArtwork(Number(label));
 });
 window.ALL_ARTWORKS = window.ARTWORKS;
+window.ARTWORK_VERSION = ARTWORK_VERSION;
+window.ARTWORK_SAVE_VERSION = ARTWORK_SAVE_VERSION;
 
 window.CATEGORIES = ['전체'].concat(CATEGORY_ORDER);
