@@ -29,6 +29,7 @@
 - 키보드 포커스: 홈, 하단 내비, 설정/확인 팝업, 완료 화면 버튼 확인 완료
 - 마우스 커서: 색칠 기본 `crosshair`, 확대 후 `grab`, 드래그 중 `grabbing`, 드래그 종료 후 `grab` 확인 완료
 - 이미지 저장: React Native WebView 브리지와 브라우저 다운로드 fallback 회귀 테스트 추가
+- 도안 에셋: 40장 WebP 원본/썸네일과 작품 저장 버전 회귀 테스트 추가
 
 ## 회귀 확인 명령
 
@@ -43,6 +44,7 @@ python3 -m http.server 4173
 ```bash
 node tests/cache-version-consistency.test.js
 node tests/save-image-bridge.test.js
+node tests/artwork-assets.test.js
 node tests/manifest-policy.test.js
 node tests/storage-version.test.js
 node tests/paint-engine.test.js
