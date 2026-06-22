@@ -716,6 +716,13 @@
   white-space:nowrap;
 }
 
+.curcolor__name {
+  font-size:16px !important;
+  line-height:1.12;
+  font-weight:900;
+  letter-spacing:0;
+}
+
 .color--bottom .curcolor__label {
   font-size:11px !important;
   opacity:.86;
@@ -798,7 +805,12 @@
 
 .color--side .curcolor {
   border-radius:22px;
-  box-shadow:0 8px 20px rgba(25, 28, 29, .08), inset 0 0 0 10px rgba(255,255,255,.2);
+  box-shadow:0 6px 14px rgba(25, 28, 29, .08), inset 0 0 0 4px rgba(255,255,255,.16);
+  gap:6px;
+}
+
+.color--side .curcolor__name {
+  font-size:17px !important;
 }
 
 .color--side .palette--side .palette__track {
@@ -2742,7 +2754,7 @@
   gap:8px;
   border-radius:24px;
   border:1px solid rgba(25, 28, 29, .16) !important;
-  box-shadow:0 8px 18px rgba(25,28,29,.12), inset 0 0 0 5px rgba(255,255,255,.16);
+  box-shadow:0 6px 14px rgba(25,28,29,.1), inset 0 0 0 3px rgba(255,255,255,.14);
 }
 
 .color--bottom .curcolor::before {
@@ -2768,10 +2780,9 @@
 }
 
 .color--bottom .curcolor__name {
-  max-width:76px;
+  max-width:116px;
   margin-top:0 !important;
-  font-size:14px !important;
-  line-height:1.12;
+  font-size:18px !important;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -2900,8 +2911,8 @@
   }
 
   .color--bottom .curcolor__name {
-    max-width:58px;
-    font-size:13px !important;
+    max-width:94px;
+    font-size:16px !important;
   }
 
   .color--bottom .color-toolbelt {

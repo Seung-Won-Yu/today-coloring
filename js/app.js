@@ -1384,6 +1384,7 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
   const hasHistory = historyStack.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
   const bottomChrome = window.innerWidth >= 768 ? 250 : 268;
+  const selectedColorName = PALETTE.find((p) => p.c === selected)?.name || "";
   return e("div", { className: "screen color color--" + layout },
     e("header", { className: "appbar appbar--color", style: { position: "relative" } },
       e("button", { className: "appbar__back", onClick: onExit },
@@ -1434,10 +1435,9 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
       ),
       e("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } },
         layout === "bottom" && e(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }),
-        e("div", { className: "curcolor", style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } },
-          e("span", { className: "curcolor__brush", "aria-hidden": "true" }, e(Icon, { name: "brush", size: 17, color: isLight(selected) ? "#4A4036" : "#fff" })),
-          e("span", { className: "curcolor__label", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, "현재 색"),
-          e("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff", fontSize: "13px", fontWeight: "bold", marginTop: "2px" } }, PALETTE.find((p) => p.c === selected)?.name || "")
+        e("div", { className: "curcolor", "aria-label": "\uC120\uD0DD\uD55C \uC0C9 " + selectedColorName, style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } },
+          e("span", { className: "curcolor__brush", "aria-hidden": "true" }, e(Icon, { name: "brush", size: 18, color: isLight(selected) ? "#4A4036" : "#fff" })),
+          e("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, selectedColorName)
         ),
         e(Palette, { selected, onSelect, layout })
       )
