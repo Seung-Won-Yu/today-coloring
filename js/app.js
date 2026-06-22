@@ -403,8 +403,17 @@ if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.getCachedRegionAnalysis = getCachedRegionAnalysis;
 }
 const finishedThumbCache = new Map();
+function getFinishedThumbCacheKey(art, limit) {
+  if (!art) return "";
+  return `${art.id || ""}@${art.version || ""}@${art.src || ""}:${limit}`;
+}
+
+if (window.__COLORING_TEST_HOOKS__) {
+  window.__COLORING_TEST_HOOKS__.getFinishedThumbCacheKey = getFinishedThumbCacheKey;
+}
+
 function FinishedThumb({ art, className = "", limit = 80 }) {
-  const cacheKey = art ? `${art.id || art.src}:${limit}` : "";
+  const cacheKey = getFinishedThumbCacheKey(art, limit);
   const [ready, setReady] = React.useState(() => finishedThumbCache.has(cacheKey));
   const [fills, setFills] = React.useState(() => finishedThumbCache.get(cacheKey) || []);
   const signatureRef = React.useRef("");

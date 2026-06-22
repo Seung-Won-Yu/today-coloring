@@ -92,6 +92,7 @@ function run() {
   assert.strictEqual(typeof hooks.getRegionAnalysisCacheKey, "function");
   assert.strictEqual(typeof hooks.rememberRegionAnalysis, "function");
   assert.strictEqual(typeof hooks.getCachedRegionAnalysis, "function");
+  assert.strictEqual(typeof hooks.getFinishedThumbCacheKey, "function");
 
   const fills = hooks.buildShowcaseFills([
     { x: 44, y: 52, size: 24, isBackground: true },
@@ -114,6 +115,10 @@ function run() {
   assert.strictEqual(cachedRegions[0].x, 8, "cached region data should not retain caller object references");
   cachedRegions[0].x = 42;
   assert.strictEqual(hooks.getCachedRegionAnalysis(firstVersionKey)[0].x, 8, "region cache reads should return defensive copies");
+
+  const firstThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "20", src: "art.webp?v=20" }, 80);
+  const nextThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "21", src: "art.webp?v=21" }, 80);
+  assert.notStrictEqual(firstThumbKey, nextThumbKey, "finished thumbnail cache keys should include artwork version changes");
 
   const noMatchMediaHooks = loadAppHooks({ matchMedia: false });
   assert.strictEqual(noMatchMediaHooks.isAppDisplayMode(), false);
