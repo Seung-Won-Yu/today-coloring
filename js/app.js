@@ -25,17 +25,6 @@ const { loadArtworkBitmap, preloadArtworkBitmaps } = window.AssetLoader;
 const { Icon, BigButton, isLight, Palette, useOrientation, Confetti } = window.UIComponents;
 const { getArtworkFileName, postImageToNativeBridge, triggerBrowserDownload } = window.SaveImage;
 
-function nowMs() {
-  return window.performance && window.performance.now ? window.performance.now() : Date.now();
-}
-
-function recordPaintMetric(sample) {
-  if (!window.__COLORING_DEBUG_PAINT) return;
-  const metrics = window.__COLORING_PAINT_METRICS__ || [];
-  metrics.push({ at: Date.now(), ...sample });
-  window.__COLORING_PAINT_METRICS__ = metrics.slice(-80);
-}
-
 function rememberBoundedCacheValue(cache, cacheKey, value, cloneValue, limit) {
   if (!cacheKey) return;
   if (cache.has(cacheKey)) {
@@ -358,16 +347,6 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   const handlePointerUp = (e) => {
     if (!interactive || !onPaint) return;
     if (canPaint && !canPaint()) return;
-    const metric = {
-      getImageData: 0,
-      progress: 0,
-      merge: 0,
-      fill: 0,
-      smooth: 0,
-      putImageData: 0,
-      commit: 0
-    };
-    const paintStartedAt = nowMs();
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = canvasRef.current.width / rect.width;
     const scaleY = canvasRef.current.height / rect.height;
@@ -377,12 +356,9 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const ch = canvasRef.current.height;
     const ctx = canvasRef.current.getContext("2d", { willReadFrequently: true });
     const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
-    let t0 = nowMs();
     const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
     const regionMap = canUsePaintRegionMap(regionMapRef.current, cw, ch) ? regionMapRef.current : null;
-    metric.getImageData += nowMs() - t0;
     let progressImgData = null;
-    t0 = nowMs();
     const cachedProgress = progressImageDataRef.current;
     if (cachedProgress && cachedProgress.width === cw && cachedProgress.height === ch) {
       progressImgData = {
@@ -396,7 +372,6 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
         markProgressForSeed(progressImgData, baseImgData.data, f, frameRef.current, regionMap);
       }
     }
-    metric.progress += nowMs() - t0;
     const progressData = progressImgData.data;
     const snapRadius = Math.max(26, Math.round(Math.max(scaleX, scaleY) * 22));
     const clickedIdx = (y * cw + x) * 4;
@@ -434,43 +409,27 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     const newFill = { x: paintX, y: paintY, color: selected, v: 2 };
     let nextFills = [...fillsArray, newFill];
     const directPaintSeeds = [{ x: paintX, y: paintY }];
-    t0 = nowMs();
     if (regionMap && clickedRegionLabel && !paintRegionLabel) {
       markProgressRegionMap(progressImgData, regionMap, x, y);
     } else {
       markProgressForSeed(progressImgData, baseImgData.data, { x: paintX, y: paintY, v: 2 }, frameRef.current, regionMap);
     }
-    metric.progress += nowMs() - t0;
-    t0 = nowMs();
     const cachedFillLayer = fillLayerImageDataRef.current;
     let fillLayer = cachedFillLayer && cachedFillLayer.width === cw && cachedFillLayer.height === ch
       ? cloneFillLayerImageData(cachedFillLayer)
       : buildPaintLayerState(baseImgData, fillsArray, frameRef.current, regionMap).fillLayer;
     directPaintSeeds.forEach((seed) => {
-      const fillStart = nowMs();
       const mappedBounds = regionMap ? paintRegionMapSeed(fillLayer, regionMap, seed, selectedRgb) : null;
       if (!mappedBounds) paintFillLayerSeed(fillLayer, baseImgData.data, seed, selectedRgb);
-      metric.fill += nowMs() - fillStart;
     });
-    t0 = nowMs();
     const lineLayer = lineLayerImageDataRef.current || buildLineLayerImageData(baseImgData);
     lineLayerImageDataRef.current = lineLayer;
     const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
     ctx.putImageData(composed, 0, 0);
-    metric.putImageData += nowMs() - t0;
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
     rememberPaintLayerState(getPaintLayerStateCacheKey(art, frameMode, cw, ch, nextFills), { fillLayer, progressImgData });
-    requestAnimationFrame(() => recordPaintMetric({
-      ...metric,
-      total: nowMs() - paintStartedAt,
-      seeds: directPaintSeeds.length,
-      fills: nextFills.length,
-      artId: art.id
-    }));
-    t0 = nowMs();
     onPaint(nextFills);
-    metric.commit = nowMs() - t0;
     if (paintFeedback) {
       const pulse = { id: Date.now(), x: paintX / cw * 100, y: paintY / ch * 100 };
       setPaintPulse(pulse);
