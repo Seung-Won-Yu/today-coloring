@@ -92,6 +92,8 @@ function run() {
   assert.strictEqual(typeof hooks.getRegionAnalysisCacheKey, "function");
   assert.strictEqual(typeof hooks.rememberRegionAnalysis, "function");
   assert.strictEqual(typeof hooks.getCachedRegionAnalysis, "function");
+  assert.strictEqual(typeof hooks.getRegionAnalysisCacheLimit, "function");
+  assert.strictEqual(typeof hooks.getRegionAnalysisCacheSize, "function");
   assert.strictEqual(typeof hooks.getFinishedThumbCacheKey, "function");
   assert.strictEqual(typeof hooks.rememberFinishedThumbFills, "function");
   assert.strictEqual(typeof hooks.getCachedFinishedThumbFills, "function");
@@ -119,6 +121,16 @@ function run() {
   assert.strictEqual(cachedRegions[0].x, 8, "cached region data should not retain caller object references");
   cachedRegions[0].x = 42;
   assert.strictEqual(hooks.getCachedRegionAnalysis(firstVersionKey)[0].x, 8, "region cache reads should return defensive copies");
+
+  const regionCacheHooks = loadAppHooks();
+  const regionCacheLimit = regionCacheHooks.getRegionAnalysisCacheLimit();
+  assert(regionCacheLimit > 0, "region analysis cache should have a positive limit");
+  for (let idx = 0; idx <= regionCacheLimit; idx += 1) {
+    regionCacheHooks.rememberRegionAnalysis(`region-${idx}`, [{ x: idx, y: idx + 1, size: 20, isBackground: false }]);
+  }
+  assert.strictEqual(regionCacheHooks.getRegionAnalysisCacheSize(), regionCacheLimit, "region analysis cache should stay within its limit");
+  assert.strictEqual(regionCacheHooks.getCachedRegionAnalysis("region-0"), null, "region analysis cache should evict the oldest entry first");
+  assert.strictEqual(regionCacheHooks.getCachedRegionAnalysis(`region-${regionCacheLimit}`)[0].x, regionCacheLimit, "region analysis cache should keep the newest entry");
 
   const firstThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "20", src: "art.webp?v=20" }, 80);
   const nextThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "21", src: "art.webp?v=21" }, 80);

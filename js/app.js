@@ -401,6 +401,8 @@ if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.getRegionAnalysisCacheKey = getRegionAnalysisCacheKey;
   window.__COLORING_TEST_HOOKS__.rememberRegionAnalysis = rememberRegionAnalysis;
   window.__COLORING_TEST_HOOKS__.getCachedRegionAnalysis = getCachedRegionAnalysis;
+  window.__COLORING_TEST_HOOKS__.getRegionAnalysisCacheLimit = () => REGION_ANALYSIS_CACHE_LIMIT;
+  window.__COLORING_TEST_HOOKS__.getRegionAnalysisCacheSize = () => regionAnalysisCache.size;
 }
 const finishedThumbCache = new Map();
 const FINISHED_THUMB_CACHE_LIMIT = 48;
