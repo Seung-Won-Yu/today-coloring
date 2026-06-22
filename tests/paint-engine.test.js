@@ -51,6 +51,16 @@ function run() {
   const PaintEngine = loadPaintEngine();
   const fillColor = { r: 36, g: 126, b: 238 };
 
+  const longHex = PaintEngine.hexToRgb("#AABBCC");
+  assert.strictEqual(longHex.r, 170);
+  assert.strictEqual(longHex.g, 187);
+  assert.strictEqual(longHex.b, 204);
+
+  const shortHex = PaintEngine.hexToRgb("#abc");
+  assert.strictEqual(shortHex.r, 170);
+  assert.strictEqual(shortHex.g, 187);
+  assert.strictEqual(shortHex.b, 204);
+
   const blueSky = [142, 210, 239, 255];
   const base = createImageData(5, 3, [
     [255, 255, 255, 255], [168, 168, 168, 255], [24, 24, 24, 255], [168, 168, 168, 255], blueSky,
