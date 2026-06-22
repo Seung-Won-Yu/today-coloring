@@ -9,6 +9,7 @@ const tests = [
   "manifest-policy.test.js",
   "index-boot.test.js",
   "storage-version.test.js",
+  "asset-loader.test.js",
   "paint-engine.test.js",
   "app-showcase-fills.test.js"
 ];
