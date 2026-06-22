@@ -17,6 +17,8 @@
     BRIGHT_GRAYSCALE_MIN: 185,
     GRAYSCALE_CHANNEL_DELTA: 50
   });
+  const VISUAL_FILL_UNDER_LINE_RADIUS = 2;
+  const VISUAL_FILL_MIN_LINE_ALPHA = 18;
   const {
     MIN_VISIBLE_ALPHA,
     LINE_ALPHA_WHITE_POINT,
@@ -544,6 +546,36 @@
     return doFloodFill(fillLayerImageData, seed.x, seed.y, fillColor, FLOOD_FILL_TOLERANCE, baseData);
   }
 
+  function findNearbyFillPixel(fillData, width, height, x, y, radius) {
+    let bestIdx = -1;
+    let bestDistance = Infinity;
+    for (let dy = -radius; dy <= radius; dy++) {
+      const py = y + dy;
+      if (py < 0 || py >= height) continue;
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const px = x + dx;
+        if (px < 0 || px >= width) continue;
+        const distance = dx * dx + dy * dy;
+        if (distance > radius * radius || distance >= bestDistance) continue;
+        const idx = (py * width + px) * 4;
+        if (fillData[idx + 3] === 0) continue;
+        bestIdx = idx;
+        bestDistance = distance;
+      }
+    }
+    return bestIdx;
+  }
+
+  function getVisualFillPixelIndex(fillData, lineData, width, height, pixelOffset) {
+    const idx = pixelOffset * 4;
+    if (fillData[idx + 3] > 0) return idx;
+    if (!lineData || lineData[idx + 3] < VISUAL_FILL_MIN_LINE_ALPHA) return -1;
+    const x = pixelOffset % width;
+    const y = Math.floor(pixelOffset / width);
+    return findNearbyFillPixel(fillData, width, height, x, y, VISUAL_FILL_UNDER_LINE_RADIUS);
+  }
+
   function composePaintLayers(baseImageData, fillLayerImageData, lineLayerImageData = null) {
     const width = baseImageData.width;
     const height = baseImageData.height;
@@ -551,22 +583,23 @@
     const baseData = baseImageData.data;
     const lineData = lineLayerImageData ? lineLayerImageData.data : buildLineLayerImageData(baseImageData).data;
     const data = new Uint8ClampedArray(width * height * 4);
-    for (let idx = 0; idx < data.length; idx += 4) {
-      const fillAlpha = fillData[idx + 3] / 255;
+    for (let idx = 0, pixelOffset = 0; idx < data.length; idx += 4, pixelOffset++) {
       const lineAlpha = lineData[idx + 3] / 255;
-      if (fillAlpha === 0) {
+      const fillIdx = getVisualFillPixelIndex(fillData, lineData, width, height, pixelOffset);
+      if (fillIdx < 0) {
         data[idx] = baseData[idx];
         data[idx + 1] = baseData[idx + 1];
         data[idx + 2] = baseData[idx + 2];
         data[idx + 3] = baseData[idx + 3] || 255;
         continue;
       }
+      const fillAlpha = fillData[fillIdx + 3] / 255;
       const baseR = 255;
       const baseG = 255;
       const baseB = 255;
-      let r = Math.round(fillData[idx] * fillAlpha + baseR * (1 - fillAlpha));
-      let g = Math.round(fillData[idx + 1] * fillAlpha + baseG * (1 - fillAlpha));
-      let b = Math.round(fillData[idx + 2] * fillAlpha + baseB * (1 - fillAlpha));
+      let r = Math.round(fillData[fillIdx] * fillAlpha + baseR * (1 - fillAlpha));
+      let g = Math.round(fillData[fillIdx + 1] * fillAlpha + baseG * (1 - fillAlpha));
+      let b = Math.round(fillData[fillIdx + 2] * fillAlpha + baseB * (1 - fillAlpha));
       if (lineAlpha > 0) {
         r = Math.round(r * (1 - lineAlpha));
         g = Math.round(g * (1 - lineAlpha));

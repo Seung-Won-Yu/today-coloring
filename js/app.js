@@ -187,6 +187,14 @@ function buildPaintLayerState(baseImgData, fillsArray, frame, regionMap = null) 
   return { fillLayer, progressImgData };
 }
 
+function renderComposedPaintFrame(ctx, baseImgData, fillLayer, lineLayer) {
+  const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.putImageData(composed, 0, 0);
+  return composed;
+}
+
 function useInViewport(options = {}) {
   const ref = React.useRef(null);
   const [visible, setVisible] = React.useState(Boolean(options.initial));
@@ -332,8 +340,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       cacheKey,
       () => buildPaintLayerState(baseImgData, fillsArray, frameRef.current, regionMapRef.current)
     );
-    const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
-    ctx.putImageData(composed, 0, 0);
+    renderComposedPaintFrame(ctx, baseImgData, fillLayer, lineLayer);
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
   };
@@ -424,8 +431,7 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     });
     const lineLayer = lineLayerImageDataRef.current || buildLineLayerImageData(baseImgData);
     lineLayerImageDataRef.current = lineLayer;
-    const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
-    ctx.putImageData(composed, 0, 0);
+    renderComposedPaintFrame(ctx, baseImgData, fillLayer, lineLayer);
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
     rememberPaintLayerState(getPaintLayerStateCacheKey(art, frameMode, cw, ch, nextFills), { fillLayer, progressImgData });
@@ -1512,8 +1518,7 @@ function renderArtworkDataUrl(art, fills, options = {}) {
       cacheKey,
       () => buildPaintLayerState(immutableBaseImgData, fillsArray, frame, regionMap)
     );
-    const composed = composePaintLayers(immutableBaseImgData, fillLayer, lineLayer);
-    ctx.putImageData(composed, 0, 0);
+    renderComposedPaintFrame(ctx, immutableBaseImgData, fillLayer, lineLayer);
     let outputCanvas = canvas;
     if (maxSide > 0 && Math.max(canvas.width, canvas.height) > maxSide) {
       const scale = maxSide / Math.max(canvas.width, canvas.height);
