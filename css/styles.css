@@ -2,7 +2,7 @@
 @import url("./screens/artworks/base.css");
 @import url("./screens/coloring/base.css");
 @import url("./components/guide-navigation.css");
-@import url("./screens/guide/modal.css");
+@import url("./screens/guide/modal.css?v=2");
 @import url("./responsive/mobile-shell.css");
 @import url("./screens/artworks/showcase.css");
 @import url("./components/canvas-feedback.css");

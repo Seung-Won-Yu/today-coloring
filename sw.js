@@ -1,4 +1,4 @@
-const CACHE_NAME = 'today-coloring-shell-v186';
+const CACHE_NAME = 'today-coloring-shell-v187';
 const APP_SHELL = [
   './',
   './index.html',
@@ -6,12 +6,12 @@ const APP_SHELL = [
   './assets/icons/app-icon.png',
   './assets/icons/app-icon-192.png',
   './assets/icons/apple-touch-icon.png',
-  './css/styles.css?v=158',
+  './css/styles.css?v=159',
   './css/foundation/base.css?v=2',
   './css/screens/artworks/base.css',
   './css/screens/coloring/base.css',
   './css/components/guide-navigation.css',
-  './css/screens/guide/modal.css',
+  './css/screens/guide/modal.css?v=2',
   './css/responsive/mobile-shell.css',
   './css/screens/artworks/showcase.css',
   './css/components/canvas-feedback.css',
