@@ -54,6 +54,12 @@ async function resolveImageLoad(promise, image) {
   return promise;
 }
 
+async function rejectImageLoad(promise, image) {
+  assert.strictEqual(typeof image.onerror, "function", "fake image should receive an onerror handler");
+  image.onerror(new Error("image failed"));
+  await assert.rejects(promise, /image failed/);
+}
+
 async function run() {
   const { AssetLoader, createdImages, testHooks } = loadAssetLoader();
   assert.strictEqual(typeof AssetLoader.loadArtworkBitmap, "function");
@@ -79,6 +85,14 @@ async function run() {
   assert.strictEqual(limited.testHooks.getArtworkImageCacheSize(), limit, "artwork image cache should stay within its limit");
   assert.strictEqual(limited.testHooks.hasArtworkImageCacheEntry("artwork-0.webp"), false, "artwork image cache should evict the oldest entry first");
   assert.strictEqual(limited.testHooks.hasArtworkImageCacheEntry(`artwork-${limit}.webp`), true, "artwork image cache should keep the newest entry");
+
+  const retryable = loadAssetLoader();
+  const failedLoad = retryable.AssetLoader.loadArtworkBitmap("broken.webp");
+  await rejectImageLoad(failedLoad, retryable.createdImages[0]);
+  assert.strictEqual(retryable.testHooks.hasArtworkImageCacheEntry("broken.webp"), false, "failed image loads should be removed from cache");
+  const retryLoad = retryable.AssetLoader.loadArtworkBitmap("broken.webp");
+  assert.strictEqual(retryable.createdImages.length, 2, "failed image loads should create a fresh Image on retry");
+  await resolveImageLoad(retryLoad, retryable.createdImages[1]);
 
   console.log("asset-loader.test.js passed");
 }

@@ -33,7 +33,11 @@
         rememberArtworkImageCacheEntry(src, { image });
         resolve(image);
       };
-      image.onerror = reject;
+      image.onerror = (error) => {
+        const cachedEntry = artworkImageCache.get(src);
+        if (cachedEntry?.promise === promise) artworkImageCache.delete(src);
+        reject(error);
+      };
     });
 
     rememberArtworkImageCacheEntry(src, { promise });
