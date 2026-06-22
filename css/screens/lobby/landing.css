@@ -123,12 +123,6 @@
   box-shadow:0 14px 28px rgba(51,40,26,.12);
 }
 
-.lobby-showcase__card .finished-thumb {
-  overflow:hidden;
-  border-radius:10px;
-  background:#FFFDF8;
-}
-
 .lobby-showcase__card canvas,
 .lobby-showcase__card img {
   width:100%;
