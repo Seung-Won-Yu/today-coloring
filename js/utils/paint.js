@@ -108,7 +108,24 @@
     return createImageDataLike(width, height);
   }
 
+  function isValidImageData(imageData) {
+    return Boolean(
+      imageData &&
+      Number.isInteger(imageData.width) &&
+      Number.isInteger(imageData.height) &&
+      imageData.width > 0 &&
+      imageData.height > 0 &&
+      imageData.data &&
+      imageData.data.length >= imageData.width * imageData.height * 4
+    );
+  }
+
+  function isValidRgbColor(color) {
+    return Boolean(color && Number.isFinite(color.r) && Number.isFinite(color.g) && Number.isFinite(color.b));
+  }
+
   function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95, baseData = null) {
+    if (!isValidImageData(imageData) || !isValidRgbColor(fillColor)) return null;
     const width = imageData.width;
     const height = imageData.height;
     if (!Number.isInteger(startX) || !Number.isInteger(startY)) return null;
