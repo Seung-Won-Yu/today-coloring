@@ -1025,14 +1025,15 @@ function useDialogKeyboard(dialogRef, onClose) {
     };
   }, [dialogRef, onClose]);
 }
-function ConfirmDialog({ title, message, confirmLabel = "확인", cancelLabel = "취소", danger = false, onConfirm, onCancel }) {
+function ConfirmDialog({ title, message, confirmLabel = "확인", cancelLabel = "취소", danger = false, icon, onConfirm, onCancel }) {
   const e = React.createElement;
   const dialogRef = React.useRef(null);
+  const iconName = icon || (danger ? "trash" : "check");
   useDialogKeyboard(dialogRef, onCancel);
   return e("div", { className: "confirm-layer", role: "presentation", onClick: onCancel },
     e("section", { ref: dialogRef, tabIndex: -1, className: "confirm-card", role: "dialog", "aria-modal": "true", "aria-label": title, onClick: (event) => event.stopPropagation() },
       e("div", { className: "confirm-card__icon " + (danger ? "confirm-card__icon--danger" : "") },
-        e(Icon, { name: danger ? "trash" : "check", size: 24 })
+        e(Icon, { name: iconName, size: 24 })
       ),
       e("h2", { className: "confirm-card__title" }, title),
       e("p", { className: "confirm-card__message" }, message),
@@ -1117,12 +1118,21 @@ function SettingsDialog({ settings, onChange, onClose }) {
     )
   );
 }
-function ColorToolbelt({ hasHistory, onUndo, onReset, onZoom }) {
+function ColorToolbelt({ hasHistory, isZoomed, onUndo, onReset, onZoom }) {
   const e = React.createElement;
   return e("div", { className: "color-toolbelt", style: { zIndex: 18 } },
-    e("button", { className: "color-toolbelt__btn", onClick: onUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30" }, e(Icon, { name: "undo", size: 22 })),
-    e("button", { className: "color-toolbelt__btn", onClick: onReset, "aria-label": "\uCD08\uAE30\uD654" }, e(Icon, { name: "trash", size: 22 })),
-    e("button", { className: "color-toolbelt__btn", onClick: onZoom, "aria-label": "\uB3CB\uBCF4\uAE30 \uD1A0\uAE00" }, e(Icon, { name: "zoom", size: 22 }))
+    e("button", { className: "color-toolbelt__btn", onClick: onUndo, disabled: !hasHistory, "aria-label": "\uB418\uB3CC\uB9AC\uAE30", title: "\uB418\uB3CC\uB9AC\uAE30" },
+      e(Icon, { name: "undo", size: 19 }),
+      e("span", { className: "color-toolbelt__label" }, "\uB418\uB3CC\uB9BC")
+    ),
+    e("button", { className: "color-toolbelt__btn", onClick: onReset, "aria-label": "\uCC98\uC74C\uBD80\uD130", title: "\uCC98\uC74C\uBD80\uD130" },
+      e(Icon, { name: "reset", size: 19 }),
+      e("span", { className: "color-toolbelt__label" }, "\uCC98\uC74C\uBD80\uD130")
+    ),
+    e("button", { className: "color-toolbelt__btn", onClick: onZoom, "aria-label": isZoomed ? "\uCD95\uC18C\uD558\uAE30" : "\uD06C\uAC8C \uBCF4\uAE30", title: isZoomed ? "\uCD95\uC18C\uD558\uAE30" : "\uD06C\uAC8C \uBCF4\uAE30" },
+      e(Icon, { name: isZoomed ? "zoomOut" : "zoomIn", size: 19 }),
+      e("span", { className: "color-toolbelt__label" }, isZoomed ? "\uCD95\uC18C" : "\uD655\uB300")
+    )
   );
 }
 function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHistoryChange, onExit, onFinish, tweaks }) {
@@ -1398,8 +1408,8 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
             e(Icon, { name: "undo", size: 20 }),
             e("span", { className: "hide-narrow" }, "되돌리기")
           ),
-          e("button", { className: "tool--pill", onClick: handleReset, "aria-label": "초기화" },
-            e(Icon, { name: "trash", size: 20 }),
+          e("button", { className: "tool--pill", onClick: handleReset, "aria-label": "처음부터" },
+            e(Icon, { name: "reset", size: 20 }),
             e("span", { className: "hide-narrow" }, "처음부터")
           )
         ),
@@ -1430,19 +1440,19 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
         )
       ),
       e("div", { className: "palettezone palettezone--" + layout, style: { zIndex: 20 } },
-        layout === "bottom" && e(ColorToolbelt, { hasHistory, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }),
+        layout === "bottom" && e(ColorToolbelt, { hasHistory, isZoomed: scale > 1, onUndo: handleUndo, onReset: handleReset, onZoom: toggleZoom }),
         e("div", { className: "curcolor", "aria-label": "\uC120\uD0DD\uD55C \uC0C9 " + selectedColorName, style: { background: selected, borderColor: isLight(selected) ? "rgba(74,64,54,.3)" : "transparent" } },
           e("span", { className: "curcolor__brush", "aria-hidden": "true" }, e(Icon, { name: "brush", size: 18, color: isLight(selected) ? "#4A4036" : "#fff" })),
           e("span", { className: "curcolor__name", style: { color: isLight(selected) ? "#4A4036" : "#fff" } }, selectedColorName)
         ),
-        layout === "side" && e("button", { onClick: toggleZoom, className: "zoom-toggle-btn", "aria-label": "돋보기 토글" },
-          e(Icon, { name: "zoom", size: 22, color: "var(--ink)" }),
+        layout === "side" && e("button", { onClick: toggleZoom, className: "zoom-toggle-btn", "aria-label": scale > 1 ? "축소하기" : "크게 보기" },
+          e(Icon, { name: scale > 1 ? "zoomOut" : "zoomIn", size: 22, color: "var(--ink)" }),
           e("span", { className: "zoom-toggle-btn__label" }, scale > 1 ? "축소하기 (1x)" : "크게 보기 (2x)")
         ),
         e(Palette, { selected, onSelect, layout })
       )
     ),
-    resetConfirmOpen && e(ConfirmDialog, { title: "처음부터 색칠할까요?", message: "지금 작품의 색칠 기록만 지워져요.", confirmLabel: "초기화", cancelLabel: "계속 색칠", danger: true, onConfirm: confirmReset, onCancel: () => setResetConfirmOpen(false) })
+    resetConfirmOpen && e(ConfirmDialog, { title: "처음부터 색칠할까요?", message: "지금 작품의 색칠 기록만 지워져요.", confirmLabel: "초기화", cancelLabel: "계속 색칠", danger: true, icon: "reset", onConfirm: confirmReset, onCancel: () => setResetConfirmOpen(false) })
   );
 }
 function CompletionScreen({ art, fills, onSave, onKeep, onNew, onBack, saved }) {
