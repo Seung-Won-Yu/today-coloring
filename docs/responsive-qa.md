@@ -30,6 +30,7 @@
 - 마우스 커서: 색칠 기본 `crosshair`, 확대 후 `grab`, 드래그 중 `grabbing`, 드래그 종료 후 `grab` 확인 완료
 - 이미지 저장: React Native WebView 브리지와 브라우저 다운로드 fallback 회귀 테스트 추가
 - 도안 에셋: 40장 WebP 원본/썸네일과 작품 저장 버전 회귀 테스트 추가
+- 오프라인 캐시: 최상위 앱 셸과 `styles.css`의 CSS import 파일까지 캐시 일관성 테스트로 확인
 
 ## 회귀 확인 명령
 

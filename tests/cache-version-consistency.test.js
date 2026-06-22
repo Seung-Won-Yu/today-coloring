@@ -14,9 +14,15 @@ function matchOne(source, pattern, label) {
   return match[1];
 }
 
+function getCssImportShellEntries(stylesheet) {
+  const imports = [...stylesheet.matchAll(/@import url\("\.\/([^"]+)"\);/g)];
+  return imports.map((match) => `'./css/${match[1]}'`);
+}
+
 function run() {
   const indexHtml = read("index.html");
   const serviceWorker = read("sw.js");
+  const stylesheet = read("css/styles.css");
 
   const registeredSwVersion = matchOne(
     indexHtml,
@@ -51,6 +57,13 @@ function run() {
     assert(
       serviceWorker.includes(`'./${assetPath}?v=${indexVersion}'`),
       `service worker should cache ${assetPath}?v=${indexVersion}`
+    );
+  });
+
+  getCssImportShellEntries(stylesheet).forEach((shellEntry) => {
+    assert(
+      serviceWorker.includes(shellEntry),
+      `service worker should pre-cache CSS import ${shellEntry}`
     );
   });
 
