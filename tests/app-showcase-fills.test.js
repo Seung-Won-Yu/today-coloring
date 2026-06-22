@@ -93,6 +93,8 @@ function run() {
   assert.strictEqual(typeof hooks.rememberRegionAnalysis, "function");
   assert.strictEqual(typeof hooks.getCachedRegionAnalysis, "function");
   assert.strictEqual(typeof hooks.getFinishedThumbCacheKey, "function");
+  assert.strictEqual(typeof hooks.rememberFinishedThumbFills, "function");
+  assert.strictEqual(typeof hooks.getCachedFinishedThumbFills, "function");
 
   const fills = hooks.buildShowcaseFills([
     { x: 44, y: 52, size: 24, isBackground: true },
@@ -119,6 +121,14 @@ function run() {
   const firstThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "20", src: "art.webp?v=20" }, 80);
   const nextThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "21", src: "art.webp?v=21" }, 80);
   assert.notStrictEqual(firstThumbKey, nextThumbKey, "finished thumbnail cache keys should include artwork version changes");
+
+  const thumbFills = [{ x: 1, y: 2, color: "#ABCDEF", v: 2 }];
+  hooks.rememberFinishedThumbFills(firstThumbKey, thumbFills);
+  thumbFills[0].x = 9;
+  const cachedThumbFills = hooks.getCachedFinishedThumbFills(firstThumbKey);
+  assert.strictEqual(cachedThumbFills[0].x, 1, "finished thumbnail cache should not retain caller fill references");
+  cachedThumbFills[0].x = 7;
+  assert.strictEqual(hooks.getCachedFinishedThumbFills(firstThumbKey)[0].x, 1, "finished thumbnail cache reads should return defensive copies");
 
   const noMatchMediaHooks = loadAppHooks({ matchMedia: false });
   assert.strictEqual(noMatchMediaHooks.isAppDisplayMode(), false);

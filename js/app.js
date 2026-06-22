@@ -408,18 +408,34 @@ function getFinishedThumbCacheKey(art, limit) {
   return `${art.id || ""}@${art.version || ""}@${art.src || ""}:${limit}`;
 }
 
+function cloneShowcaseFills(fills) {
+  return (fills || []).map((fill) => ({ ...fill }));
+}
+
+function getCachedFinishedThumbFills(cacheKey) {
+  const cached = finishedThumbCache.get(cacheKey);
+  return cached ? cloneShowcaseFills(cached) : null;
+}
+
+function rememberFinishedThumbFills(cacheKey, fills) {
+  if (!cacheKey) return;
+  finishedThumbCache.set(cacheKey, cloneShowcaseFills(fills));
+}
+
 if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.getFinishedThumbCacheKey = getFinishedThumbCacheKey;
+  window.__COLORING_TEST_HOOKS__.rememberFinishedThumbFills = rememberFinishedThumbFills;
+  window.__COLORING_TEST_HOOKS__.getCachedFinishedThumbFills = getCachedFinishedThumbFills;
 }
 
 function FinishedThumb({ art, className = "", limit = 80 }) {
   const cacheKey = getFinishedThumbCacheKey(art, limit);
   const [ready, setReady] = React.useState(() => finishedThumbCache.has(cacheKey));
-  const [fills, setFills] = React.useState(() => finishedThumbCache.get(cacheKey) || []);
+  const [fills, setFills] = React.useState(() => getCachedFinishedThumbFills(cacheKey) || []);
   const signatureRef = React.useRef("");
   React.useEffect(() => {
     if (!art) return;
-    const cached = finishedThumbCache.get(cacheKey);
+    const cached = getCachedFinishedThumbFills(cacheKey);
     setFills(cached || []);
     signatureRef.current = cached ? cached.map((fill) => `${fill.x}:${fill.y}:${fill.color}`).join("|") : "";
     if (cached) {
@@ -437,8 +453,8 @@ function FinishedThumb({ art, className = "", limit = 80 }) {
     const signature = next.map((fill) => `${fill.x}:${fill.y}:${fill.color}`).join("|");
     if (signatureRef.current === signature) return;
     signatureRef.current = signature;
-    if (cacheKey) finishedThumbCache.set(cacheKey, next);
-    setFills(next);
+    rememberFinishedThumbFills(cacheKey, next);
+    setFills(cloneShowcaseFills(next));
   }, [cacheKey, limit]);
   return /* @__PURE__ */ React.createElement("div", { className: "finished-thumb " + className }, ready ? /* @__PURE__ */ React.createElement(CanvasArt, { art, fills, interactive: false, onRegionsChange: handleRegionsChange }) : /* @__PURE__ */ React.createElement(ArtworkImage, { art, priority: true }));
 }
