@@ -26,11 +26,14 @@ python3 -m http.server 8002
 
 브라우저에서 `http://localhost:8002`로 접속합니다.
 
+반응형 검증 기준은 [docs/responsive-qa.md](docs/responsive-qa.md)에 정리되어 있습니다.
+
 ## 폴더 구조
 
 ```text
 assets/              앱 아이콘, 도안, 썸네일, README 이미지
 css/                 화면 스타일
+docs/                반응형 QA와 운영 기준 문서
 js/                  앱 로직, 데이터, 색칠 엔진
 index.html           앱 시작 파일
 manifest.webmanifest PWA 설정
