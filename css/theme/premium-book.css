@@ -2563,6 +2563,16 @@
   max-width:352px;
 }
 
+@media (min-width: 768px) and (min-height: 900px) {
+  .completion--view .completion__inner {
+    max-width:520px;
+  }
+
+  .completion--view .completion__frame {
+    width:min(46vw, 360px, 42vh);
+  }
+}
+
 @media (min-width: 1180px) and (min-height: 760px) {
   .completion {
     padding-inline:28px;
