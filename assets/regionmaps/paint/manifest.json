@@ -1,366 +1,368 @@
 {
-  "version": 1,
+  "version": 2,
   "mode": "paint",
+  "paintMaxSide": 1500,
+  "source": "assets/images/artworks",
   "maps": [
     {
       "id": "vertical-05",
       "file": "vertical-05.png",
       "lineLayerFile": "vertical-05.png",
-      "width": 672,
-      "height": 900,
-      "regions": 475,
-      "paintablePixels": 171965
+      "width": 896,
+      "height": 1200,
+      "regions": 561,
+      "paintablePixels": 304260
     },
     {
       "id": "vertical-10",
       "file": "vertical-10.png",
       "lineLayerFile": "vertical-10.png",
-      "width": 672,
-      "height": 900,
-      "regions": 6529,
-      "paintablePixels": 149177
+      "width": 896,
+      "height": 1200,
+      "regions": 5132,
+      "paintablePixels": 267569
     },
     {
       "id": "vertical-11",
       "file": "vertical-11.png",
       "lineLayerFile": "vertical-11.png",
-      "width": 672,
-      "height": 900,
-      "regions": 746,
-      "paintablePixels": 182421
+      "width": 896,
+      "height": 1200,
+      "regions": 839,
+      "paintablePixels": 324136
     },
     {
       "id": "vertical-13",
       "file": "vertical-13.png",
       "lineLayerFile": "vertical-13.png",
-      "width": 672,
-      "height": 900,
-      "regions": 1325,
-      "paintablePixels": 157411
+      "width": 896,
+      "height": 1200,
+      "regions": 1624,
+      "paintablePixels": 278595
     },
     {
       "id": "vertical-14",
       "file": "vertical-14.png",
       "lineLayerFile": "vertical-14.png",
-      "width": 672,
-      "height": 900,
-      "regions": 2233,
-      "paintablePixels": 245533
+      "width": 896,
+      "height": 1200,
+      "regions": 3301,
+      "paintablePixels": 432681
     },
     {
       "id": "vertical-15",
       "file": "vertical-15.png",
       "lineLayerFile": "vertical-15.png",
-      "width": 672,
-      "height": 900,
-      "regions": 592,
-      "paintablePixels": 190130
+      "width": 896,
+      "height": 1200,
+      "regions": 600,
+      "paintablePixels": 337565
     },
     {
       "id": "vertical-17",
       "file": "vertical-17.png",
       "lineLayerFile": "vertical-17.png",
-      "width": 672,
-      "height": 900,
-      "regions": 86,
-      "paintablePixels": 222709
+      "width": 896,
+      "height": 1200,
+      "regions": 234,
+      "paintablePixels": 395589
     },
     {
       "id": "vertical-21",
       "file": "vertical-21.png",
       "lineLayerFile": "vertical-21.png",
-      "width": 672,
-      "height": 900,
-      "regions": 42,
-      "paintablePixels": 306237
+      "width": 896,
+      "height": 1200,
+      "regions": 48,
+      "paintablePixels": 543628
     },
     {
       "id": "vertical-22",
       "file": "vertical-22.png",
       "lineLayerFile": "vertical-22.png",
-      "width": 672,
-      "height": 900,
-      "regions": 505,
-      "paintablePixels": 219615
+      "width": 896,
+      "height": 1200,
+      "regions": 555,
+      "paintablePixels": 389381
     },
     {
       "id": "vertical-28",
       "file": "vertical-28.png",
       "lineLayerFile": "vertical-28.png",
-      "width": 672,
-      "height": 900,
-      "regions": 800,
-      "paintablePixels": 130726
+      "width": 896,
+      "height": 1200,
+      "regions": 977,
+      "paintablePixels": 230034
     },
     {
       "id": "vertical-29",
       "file": "vertical-29.png",
       "lineLayerFile": "vertical-29.png",
-      "width": 672,
-      "height": 900,
-      "regions": 204,
-      "paintablePixels": 339296
+      "width": 896,
+      "height": 1200,
+      "regions": 188,
+      "paintablePixels": 602870
     },
     {
       "id": "vertical-31",
       "file": "vertical-31.png",
       "lineLayerFile": "vertical-31.png",
-      "width": 672,
-      "height": 900,
-      "regions": 4009,
-      "paintablePixels": 264184
+      "width": 896,
+      "height": 1200,
+      "regions": 6564,
+      "paintablePixels": 472071
     },
     {
       "id": "vertical-34",
       "file": "vertical-34.png",
       "lineLayerFile": "vertical-34.png",
-      "width": 672,
-      "height": 900,
-      "regions": 144,
-      "paintablePixels": 270794
+      "width": 896,
+      "height": 1200,
+      "regions": 259,
+      "paintablePixels": 480861
     },
     {
       "id": "vertical-37",
       "file": "vertical-37.png",
       "lineLayerFile": "vertical-37.png",
-      "width": 672,
-      "height": 900,
-      "regions": 81,
-      "paintablePixels": 246111
+      "width": 896,
+      "height": 1200,
+      "regions": 110,
+      "paintablePixels": 436169
     },
     {
       "id": "vertical-38",
       "file": "vertical-38.png",
       "lineLayerFile": "vertical-38.png",
-      "width": 672,
-      "height": 900,
-      "regions": 629,
-      "paintablePixels": 258060
+      "width": 896,
+      "height": 1200,
+      "regions": 608,
+      "paintablePixels": 458084
     },
     {
       "id": "vertical-40",
       "file": "vertical-40.png",
       "lineLayerFile": "vertical-40.png",
-      "width": 672,
-      "height": 900,
-      "regions": 672,
-      "paintablePixels": 220096
+      "width": 896,
+      "height": 1200,
+      "regions": 946,
+      "paintablePixels": 390972
     },
     {
       "id": "vertical-41",
       "file": "vertical-41.png",
       "lineLayerFile": "vertical-41.png",
-      "width": 657,
-      "height": 900,
-      "regions": 32,
-      "paintablePixels": 259229
+      "width": 864,
+      "height": 1184,
+      "regions": 26,
+      "paintablePixels": 444347
     },
     {
       "id": "vertical-43",
       "file": "vertical-43.png",
       "lineLayerFile": "vertical-43.png",
-      "width": 672,
-      "height": 900,
+      "width": 896,
+      "height": 1200,
       "regions": 12,
-      "paintablePixels": 268091
+      "paintablePixels": 476417
     },
     {
       "id": "vertical-46",
       "file": "vertical-46.png",
       "lineLayerFile": "vertical-46.png",
-      "width": 672,
-      "height": 900,
-      "regions": 1015,
-      "paintablePixels": 211911
+      "width": 896,
+      "height": 1200,
+      "regions": 1435,
+      "paintablePixels": 373371
     },
     {
       "id": "vertical-48",
       "file": "vertical-48.png",
       "lineLayerFile": "vertical-48.png",
-      "width": 672,
-      "height": 900,
-      "regions": 617,
-      "paintablePixels": 220096
+      "width": 896,
+      "height": 1200,
+      "regions": 846,
+      "paintablePixels": 389292
     },
     {
       "id": "vertical-49",
       "file": "vertical-49.png",
       "lineLayerFile": "vertical-49.png",
-      "width": 672,
-      "height": 900,
-      "regions": 52,
-      "paintablePixels": 340296
+      "width": 896,
+      "height": 1200,
+      "regions": 53,
+      "paintablePixels": 597735
     },
     {
       "id": "vertical-50",
       "file": "vertical-50.png",
       "lineLayerFile": "vertical-50.png",
-      "width": 672,
-      "height": 900,
-      "regions": 1026,
-      "paintablePixels": 177701
+      "width": 896,
+      "height": 1200,
+      "regions": 1577,
+      "paintablePixels": 315271
     },
     {
       "id": "vertical-53",
       "file": "vertical-53.png",
       "lineLayerFile": "vertical-53.png",
-      "width": 672,
-      "height": 900,
-      "regions": 115,
-      "paintablePixels": 241260
+      "width": 896,
+      "height": 1200,
+      "regions": 161,
+      "paintablePixels": 429102
     },
     {
       "id": "vertical-54",
       "file": "vertical-54.png",
       "lineLayerFile": "vertical-54.png",
-      "width": 672,
-      "height": 900,
-      "regions": 1425,
-      "paintablePixels": 218846
+      "width": 896,
+      "height": 1200,
+      "regions": 3275,
+      "paintablePixels": 389751
     },
     {
       "id": "vertical-55",
       "file": "vertical-55.png",
       "lineLayerFile": "vertical-55.png",
-      "width": 672,
-      "height": 900,
-      "regions": 450,
-      "paintablePixels": 138385
+      "width": 896,
+      "height": 1200,
+      "regions": 668,
+      "paintablePixels": 245196
     },
     {
       "id": "vertical-58",
       "file": "vertical-58.png",
       "lineLayerFile": "vertical-58.png",
-      "width": 672,
-      "height": 900,
-      "regions": 828,
-      "paintablePixels": 142510
+      "width": 896,
+      "height": 1200,
+      "regions": 1083,
+      "paintablePixels": 250879
     },
     {
       "id": "vertical-59",
       "file": "vertical-59.png",
       "lineLayerFile": "vertical-59.png",
-      "width": 672,
-      "height": 900,
-      "regions": 462,
-      "paintablePixels": 155634
+      "width": 896,
+      "height": 1200,
+      "regions": 1010,
+      "paintablePixels": 276721
     },
     {
       "id": "vertical-60",
       "file": "vertical-60.png",
       "lineLayerFile": "vertical-60.png",
-      "width": 672,
-      "height": 900,
-      "regions": 39,
-      "paintablePixels": 297988
+      "width": 896,
+      "height": 1200,
+      "regions": 44,
+      "paintablePixels": 528257
     },
     {
       "id": "vertical-61",
       "file": "vertical-61.png",
       "lineLayerFile": "vertical-61.png",
-      "width": 672,
-      "height": 900,
-      "regions": 126,
-      "paintablePixels": 247495
+      "width": 896,
+      "height": 1200,
+      "regions": 151,
+      "paintablePixels": 437793
     },
     {
       "id": "vertical-62",
       "file": "vertical-62.png",
       "lineLayerFile": "vertical-62.png",
-      "width": 672,
-      "height": 900,
-      "regions": 275,
-      "paintablePixels": 269462
+      "width": 896,
+      "height": 1200,
+      "regions": 304,
+      "paintablePixels": 473606
     },
     {
       "id": "vertical-63",
       "file": "vertical-63.png",
       "lineLayerFile": "vertical-63.png",
-      "width": 672,
-      "height": 900,
-      "regions": 651,
-      "paintablePixels": 271261
+      "width": 896,
+      "height": 1200,
+      "regions": 764,
+      "paintablePixels": 481181
     },
     {
       "id": "vertical-64",
       "file": "vertical-64.png",
       "lineLayerFile": "vertical-64.png",
-      "width": 672,
-      "height": 900,
-      "regions": 500,
-      "paintablePixels": 227015
+      "width": 896,
+      "height": 1200,
+      "regions": 630,
+      "paintablePixels": 391709
     },
     {
       "id": "vertical-65",
       "file": "vertical-65.png",
       "lineLayerFile": "vertical-65.png",
-      "width": 672,
-      "height": 900,
-      "regions": 139,
-      "paintablePixels": 192271
+      "width": 896,
+      "height": 1200,
+      "regions": 137,
+      "paintablePixels": 341394
     },
     {
       "id": "vertical-66",
       "file": "vertical-66.png",
       "lineLayerFile": "vertical-66.png",
-      "width": 672,
-      "height": 900,
-      "regions": 634,
-      "paintablePixels": 231444
+      "width": 896,
+      "height": 1200,
+      "regions": 966,
+      "paintablePixels": 408752
     },
     {
       "id": "vertical-67",
       "file": "vertical-67.png",
       "lineLayerFile": "vertical-67.png",
-      "width": 672,
-      "height": 900,
-      "regions": 1242,
-      "paintablePixels": 217652
+      "width": 896,
+      "height": 1200,
+      "regions": 1756,
+      "paintablePixels": 384288
     },
     {
       "id": "vertical-68",
       "file": "vertical-68.png",
       "lineLayerFile": "vertical-68.png",
-      "width": 672,
-      "height": 900,
-      "regions": 411,
-      "paintablePixels": 199510
+      "width": 896,
+      "height": 1200,
+      "regions": 521,
+      "paintablePixels": 352042
     },
     {
       "id": "vertical-69",
       "file": "vertical-69.png",
       "lineLayerFile": "vertical-69.png",
-      "width": 672,
-      "height": 900,
-      "regions": 319,
-      "paintablePixels": 224470
+      "width": 896,
+      "height": 1200,
+      "regions": 425,
+      "paintablePixels": 396595
     },
     {
       "id": "vertical-70",
       "file": "vertical-70.png",
       "lineLayerFile": "vertical-70.png",
-      "width": 672,
-      "height": 900,
-      "regions": 106,
-      "paintablePixels": 243830
+      "width": 896,
+      "height": 1200,
+      "regions": 128,
+      "paintablePixels": 431895
     },
     {
       "id": "vertical-71",
       "file": "vertical-71.png",
       "lineLayerFile": "vertical-71.png",
-      "width": 672,
-      "height": 900,
-      "regions": 533,
-      "paintablePixels": 278647
+      "width": 896,
+      "height": 1200,
+      "regions": 637,
+      "paintablePixels": 489609
     },
     {
       "id": "vertical-72",
       "file": "vertical-72.png",
       "lineLayerFile": "vertical-72.png",
-      "width": 672,
-      "height": 900,
-      "regions": 474,
-      "paintablePixels": 230593
+      "width": 896,
+      "height": 1200,
+      "regions": 481,
+      "paintablePixels": 404619
     }
   ]
 }

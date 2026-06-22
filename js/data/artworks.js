@@ -1,4 +1,4 @@
-var ARTWORK_VERSION = '22';
+var ARTWORK_VERSION = '23';
 var ARTWORK_SAVE_VERSION = '20';
 var ARTWORK_IDS = [
   '15', '17', '40', '43', '11', '50', '41', '59', '46', '29',

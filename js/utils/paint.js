@@ -23,6 +23,7 @@
   const VISUAL_HOLE_FILL_MIN_NEIGHBORS = 5;
   const VISUAL_HOLE_FILL_PAINTABLE_MIN_NEIGHBORS = 8;
   const VISUAL_HOLE_FILL_MAX_COLOR_DISTANCE = 42;
+  const PAINT_FRAME_MAX_SIDE = 1500;
   const {
     MIN_VISIBLE_ALPHA,
     LINE_ALPHA_WHITE_POINT,
@@ -741,7 +742,7 @@
     const innerHeight = Math.max(1, height - pad * 2);
     const layoutScale = layout && layout.scale ? layout.scale : 1;
     const paintPad = mode === "paint" ? 0 : 0;
-    const paintMaxSide = Math.min(900, Math.max(width, height));
+    const paintMaxSide = Math.min(PAINT_FRAME_MAX_SIDE, Math.max(width, height));
     const outputScale = mode === "paint" ? (paintMaxSide - paintPad * 2) / Math.max(sourceW, sourceH) : 1;
     const outputWidth = mode === "paint" ? Math.max(1, Math.round(sourceW * outputScale) + paintPad * 2) : width;
     const outputHeight = mode === "paint" ? Math.max(1, Math.round(sourceH * outputScale) + paintPad * 2) : height;
