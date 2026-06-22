@@ -85,10 +85,20 @@
 
   function normalizeUndoHistory(history) {
     if (!Array.isArray(history)) return { value: [], changed: history !== undefined };
-    const next = history.filter((item) => Array.isArray(item));
+    let changed = false;
+    const next = [];
+    history.forEach((item) => {
+      if (!Array.isArray(item)) {
+        changed = true;
+        return;
+      }
+      const normalized = normalizeFills(item);
+      next.push(normalized.value);
+      if (normalized.changed) changed = true;
+    });
     return {
-      value: next.length === history.length ? history : next,
-      changed: next.length !== history.length
+      value: changed ? next : history,
+      changed
     };
   }
 
