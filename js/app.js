@@ -554,9 +554,10 @@ if (window.__COLORING_TEST_HOOKS__) {
 }
 const finishedThumbCache = new Map();
 const FINISHED_THUMB_CACHE_LIMIT = 48;
+const FINISHED_THUMB_FRAME_MODE = "paint";
 function getFinishedThumbCacheKey(art, limit) {
   if (!art) return "";
-  return `${art.id || ""}@${art.version || ""}@${art.src || ""}:${limit}`;
+  return `${art.id || ""}@${art.version || ""}@${art.src || ""}:${FINISHED_THUMB_FRAME_MODE}:${limit}`;
 }
 
 function cloneShowcaseFills(fills) {
@@ -576,6 +577,7 @@ if (window.__COLORING_TEST_HOOKS__) {
   window.__COLORING_TEST_HOOKS__.getFinishedThumbCacheKey = getFinishedThumbCacheKey;
   window.__COLORING_TEST_HOOKS__.rememberFinishedThumbFills = rememberFinishedThumbFills;
   window.__COLORING_TEST_HOOKS__.getCachedFinishedThumbFills = getCachedFinishedThumbFills;
+  window.__COLORING_TEST_HOOKS__.getFinishedThumbFrameMode = () => FINISHED_THUMB_FRAME_MODE;
   window.__COLORING_TEST_HOOKS__.getFinishedThumbCacheLimit = () => FINISHED_THUMB_CACHE_LIMIT;
   window.__COLORING_TEST_HOOKS__.getFinishedThumbCacheSize = () => finishedThumbCache.size;
 }
@@ -608,7 +610,7 @@ function FinishedThumb({ art, className = "", limit = 80 }) {
     rememberFinishedThumbFills(cacheKey, next);
     setFills(cloneShowcaseFills(next));
   }, [cacheKey, limit]);
-  return /* @__PURE__ */ React.createElement("div", { className: "finished-thumb " + className }, ready ? /* @__PURE__ */ React.createElement(CanvasArt, { art, fills, interactive: false, onRegionsChange: handleRegionsChange }) : /* @__PURE__ */ React.createElement(ArtworkImage, { art, priority: true }));
+  return /* @__PURE__ */ React.createElement("div", { className: "finished-thumb " + className }, ready ? /* @__PURE__ */ React.createElement(CanvasArt, { art, fills, interactive: false, frameMode: FINISHED_THUMB_FRAME_MODE, onRegionsChange: handleRegionsChange }) : /* @__PURE__ */ React.createElement(ArtworkImage, { art, priority: true }));
 }
 // Artwork data is loaded from js/data/artworks.js.
 function getArtworkById(id) {

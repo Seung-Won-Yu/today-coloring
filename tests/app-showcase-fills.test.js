@@ -108,6 +108,7 @@ async function run() {
   assert.strictEqual(typeof hooks.getFinishedThumbCacheKey, "function");
   assert.strictEqual(typeof hooks.rememberFinishedThumbFills, "function");
   assert.strictEqual(typeof hooks.getCachedFinishedThumbFills, "function");
+  assert.strictEqual(typeof hooks.getFinishedThumbFrameMode, "function");
   assert.strictEqual(typeof hooks.getFinishedThumbCacheLimit, "function");
   assert.strictEqual(typeof hooks.getFinishedThumbCacheSize, "function");
   assert.strictEqual(typeof hooks.getPaintLayerStateCacheKey, "function");
@@ -162,6 +163,8 @@ async function run() {
   const firstThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "20", src: "art.webp?v=20" }, 80);
   const nextThumbKey = hooks.getFinishedThumbCacheKey({ id: "vertical-40", version: "21", src: "art.webp?v=21" }, 80);
   assert.notStrictEqual(firstThumbKey, nextThumbKey, "finished thumbnail cache keys should include artwork version changes");
+  assert.strictEqual(hooks.getFinishedThumbFrameMode(), "paint", "finished showcase thumbnails should use paint-frame precomputed maps");
+  assert(firstThumbKey.includes(":paint:"), "finished thumbnail cache keys should include the frame mode");
 
   const thumbFills = [{ x: 1, y: 2, color: "#ABCDEF", v: 2 }];
   hooks.rememberFinishedThumbFills(firstThumbKey, thumbFills);
