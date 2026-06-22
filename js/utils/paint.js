@@ -111,6 +111,7 @@
   function doFloodFill(imageData, startX, startY, fillColor, tolerance = 95, baseData = null) {
     const width = imageData.width;
     const height = imageData.height;
+    if (!Number.isInteger(startX) || !Number.isInteger(startY)) return null;
     if (startX < 0 || startX >= width || startY < 0 || startY >= height) return null;
     const data = imageData.data;
     const getPixelIndex = (x, y) => (y * width + x) * 4;

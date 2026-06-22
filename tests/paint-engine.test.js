@@ -75,6 +75,16 @@ function run() {
   assert.strictEqual(PaintEngine.isLinePixelColor(blueSky[0], blueSky[1], blueSky[2], blueSky[3]), false);
   assert.strictEqual(PaintEngine.isLinePixelColor(24, 24, 24, 255), true);
 
+  const invalidSeedLayer = PaintEngine.createFillLayerImageData(base.width, base.height);
+  const invalidSeedResult = PaintEngine.paintFillLayerSeed(invalidSeedLayer, base.data, { x: NaN, y: 1 }, fillColor);
+  assert.strictEqual(invalidSeedResult, null);
+  assert.deepStrictEqual(pixelAt(invalidSeedLayer, 0, 0), [0, 0, 0, 0]);
+
+  const invalidDirectLayer = PaintEngine.createFillLayerImageData(base.width, base.height);
+  const invalidDirectResult = PaintEngine.doFloodFill(invalidDirectLayer, NaN, 1, fillColor);
+  assert.strictEqual(invalidDirectResult, null);
+  assert.deepStrictEqual(pixelAt(invalidDirectLayer, 0, 0), [0, 0, 0, 0]);
+
   const fillLayer = PaintEngine.createFillLayerImageData(base.width, base.height);
   const result = PaintEngine.paintFillLayerSeed(fillLayer, base.data, { x: 0, y: 1 }, fillColor);
   assert(result);
