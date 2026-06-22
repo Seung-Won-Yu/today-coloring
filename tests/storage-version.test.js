@@ -52,8 +52,8 @@ function run() {
     sori_progress_v12: JSON.stringify({
       "vertical-15": { fills: [{ x: 1, y: 1, color: "#fff" }], artworkVersion: "old" },
       "vertical-17": {
-        fills: [{ x: 2, y: 2, color: "#000" }, { x: "bad", y: 4, color: "#123456" }, { x: 4, y: 4, color: "red" }],
-        undoHistory: [[{ x: 1, y: 1, color: "#fff" }, { x: 1, y: "bad", color: "#fff" }, { x: 1, y: 1, color: "white" }], "bad-history", []],
+        fills: [{ x: 2, y: 2, color: "#000" }, { x: "bad", y: 4, color: "#123456" }, { x: 4, y: 4, color: "red" }, { x: -1, y: 2, color: "#123456" }, { x: 2.5, y: 2, color: "#123456" }],
+        undoHistory: [[{ x: 1, y: 1, color: "#fff" }, { x: 1, y: "bad", color: "#fff" }, { x: 1, y: 1, color: "white" }, { x: -1, y: 1, color: "#fff" }, { x: 1.5, y: 1, color: "#fff" }], "bad-history", []],
         artworkVersion: "20"
       },
       "vertical-40": [{ x: 3, y: 3, color: "#f00" }],

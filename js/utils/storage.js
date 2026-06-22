@@ -62,8 +62,10 @@
   function isValidFill(fill) {
     return Boolean(
       fill &&
-      Number.isFinite(fill.x) &&
-      Number.isFinite(fill.y) &&
+      Number.isInteger(fill.x) &&
+      fill.x >= 0 &&
+      Number.isInteger(fill.y) &&
+      fill.y >= 0 &&
       typeof fill.color === "string" &&
       /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(fill.color)
     );
