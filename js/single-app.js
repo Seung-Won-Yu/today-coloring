@@ -56,6 +56,10 @@
     return [];
   }
 
+  function getAutoReturnSeconds(modeConfig) {
+    return Math.ceil((modeConfig.autoReturnMs || 25000) / 1000);
+  }
+
   function chooseArtwork(modeConfig) {
     const params = getParams();
     const artworks = window.ARTWORKS || [];
@@ -118,9 +122,14 @@
     );
   }
 
-  function SingleCompletion({ art, fills, saved, remainingSeconds, returning, onSave, onMore, onReturn }) {
+  function SingleCompletion({ art, fills, saved, remainingSeconds, returning, onSave, onMore, onReturn, onTimerInteract }) {
     const fillCount = Array.isArray(fills) ? fills.length : 0;
-    return e("main", { className: "single-completion" },
+    const handlePointerDown = (event) => {
+      const target = event.target;
+      if (target && target.closest && target.closest("[data-immediate-return='true']")) return;
+      onTimerInteract();
+    };
+    return e("main", { className: "single-completion", onPointerDownCapture: handlePointerDown },
       e(Confetti, null),
       e("div", { className: "single-completion__frame", "aria-label": "완성 작품" },
         e(CanvasArt, { art, fills, interactive: false, frameMode: "paint" })
@@ -147,7 +156,7 @@
               e(Icon, { name: "pencil", size: 22 }),
               e("span", null, "더 칠하기")
             ),
-            e("button", { type: "button", className: "single-completion__secondary", onClick: onReturn, disabled: returning },
+            e("button", { type: "button", className: "single-completion__secondary", onClick: onReturn, disabled: returning, "data-immediate-return": "true" },
               e(Icon, { name: "home", size: 22 }),
               e("span", null, "지금 돌아가기")
             )
@@ -171,7 +180,9 @@
     const [history, setHistory] = React.useState(createEmptyHistory);
     const [selected, setSelected] = React.useState((window.PALETTE && window.PALETTE[0] && window.PALETTE[0].c) || "#E0584F");
     const [saved, setSaved] = React.useState(false);
-    const [remainingSeconds, setRemainingSeconds] = React.useState(Math.ceil((modeConfig.autoReturnMs || 10000) / 1000));
+    const autoReturnSeconds = React.useMemo(() => getAutoReturnSeconds(modeConfig), [modeConfig]);
+    const [remainingSeconds, setRemainingSeconds] = React.useState(autoReturnSeconds);
+    const [autoReturnResetToken, setAutoReturnResetToken] = React.useState(0);
     const [returning, setReturning] = React.useState(false);
     const [toast, setToast] = React.useState("");
     const sentRef = React.useRef(false);
@@ -211,6 +222,12 @@
       sendSessionEnd(reason, { completed: true, abandoned: false });
     }, [returning, sendSessionEnd]);
 
+    const resetAutoReturnTimer = React.useCallback(() => {
+      if (screen !== "done" || returning) return;
+      setRemainingSeconds(autoReturnSeconds);
+      setAutoReturnResetToken((token) => token + 1);
+    }, [autoReturnSeconds, returning, screen]);
+
     React.useEffect(() => {
       if (!art) return;
       rememberRecentId(art.id, 5);
@@ -247,7 +264,7 @@
         });
       }, 1000);
       return () => window.clearInterval(timer);
-    }, [screen, returning, returnToHost]);
+    }, [screen, returning, returnToHost, autoReturnResetToken]);
 
     if (!art) {
       return e("div", { className: "app single-app" },
@@ -270,7 +287,7 @@
         flash("한 칸 이상 색칠한 뒤 완성할 수 있어요");
         return;
       }
-      setRemainingSeconds(Math.ceil((modeConfig.autoReturnMs || 10000) / 1000));
+      setRemainingSeconds(autoReturnSeconds);
       setScreen("done");
     };
 
@@ -278,7 +295,8 @@
       try {
         await downloadCanvasPng(art, fills);
         setSaved(true);
-        setRemainingSeconds(Math.ceil((modeConfig.autoReturnMs || 10000) / 1000));
+        setRemainingSeconds(autoReturnSeconds);
+        setAutoReturnResetToken((token) => token + 1);
         flash("이미지를 저장했어요");
       } catch (_) {
         flash("저장에 실패했어요");
@@ -315,7 +333,8 @@
         returning,
         onSave: save,
         onMore: more,
-        onReturn: () => returnToHost("manual_return")
+        onReturn: () => returnToHost("manual_return"),
+        onTimerInteract: resetAutoReturnTimer
       }),
       toast && e("div", { className: "single-toast" }, toast)
     );

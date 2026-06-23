@@ -10,39 +10,23 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="msapplication-TileColor" content="#FAF8F5">
-<link rel="manifest" href="manifest.webmanifest?v=5">
-<link rel="icon" sizes="512x512" href="assets/icons/app-icon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest?v=220">
+<link rel="icon" sizes="512x512" href="assets/icons/app-icon.png?v=220">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png?v=220">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=170">
+<link rel="stylesheet" href="css/styles.css?v=220">
 </head>
 <body>
 <div id="root"></div>
 <script>
-  // 앱 버전 변경 시 localStorage 초기화 (이전 테스트 데이터 제거)
-  (function() {
-    var APP_VER = 'v11.0';
-    try {
-      if (localStorage.getItem('sori_app_ver') !== APP_VER) {
-        Object.keys(localStorage).forEach(function(key) {
-          if (key.indexOf('sori_progress_') === 0 || key.indexOf('sori_gallery_') === 0) {
-            localStorage.removeItem(key);
-          }
-        });
-        localStorage.setItem('sori_app_ver', APP_VER);
-      }
-    } catch (_) {
-      // 저장소가 막힌 WebView/브라우저에서도 앱 부팅은 계속한다.
-    }
-  })();
-</script>
-<script>
   (function() {
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('./sw.js?v=219').catch(function() {});
+      navigator.serviceWorker.register('./sw.js?v=220').catch(function() {});
     });
   })();
 </script>
@@ -50,14 +34,14 @@
 <!-- Vendor JS -->
 <script src="js/vendor/react.production.min.js"></script>
 <script src="js/vendor/react-dom.production.min.js"></script>
-<script src="js/data/artworks.js?v=37"></script>
-<script src="js/data/palette.js?v=3"></script>
-<script src="js/utils/storage.js?v=28"></script>
-<script src="js/utils/paint.js?v=43"></script>
-<script src="js/utils/assets.js?v=17"></script>
-<script src="js/utils/save-image.js?v=1"></script>
-<script src="js/ui/components.js?v=17"></script>
+<script src="js/data/artworks.js?v=220"></script>
+<script src="js/data/palette.js?v=220"></script>
+<script src="js/utils/storage.js?v=220"></script>
+<script src="js/utils/paint.js?v=220"></script>
+<script src="js/utils/assets.js?v=220"></script>
+<script src="js/utils/save-image.js?v=220"></script>
+<script src="js/ui/components.js?v=220"></script>
 
-<script src="js/app.js?v=104"></script>
+<script src="js/app.js?v=220"></script>
 </body>
 </html>

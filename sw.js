@@ -1,39 +1,48 @@
-const CACHE_NAME = 'today-coloring-shell-v219';
-const APP_SHELL = [
+const CACHE_VERSION = '220';
+const CACHE_NAME = 'today-coloring-shell-v' + CACHE_VERSION;
+const APP_PAGES = [
   './',
   './index.html',
-  './single.html',
-  './manifest.webmanifest?v=5',
+  './single.html'
+];
+const APP_ASSETS = [
+  './manifest.webmanifest',
   './assets/icons/app-icon.png',
   './assets/icons/app-icon-192.png',
   './assets/icons/apple-touch-icon.png',
-  './css/styles.css?v=170',
-  './css/foundation/base.css?v=2',
+  './css/styles.css',
+  './css/foundation/base.css',
   './css/screens/artworks/base.css',
   './css/screens/coloring/base.css',
   './css/components/guide-navigation.css',
-  './css/screens/guide/modal.css?v=2',
+  './css/screens/guide/modal.css',
   './css/responsive/mobile-shell.css',
   './css/screens/artworks/showcase.css',
   './css/components/canvas-feedback.css',
   './css/screens/artworks/cards.css',
   './css/screens/completion/reward.css',
-  './css/screens/single/base.css?v=6',
-  './css/theme/premium-book.css?v=26',
-  './css/screens/lobby/landing.css?v=3',
+  './css/screens/single/base.css',
+  './css/theme/premium-book.css',
+  './css/screens/lobby/landing.css',
   './js/vendor/react.production.min.js',
   './js/vendor/react-dom.production.min.js',
-  './js/data/artworks.js?v=37',
-  './js/data/palette.js?v=3',
-  './js/utils/storage.js?v=28',
-  './js/utils/paint.js?v=43',
-  './js/utils/assets.js?v=17',
-  './js/utils/save-image.js?v=1',
-  './js/ui/components.js?v=17',
-  './js/app.js?v=104',
-  './js/data/modes.js?v=3',
-  './js/single-app.js?v=10'
+  './js/data/artworks.js',
+  './js/data/palette.js',
+  './js/utils/storage.js',
+  './js/utils/paint.js',
+  './js/utils/assets.js',
+  './js/utils/save-image.js',
+  './js/ui/components.js',
+  './js/app.js',
+  './js/data/modes.js',
+  './js/single-app.js'
 ];
+
+function withCacheVersion(url) {
+  return url + (url.indexOf('?') === -1 ? '?v=' : '&v=') + CACHE_VERSION;
+}
+
+const APP_SHELL = APP_PAGES.concat(APP_ASSETS.map(withCacheVersion));
 
 self.addEventListener('install', function(event) {
   self.skipWaiting();

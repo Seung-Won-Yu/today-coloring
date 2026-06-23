@@ -139,16 +139,17 @@ function Palette({ selected, onSelect, layout }) {
     onTouchCancel: stopDragging
   }, PALETTE.map((p) => {
     const on = selected === p.c;
+    const light = isLight(p.c);
     return /* @__PURE__ */ React.createElement(
       "button",
       {
         key: p.c,
         type: "button",
         "data-palette-color": p.c,
-        className: "swatch" + (on ? " swatch--on" : ""),
+        className: "swatch" + (light ? " swatch--light" : "") + (on ? " swatch--on" : ""),
         style: {
           background: p.c,
-          borderColor: isLight(p.c) ? "rgba(74,64,54,.35)" : "transparent"
+          borderColor: light ? "rgba(74,56,30,.62)" : "rgba(255,255,255,.92)"
         },
         onPointerDown: () => {
           isDraggingRef.current = true;
@@ -160,7 +161,7 @@ function Palette({ selected, onSelect, layout }) {
         onClick: () => onSelect(p.c),
         "aria-label": p.name
       },
-      on && /* @__PURE__ */ React.createElement("span", { className: "swatch__check", style: { color: isLight(p.c) ? "#4A4036" : "#fff" } }, "\u2713")
+      on && /* @__PURE__ */ React.createElement("span", { className: "swatch__check", style: { color: light ? "#33291F" : "#fff" } }, "\u2713")
     );
   })),
     !side && /* @__PURE__ */ React.createElement("button", {

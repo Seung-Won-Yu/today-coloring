@@ -697,7 +697,48 @@
     return findThinGapFillPixel(fillData, baseData, width, height, x, y, VISUAL_THIN_GAP_FILL_RADIUS);
   }
 
-  function composePaintLayers(baseImageData, fillLayerImageData, lineLayerImageData = null) {
+  function isSameImageSize(a, b) {
+    return Boolean(a && b && a.width === b.width && a.height === b.height && a.data && b.data);
+  }
+
+  function getComposeBounds(bounds, width, height) {
+    if (!bounds || !Number.isFinite(bounds.minX) || !Number.isFinite(bounds.minY) || !Number.isFinite(bounds.maxX) || !Number.isFinite(bounds.maxY)) return null;
+    const pad = Math.max(VISUAL_FILL_UNDER_LINE_RADIUS, VISUAL_HOLE_FILL_RADIUS, VISUAL_THIN_GAP_FILL_RADIUS) + 2;
+    const minX = Math.max(0, Math.floor(bounds.minX) - pad);
+    const minY = Math.max(0, Math.floor(bounds.minY) - pad);
+    const maxX = Math.min(width - 1, Math.ceil(bounds.maxX) + pad);
+    const maxY = Math.min(height - 1, Math.ceil(bounds.maxY) + pad);
+    if (maxX < minX || maxY < minY) return null;
+    return { minX, minY, maxX, maxY };
+  }
+
+  function composePaintPixel(outputData, baseData, fillData, lineData, width, height, pixelOffset) {
+    const idx = pixelOffset * 4;
+    const lineAlpha = lineData[idx + 3] / 255;
+    const fillIdx = getVisualFillPixelIndex(fillData, lineData, baseData, width, height, pixelOffset);
+    if (fillIdx < 0) {
+      outputData[idx] = baseData[idx];
+      outputData[idx + 1] = baseData[idx + 1];
+      outputData[idx + 2] = baseData[idx + 2];
+      outputData[idx + 3] = baseData[idx + 3] || 255;
+      return;
+    }
+    const fillAlpha = fillData[fillIdx + 3] / 255;
+    let r = Math.round(fillData[fillIdx] * fillAlpha + 255 * (1 - fillAlpha));
+    let g = Math.round(fillData[fillIdx + 1] * fillAlpha + 255 * (1 - fillAlpha));
+    let b = Math.round(fillData[fillIdx + 2] * fillAlpha + 255 * (1 - fillAlpha));
+    if (lineAlpha > 0) {
+      r = Math.round(r * (1 - lineAlpha));
+      g = Math.round(g * (1 - lineAlpha));
+      b = Math.round(b * (1 - lineAlpha));
+    }
+    outputData[idx] = r;
+    outputData[idx + 1] = g;
+    outputData[idx + 2] = b;
+    outputData[idx + 3] = 255;
+  }
+
+  function composePaintLayers(baseImageData, fillLayerImageData, lineLayerImageData = null, options = {}) {
     const width = baseImageData.width;
     const height = baseImageData.height;
     const fillData = fillLayerImageData.data;
@@ -706,33 +747,19 @@
     if (!hasAnyVisibleFill(fillData)) {
       return createImageDataLike(width, height, new Uint8ClampedArray(baseData));
     }
-    const data = new Uint8ClampedArray(width * height * 4);
-    for (let idx = 0, pixelOffset = 0; idx < data.length; idx += 4, pixelOffset++) {
-      const lineAlpha = lineData[idx + 3] / 255;
-      const fillIdx = getVisualFillPixelIndex(fillData, lineData, baseData, width, height, pixelOffset);
-      if (fillIdx < 0) {
-        data[idx] = baseData[idx];
-        data[idx + 1] = baseData[idx + 1];
-        data[idx + 2] = baseData[idx + 2];
-        data[idx + 3] = baseData[idx + 3] || 255;
-        continue;
+    const previous = isSameImageSize(options.previousImageData, baseImageData) ? options.previousImageData : null;
+    const bounds = previous ? getComposeBounds(options.bounds, width, height) : null;
+    const data = previous ? new Uint8ClampedArray(previous.data) : new Uint8ClampedArray(width * height * 4);
+    if (bounds) {
+      for (let y = bounds.minY; y <= bounds.maxY; y++) {
+        for (let x = bounds.minX; x <= bounds.maxX; x++) {
+          composePaintPixel(data, baseData, fillData, lineData, width, height, y * width + x);
+        }
       }
-      const fillAlpha = fillData[fillIdx + 3] / 255;
-      const baseR = 255;
-      const baseG = 255;
-      const baseB = 255;
-      let r = Math.round(fillData[fillIdx] * fillAlpha + baseR * (1 - fillAlpha));
-      let g = Math.round(fillData[fillIdx + 1] * fillAlpha + baseG * (1 - fillAlpha));
-      let b = Math.round(fillData[fillIdx + 2] * fillAlpha + baseB * (1 - fillAlpha));
-      if (lineAlpha > 0) {
-        r = Math.round(r * (1 - lineAlpha));
-        g = Math.round(g * (1 - lineAlpha));
-        b = Math.round(b * (1 - lineAlpha));
+    } else {
+      for (let pixelOffset = 0; pixelOffset < width * height; pixelOffset++) {
+        composePaintPixel(data, baseData, fillData, lineData, width, height, pixelOffset);
       }
-      data[idx] = r;
-      data[idx + 1] = g;
-      data[idx + 2] = b;
-      data[idx + 3] = 255;
     }
     return createImageDataLike(width, height, data);
   }

@@ -236,7 +236,7 @@ function renderImageDataToCanvas(canvas, imageData, options = {}) {
 }
 
 function renderComposedPaintFrame(canvas, baseImgData, fillLayer, lineLayer, options = {}) {
-  const composed = composePaintLayers(baseImgData, fillLayer, lineLayer);
+  const composed = composePaintLayers(baseImgData, fillLayer, lineLayer, options);
   renderImageDataToCanvas(canvas, composed, options);
   return composed;
 }
@@ -278,8 +278,10 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   const baseImageDataRef = React.useRef(null);
   const lineLayerImageDataRef = React.useRef(null);
   const fillLayerImageDataRef = React.useRef(null);
+  const composedImageDataRef = React.useRef(null);
   const progressImageDataRef = React.useRef(null);
   const regionMapRef = React.useRef(null);
+  const lastRenderedPaintKeyRef = React.useRef("");
   const fillsArray = Array.isArray(fills) ? fills : [];
   const regionsRef = React.useRef(null);
   const frameRef = React.useRef(null);
@@ -293,8 +295,10 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     baseImageDataRef.current = null;
     lineLayerImageDataRef.current = null;
     fillLayerImageDataRef.current = null;
+    composedImageDataRef.current = null;
     progressImageDataRef.current = null;
     regionMapRef.current = null;
+    lastRenderedPaintKeyRef.current = "";
     lastArtSrcRef.current = art.src;
   }
   const publishRegions = (regions) => {
@@ -392,9 +396,11 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
       cacheKey,
       () => buildPaintLayerState(baseImgData, fillsArray, frameRef.current, regionMapRef.current)
     );
-    renderComposedPaintFrame(canvasRef.current, baseImgData, fillLayer, lineLayer, { smoothToDisplay: true });
+    if (lastRenderedPaintKeyRef.current === cacheKey && composedImageDataRef.current) return;
+    composedImageDataRef.current = renderComposedPaintFrame(canvasRef.current, baseImgData, fillLayer, lineLayer, { smoothToDisplay: true });
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
+    lastRenderedPaintKeyRef.current = cacheKey;
   };
   React.useEffect(() => {
     if (!canvasRef.current || !baseImageDataRef.current) return;
@@ -479,16 +485,34 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     let fillLayer = cachedFillLayer && cachedFillLayer.width === cw && cachedFillLayer.height === ch
       ? cloneFillLayerImageData(cachedFillLayer)
       : buildPaintLayerState(baseImgData, fillsArray, frameRef.current, regionMap).fillLayer;
+    let dirtyBounds = null;
+    const includeDirtyBounds = (bounds) => {
+      if (!bounds) return;
+      if (!dirtyBounds) {
+        dirtyBounds = { minX: bounds.minX, minY: bounds.minY, maxX: bounds.maxX, maxY: bounds.maxY };
+        return;
+      }
+      dirtyBounds.minX = Math.min(dirtyBounds.minX, bounds.minX);
+      dirtyBounds.minY = Math.min(dirtyBounds.minY, bounds.minY);
+      dirtyBounds.maxX = Math.max(dirtyBounds.maxX, bounds.maxX);
+      dirtyBounds.maxY = Math.max(dirtyBounds.maxY, bounds.maxY);
+    };
     directPaintSeeds.forEach((seed) => {
       const mappedBounds = regionMap ? paintRegionMapSeed(fillLayer, regionMap, seed, selectedRgb) : null;
-      if (!mappedBounds) paintFillLayerSeed(fillLayer, baseImgData.data, seed, selectedRgb);
+      includeDirtyBounds(mappedBounds || paintFillLayerSeed(fillLayer, baseImgData.data, seed, selectedRgb));
     });
     const lineLayer = lineLayerImageDataRef.current || buildLineLayerImageData(baseImgData);
     lineLayerImageDataRef.current = lineLayer;
-    renderComposedPaintFrame(canvasRef.current, baseImgData, fillLayer, lineLayer, { smoothToDisplay: true });
+    composedImageDataRef.current = renderComposedPaintFrame(canvasRef.current, baseImgData, fillLayer, lineLayer, {
+      smoothToDisplay: true,
+      bounds: dirtyBounds,
+      previousImageData: composedImageDataRef.current
+    });
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
-    rememberPaintLayerState(getPaintLayerStateCacheKey(art, frameMode, cw, ch, nextFills), { fillLayer, progressImgData });
+    const nextCacheKey = getPaintLayerStateCacheKey(art, frameMode, cw, ch, nextFills);
+    rememberPaintLayerState(nextCacheKey, { fillLayer, progressImgData });
+    lastRenderedPaintKeyRef.current = nextCacheKey;
     onPaint(nextFills);
     if (paintFeedback) {
       const pulse = { id: Date.now(), x: paintX / cw * 100, y: paintY / ch * 100 };
