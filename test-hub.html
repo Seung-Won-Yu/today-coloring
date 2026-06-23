@@ -397,7 +397,7 @@
   <header class="hub__header">
     <div class="hub__title">
       <h1>오늘의 색칠 테스트 허브</h1>
-      <span>알림·케어 모드를 호스트 없이 실행하고 payload를 확인합니다.</span>
+      <span>표준·알림·케어 모드를 호스트 없이 실행하고 payload를 확인합니다.</span>
     </div>
     <span class="hub__status" id="status">대기 중</span>
   </header>
@@ -411,6 +411,7 @@
         <div class="field">
           <label for="mode">모드</label>
           <select id="mode">
+            <option value="standard">standard</option>
             <option value="reminder">reminder</option>
             <option value="care">care</option>
             <option value="notification">notification</option>
@@ -424,7 +425,7 @@
             <option value="normal">normal</option>
             <option value="hard">hard</option>
           </select>
-          <span class="hint" id="difficultyHint">reminder는 자동이면 전체 도안에서 선택합니다.</span>
+          <span class="hint" id="difficultyHint">reminder/notification은 도안 미지정 시 난이도 기준으로 랜덤 선택합니다.</span>
         </div>
         <div class="field">
           <label for="art">도안 직접 지정</label>
@@ -494,7 +495,7 @@
               <span class="label">보내는 값(IN)</span>
               <button type="button" class="subtle" id="copyUrlBtn">URL 복사</button>
             </div>
-            <div class="url" id="urlPreview">single.html?mode=reminder</div>
+            <div class="url" id="urlPreview">index.html?mode=standard</div>
           </div>
           <div class="kv" id="paramsTable"></div>
           <div class="codebox">
@@ -607,6 +608,16 @@
   }
 
   function currentModeConfig() {
+    if (el.mode.value === "standard") {
+      return {
+        id: "standard",
+        title: "표준 색칠",
+        selectionPolicy: "standard",
+        minPaintedToFinish: null,
+        autoReturnMs: null,
+        returnToHost: false
+      };
+    }
     var modes = window.COLORING_MODES || {};
     return modes[el.mode.value] || modes.reminder || {};
   }
@@ -614,6 +625,10 @@
   function buildParams(includeCacheBuster) {
     var params = new URLSearchParams();
     params.set("mode", el.mode.value);
+    if (el.mode.value === "standard") {
+      if (includeCacheBuster) params.set("_t", String(Date.now()));
+      return params;
+    }
     if (el.mode.value !== "care" && el.difficulty.value) params.set("difficulty", el.difficulty.value);
     if (el.sessionId.value.trim()) params.set("session_id", el.sessionId.value.trim());
     if (el.contentId.value.trim()) params.set("content_id", el.contentId.value.trim());
@@ -624,7 +639,8 @@
   }
 
   function buildUrl(includeCacheBuster) {
-    return "single.html?" + buildParams(includeCacheBuster).toString();
+    var base = el.mode.value === "standard" ? "index.html" : "single.html";
+    return base + "?" + buildParams(includeCacheBuster).toString();
   }
 
   function renderKeyValues(target, rows) {
@@ -646,10 +662,19 @@
 
   function updateDifficultyState() {
     var isCare = el.mode.value === "care";
-    el.difficulty.disabled = isCare;
-    el.difficultyHint.textContent = isCare
+    var isStandard = el.mode.value === "standard";
+    el.difficulty.disabled = isCare || isStandard;
+    el.art.disabled = isStandard;
+    el.sessionId.disabled = isStandard;
+    el.contentId.disabled = isStandard;
+    el.gameKey.disabled = isStandard;
+    el.difficultyHint.textContent = isStandard
+      ? "standard는 기존 목록 화면(index.html)을 열며, 난이도/도안 자동 선택은 적용하지 않습니다."
+      : isCare
       ? "care는 easy 도안 풀로 고정됩니다."
-      : "reminder/notification은 자동이면 전체 도안에서 선택합니다.";
+      : el.difficulty.value
+      ? "도안을 비워두면 선택한 난이도 안에서 랜덤으로 1장을 실행합니다."
+      : "난이도 자동이면 전체 도안 중 랜덤으로 1장을 실행합니다.";
   }
 
   function renderInputPanel() {
@@ -668,8 +693,9 @@
       aliasOf: el.mode.value === "notification" ? "reminder" : undefined
     }, null, 2);
     renderKeyValues(el.paramsTable, [
+      { label: "entry", value: el.mode.value === "standard" ? "index.html" : "single.html" },
       { label: "mode", value: params.get("mode") },
-      { label: "difficulty", value: params.get("difficulty") || (el.mode.value === "care" ? "easy 고정" : "") },
+      { label: "difficulty", value: el.mode.value === "standard" ? "표준모드 미적용" : params.get("difficulty") || (el.mode.value === "care" ? "easy 고정" : "전체 랜덤") },
       { label: "session_id", value: params.get("session_id") },
       { label: "content_id", value: params.get("content_id") },
       { label: "game_key", value: params.get("game_key") },
