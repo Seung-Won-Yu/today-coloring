@@ -1,6 +1,6 @@
 # 오늘의 색칠
 
-정적 웹으로 실행되는 컬러링 게임입니다. 별도 빌드 없이 `index.html`을 기준으로 실행되며, GitHub Pages에 바로 배포됩니다.
+정적 웹으로 실행되는 컬러링 게임입니다. 별도 빌드 없이 HTML/CSS/JS 파일만으로 실행되며, GitHub Pages에 바로 배포됩니다.
 
 **실행 주소:** [https://seung-won-yu.github.io/today-coloring/](https://seung-won-yu.github.io/today-coloring/)
 
@@ -12,7 +12,26 @@
 python3 -m http.server 8002
 ```
 
-브라우저에서 `http://localhost:8002`로 접속합니다.
+브라우저에서 아래 주소로 접속합니다.
+
+```text
+http://localhost:8002/index.html
+http://localhost:8002/single.html?mode=reminder
+http://localhost:8002/single.html?mode=care
+```
+
+## 모드
+
+`index.html`
+: 표준모드입니다. 도안 목록에서 원하는 작품을 고르고 여러 작품을 이어서 색칠할 수 있습니다.
+
+`single.html?mode=reminder`
+: 알림모드입니다. 도안을 자동으로 고른 뒤 게임방법 안내를 거쳐 1회 플레이로 진행합니다.
+
+`single.html?mode=care`
+: 케어모드입니다. 쉬운 도안 위주로 자동 선택하고 알림모드와 같은 1회 플레이 흐름으로 진행합니다.
+
+알림/케어모드는 완료 화면에서 `핸드폰에 저장`, `더 칠하기`, `지금 돌아가기`를 제공합니다. 별도 조작이 없으면 10초 후 `COLORING_SESSION_END` 메시지를 전송해 호스트 앱으로 복귀할 수 있게 합니다.
 
 ## 구성
 
@@ -20,11 +39,14 @@ python3 -m http.server 8002
 assets/              앱 아이콘, 도안, 썸네일, line layer, region map
 css/                 화면별 스타일과 테마
 js/                  앱 로직, 데이터, UI 컴포넌트, 유틸, React vendor 파일
-index.html           앱 시작 파일
+index.html           표준모드 시작 파일
+single.html          알림/케어 단일 세션 시작 파일
 manifest.webmanifest PWA 설정
 sw.js                서비스워커 캐시
 ```
 
+도안은 `vertical-01`부터 `vertical-40`까지 정리되어 있으며, 난이도 정보는 `js/data/artworks.js`의 `difficulty` 값 하나를 기준으로 사용합니다.
+
 ## 배포
 
-`main` 브랜치에 푸시하면 GitHub Pages로 배포됩니다. 정적 파일 캐시를 쓰기 때문에 JS, CSS, 서비스워커를 바꿀 때는 `index.html`, `css/styles.css`, `sw.js`의 버전 query도 같이 갱신합니다.
+`main` 브랜치에 푸시하면 GitHub Pages로 배포됩니다. 정적 파일 캐시를 쓰기 때문에 JS, CSS, 서비스워커를 바꿀 때는 `index.html`, `single.html`, `css/styles.css`, `sw.js`의 버전 query도 같이 갱신합니다.
