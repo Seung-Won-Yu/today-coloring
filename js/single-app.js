@@ -60,6 +60,12 @@
     return Math.ceil((modeConfig.autoReturnMs || 25000) / 1000);
   }
 
+  function getModeClassName(modeConfig) {
+    const modeId = modeConfig && modeConfig.id ? modeConfig.id : "alarm";
+    const toneClass = modeConfig && modeConfig.tone === "calm" ? " single-app--calm" : "";
+    return " single-app--" + modeId + toneClass;
+  }
+
   function chooseArtwork(modeConfig) {
     const params = getParams();
     const artworks = window.ARTWORKS || [];
@@ -105,7 +111,7 @@
           e("img", { src: art.thumbSrc || art.src, alt: art.title })
         ),
         e("div", { className: "single-intro__copy" },
-          e("span", { className: "single-pill" }, e(Icon, { name: "pencil", size: 18 }), modeConfig.title),
+          modeConfig.introBadge && e("span", { className: "single-pill" }, e(Icon, { name: "pencil", size: 18 }), modeConfig.introBadge),
           e("h1", null, modeConfig.introTitle),
           e("p", { className: "single-intro__subtitle" }, "오늘의 도안은 ", e("strong", null, art.title), "입니다. ", modeConfig.introText),
           e("div", { className: "single-intro__steps" },
@@ -115,7 +121,7 @@
           ),
           e("button", { type: "button", className: "single-intro__start", onClick: onStart },
             e(Icon, { name: "check", size: 24 }),
-            e("span", null, "시작하기")
+            e("span", null, modeConfig.startLabel || "시작하기")
           )
         )
       )
@@ -267,7 +273,7 @@
     }, [screen, returning, returnToHost, autoReturnResetToken]);
 
     if (!art) {
-      return e("div", { className: "app single-app" },
+      return e("div", { className: "app single-app" + getModeClassName(modeConfig) },
         e("main", { className: "single-returning" },
           e("section", { className: "single-returning__panel" },
             e("h1", null, "도안을 불러오지 못했어요"),
@@ -308,7 +314,7 @@
       setScreen("color");
     };
 
-    return e("div", { className: "app single-app app--" + screen },
+    return e("div", { className: "app single-app app--" + screen + getModeClassName(modeConfig) },
       screen === "intro" && e(SingleIntro, { art, modeConfig, onStart: startColoring }),
       screen === "color" && e(ColoringScreen, {
         key: paintSessionKey,
