@@ -190,6 +190,10 @@
     gap: 10px;
   }
 
+  .actions .wide {
+    grid-column: 1 / -1;
+  }
+
   .device-panel {
     min-width: 0;
   }
@@ -449,8 +453,9 @@
         <div class="actions">
           <button type="button" class="primary" id="runBtn">게임 실행</button>
           <button type="button" class="subtle" id="resetBtn">리셋</button>
+          <button type="button" class="wide" id="openDirectBtn">새 창에서 실행</button>
         </div>
-        <div class="notice">이 페이지는 개발용입니다. 서비스워커 프리캐시에 넣지 않고, 로컬 서버에서 실행하세요.</div>
+        <div class="notice">가운데 프레임에서 시작되지 않으면 새 창에서 실행으로 실제 주소를 바로 열어 확인하세요.</div>
       </div>
     </section>
 
@@ -574,7 +579,7 @@
   [
     "mode", "difficulty", "difficultyHint", "art", "artList", "sessionId", "contentId", "gameKey",
     "runBtn", "resetBtn", "device", "rotateBtn", "reloadBtn", "customSize", "customW", "customH",
-    "frameShell", "deviceBox", "deviceLabel", "scaleLabel", "deviceFrame", "placeholder", "gameFrame",
+    "openDirectBtn", "frameShell", "deviceBox", "deviceLabel", "scaleLabel", "deviceFrame", "placeholder", "gameFrame",
     "urlPreview", "paramsTable", "configJson", "payloadTable", "payloadJson", "messageLog",
     "copyUrlBtn", "copyPayloadBtn", "clearLogBtn", "status"
   ].forEach(function(id) { el[id] = document.getElementById(id); });
@@ -641,6 +646,10 @@
   function buildUrl(includeCacheBuster) {
     var base = el.mode.value === "standard" ? "index.html" : "single.html";
     return base + "?" + buildParams(includeCacheBuster).toString();
+  }
+
+  function buildAbsoluteUrl(includeCacheBuster) {
+    return new URL(buildUrl(includeCacheBuster), window.location.href).href;
   }
 
   function renderKeyValues(target, rows) {
@@ -739,6 +748,10 @@
     renderInputPanel();
   }
 
+  function openGameDirect() {
+    window.open(buildAbsoluteUrl(true), "_blank", "noopener");
+  }
+
   function disableFrameFullscreen() {
     try {
       var frameWindow = el.gameFrame.contentWindow;
@@ -835,13 +848,14 @@
       el[id].addEventListener("change", applyDeviceSize);
     });
     el.runBtn.addEventListener("click", runGame);
+    el.openDirectBtn.addEventListener("click", openGameDirect);
     el.resetBtn.addEventListener("click", resetGame);
     el.reloadBtn.addEventListener("click", runGame);
     el.rotateBtn.addEventListener("click", function() {
       state.orientation = state.orientation === "portrait" ? "landscape" : "portrait";
       applyDeviceSize();
     });
-    el.copyUrlBtn.addEventListener("click", function() { copyText(location.origin + location.pathname.replace(/test-hub\.html$/, "") + el.urlPreview.textContent); });
+    el.copyUrlBtn.addEventListener("click", function() { copyText(buildAbsoluteUrl(false)); });
     el.copyPayloadBtn.addEventListener("click", function() { copyText(el.payloadJson.value); });
     el.clearLogBtn.addEventListener("click", function() {
       state.logs = [];
