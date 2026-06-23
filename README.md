@@ -16,6 +16,7 @@ python3 -m http.server 8002
 
 ```text
 http://localhost:8002/index.html
+http://localhost:8002/index.html?mode=standard
 http://localhost:8002/single.html?mode=reminder
 http://localhost:8002/single.html?mode=care
 ```
@@ -24,6 +25,9 @@ http://localhost:8002/single.html?mode=care
 
 `index.html`
 : 표준모드입니다. 도안 목록에서 원하는 작품을 고르고 여러 작품을 이어서 색칠할 수 있습니다.
+
+`index.html?mode=standard`
+: 표준모드 명시 호출입니다. 공통 진입점에서 `single.html?mode=standard`로 들어오더라도 `index.html?mode=standard`로 이동합니다.
 
 `single.html?mode=reminder`
 : 알림모드입니다. 도안을 자동으로 고른 뒤 게임방법 안내를 거쳐 1회 플레이로 진행합니다.
