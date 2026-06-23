@@ -1096,7 +1096,7 @@ const THEME_OPTIONS = [
   { label: "차분", value: "차분" },
   { label: "고대비", value: "고대비" }
 ];
-function SettingsDialog({ settings, onChange, onClose }) {
+function SettingsDialog({ settings, onChange, onClose, progressCount = 0, onResetProgress }) {
   const e = React.createElement;
   const dialogRef = React.useRef(null);
   const fontScale = settings && settings.fontScale ? settings.fontScale : 1;
@@ -1155,6 +1155,22 @@ function SettingsDialog({ settings, onChange, onClose }) {
             e("span", { className: "settings-toggle__thumb" })
           )
         )
+      ),
+      e("fieldset", { className: "settings-field settings-field--danger" },
+        e("legend", null, "도안 기록"),
+        e("button", {
+          type: "button",
+          className: "settings-reset",
+          onClick: onResetProgress,
+          disabled: progressCount <= 0
+        },
+          e("span", { className: "settings-reset__icon", "aria-hidden": "true" }, e(Icon, { name: "reset", size: 19 })),
+          e("span", { className: "settings-reset__copy" },
+            e("strong", null, "색칠 기록 초기화"),
+            e("small", null, progressCount > 0 ? progressCount + "개 도안을 처음 상태로 돌려요" : "초기화할 색칠 기록이 없어요")
+          )
+        ),
+        e("p", { className: "settings-help" }, "갤러리에 보관한 완성 작품은 유지돼요.")
       ),
       e("p", { className: "settings-preview", "aria-live": "polite" }, "오늘의 색칠")
     )
@@ -1708,6 +1724,7 @@ const App = function App() {
   const [justSaved, setJustSaved] = React.useState(false);
   const [toast, setToast] = React.useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = React.useState(null);
+  const [resetProgressConfirmOpen, setResetProgressConfirmOpen] = React.useState(false);
   const progressSaveTimerRef = React.useRef(null);
   const pendingProgressRef = React.useRef(null);
   const artworksList = window.ARTWORKS;
@@ -1816,6 +1833,17 @@ const App = function App() {
     }
     flash("\uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD588\uC5B4\uC694");
   };
+  const resetAllProgress = () => {
+    if (progressSaveTimerRef.current) {
+      window.clearTimeout(progressSaveTimerRef.current);
+      progressSaveTimerRef.current = null;
+    }
+    pendingProgressRef.current = null;
+    setProgress({});
+    AppStorage.saveProgress({});
+    setResetProgressConfirmOpen(false);
+    flash("도안 색칠 기록을 초기화했어요");
+  };
   const saveArtworkPng = async (targetArt, targetFills) => {
     try {
       await downloadCanvasPng(targetArt, targetFills);
@@ -1897,7 +1925,7 @@ const App = function App() {
       },
       onDelete: setDeleteConfirmId
     }
-  ), deleteConfirmId && /* @__PURE__ */ React.createElement(ConfirmDialog, { title: "\uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?", message: "\uC0AD\uC81C\uD55C \uC644\uC131\uC791\uC740 \uB2E4\uC2DC \uBCF5\uAD6C\uD560 \uC218 \uC5C6\uC5B4\uC694.", confirmLabel: "\uC0AD\uC81C", cancelLabel: "\uCDE8\uC18C", danger: true, onConfirm: () => deleteGalleryItem(deleteConfirmId), onCancel: () => setDeleteConfirmId(null) }), toast && /* @__PURE__ */ React.createElement("div", { className: "toast toast--" + screen }, toast), showBottomNav && /* @__PURE__ */ React.createElement(
+  ), deleteConfirmId && /* @__PURE__ */ React.createElement(ConfirmDialog, { title: "\uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?", message: "\uC0AD\uC81C\uD55C \uC644\uC131\uC791\uC740 \uB2E4\uC2DC \uBCF5\uAD6C\uD560 \uC218 \uC5C6\uC5B4\uC694.", confirmLabel: "\uC0AD\uC81C", cancelLabel: "\uCDE8\uC18C", danger: true, onConfirm: () => deleteGalleryItem(deleteConfirmId), onCancel: () => setDeleteConfirmId(null) }), resetProgressConfirmOpen && /* @__PURE__ */ React.createElement(ConfirmDialog, { title: "\uC0C9\uCE60 \uAE30\uB85D\uC744 \uCD08\uAE30\uD654\uD560\uAE4C\uC694?", message: "\uBAA8\uB4E0 \uB3C4\uC548\uC758 \uC0C9\uCE60 \uC9C4\uD589 \uAE30\uB85D\uB9CC \uC9C0\uC6CC\uC838\uC694. \uAC24\uB7EC\uB9AC\uC5D0 \uBCF4\uAD00\uD55C \uC644\uC131 \uC791\uD488\uC740 \uADF8\uB300\uB85C \uB0A8\uC544\uC694.", confirmLabel: "\uCD08\uAE30\uD654", cancelLabel: "\uCDE8\uC18C", danger: true, icon: "reset", onConfirm: resetAllProgress, onCancel: () => setResetProgressConfirmOpen(false) }), toast && /* @__PURE__ */ React.createElement("div", { className: "toast toast--" + screen }, toast), showBottomNav && /* @__PURE__ */ React.createElement(
     BottomNav,
     {
       active: activeNav,
@@ -1905,7 +1933,10 @@ const App = function App() {
     onHome: () => setScreen("home"),
       onGallery: () => setScreen("gallery")
     }
-  ), settingsOpen && /* @__PURE__ */ React.createElement(SettingsDialog, { settings, onChange: updateSettings, onClose: () => setSettingsOpen(false) }));
+  ), settingsOpen && /* @__PURE__ */ React.createElement(SettingsDialog, { settings, onChange: updateSettings, onClose: () => setSettingsOpen(false), progressCount: Object.keys(progress || {}).length, onResetProgress: () => {
+    setSettingsOpen(false);
+    setResetProgressConfirmOpen(true);
+  } }));
 };
 window.ColoringRuntime = {
   App,
