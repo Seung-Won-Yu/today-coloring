@@ -48,6 +48,14 @@
     return list[Math.floor(Math.random() * list.length)];
   }
 
+  function createEmptyFills() {
+    return [];
+  }
+
+  function createEmptyHistory() {
+    return [];
+  }
+
   function chooseArtwork(modeConfig) {
     const params = getParams();
     const artworks = window.ARTWORKS || [];
@@ -157,8 +165,10 @@
     const modeConfig = React.useMemo(getModeConfig, []);
     const [art] = React.useState(() => chooseArtwork(modeConfig));
     const [screen, setScreen] = React.useState("intro");
-    const [fills, setFills] = React.useState([]);
-    const [history, setHistory] = React.useState([]);
+    const [paintSessionKey] = React.useState(() => "single-" + modeConfig.id + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2));
+    // Alarm/care sessions are intentionally ephemeral. Do not restore AppStorage progress or gallery fills here.
+    const [fills, setFills] = React.useState(createEmptyFills);
+    const [history, setHistory] = React.useState(createEmptyHistory);
     const [selected, setSelected] = React.useState((window.PALETTE && window.PALETTE[0] && window.PALETTE[0].c) || "#E0584F");
     const [saved, setSaved] = React.useState(false);
     const [remainingSeconds, setRemainingSeconds] = React.useState(Math.ceil((modeConfig.autoReturnMs || 10000) / 1000));
@@ -283,6 +293,7 @@
     return e("div", { className: "app single-app app--" + screen },
       screen === "intro" && e(SingleIntro, { art, modeConfig, onStart: startColoring }),
       screen === "color" && e(ColoringScreen, {
+        key: paintSessionKey,
         art,
         fills,
         history,

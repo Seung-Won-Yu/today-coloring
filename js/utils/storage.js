@@ -1,5 +1,5 @@
 (function() {
-  const STORAGE_VERSION = "v13";
+  const STORAGE_VERSION = "v14";
   const GALLERY_KEY = "sori_gallery_" + STORAGE_VERSION;
   const PROGRESS_KEY = "sori_progress_" + STORAGE_VERSION;
   const SETTINGS_KEY = "sori_settings_v1";
