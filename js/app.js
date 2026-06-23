@@ -1153,7 +1153,7 @@ function ColorToolbelt({ hasHistory, isZoomed, onUndo, onReset, onZoom }) {
     )
   );
 }
-function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHistoryChange, onExit, onFinish, tweaks }) {
+function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHistoryChange, onExit, onFinish, tweaks, exitLabel = "목록", finishLabel = "완성하기" }) {
   const e = React.createElement;
   const orient = useOrientation();
   const layout = orient === "landscape" ? "side" : "bottom";
@@ -1417,13 +1417,13 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
     e("header", { className: "appbar appbar--color", style: { position: "relative" } },
       e("button", { className: "appbar__back", onClick: onExit },
         e(Icon, { name: "back", size: 28 }),
-        e("span", { className: "hide-narrow" }, "목록")
+        e("span", { className: "hide-narrow" }, exitLabel)
       ),
       e("div", { className: "appbar__center-txt appbar__center-title" }, art.title),
       e("div", { className: "appbar__tools appbar__tools--color" },
         e("button", { className: "appbar__save", onClick: onFinish },
           e(Icon, { name: "check", size: 19 }),
-          e("span", null, "완성하기")
+          e("span", null, finishLabel)
         )
       )
     ),
@@ -1882,4 +1882,18 @@ const App = function App() {
     }
   ), settingsOpen && /* @__PURE__ */ React.createElement(SettingsDialog, { settings, onChange: updateSettings, onClose: () => setSettingsOpen(false) }));
 };
-ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
+window.ColoringRuntime = {
+  App,
+  CanvasArt,
+  ColoringScreen,
+  CompletionScreen,
+  getArtworkById,
+  renderArtworkDataUrl,
+  createGallerySnapshotDataUrl,
+  downloadCanvasPng,
+  requestAppFullscreen
+};
+
+if (!window.COLORING_APP_NO_AUTO_MOUNT) {
+  ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
+}

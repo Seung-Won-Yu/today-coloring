@@ -1,12 +1,13 @@
-const CACHE_NAME = 'today-coloring-shell-v200';
+const CACHE_NAME = 'today-coloring-shell-v201';
 const APP_SHELL = [
   './',
   './index.html',
+  './single.html',
   './manifest.webmanifest?v=5',
   './assets/icons/app-icon.png',
   './assets/icons/app-icon-192.png',
   './assets/icons/apple-touch-icon.png',
-  './css/styles.css?v=165',
+  './css/styles.css?v=166',
   './css/foundation/base.css?v=2',
   './css/screens/artworks/base.css',
   './css/screens/coloring/base.css',
@@ -17,6 +18,7 @@ const APP_SHELL = [
   './css/components/canvas-feedback.css',
   './css/screens/artworks/cards.css',
   './css/screens/completion/reward.css',
+  './css/screens/single/base.css?v=1',
   './css/theme/premium-book.css?v=22',
   './css/screens/lobby/landing.css?v=3',
   './js/vendor/react.production.min.js',
@@ -28,7 +30,9 @@ const APP_SHELL = [
   './js/utils/assets.js?v=17',
   './js/utils/save-image.js?v=1',
   './js/ui/components.js?v=17',
-  './js/app.js?v=100'
+  './js/app.js?v=101',
+  './js/data/modes.js?v=1',
+  './js/single-app.js?v=1'
 ];
 
 self.addEventListener('install', function(event) {
@@ -81,9 +85,10 @@ self.addEventListener('fetch', function(event) {
   if (requestUrl.origin !== self.location.origin) return;
 
   if (event.request.mode === 'navigate') {
+    const fallbackPage = requestUrl.pathname.endsWith('/single.html') ? './single.html' : './index.html';
     event.respondWith(
       fetch(event.request).catch(function() {
-        return caches.match('./index.html');
+        return caches.match(fallbackPage);
       })
     );
     return;
