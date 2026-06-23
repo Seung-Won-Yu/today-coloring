@@ -21,4 +21,6 @@
       returnToHost: true
     }
   };
+
+  window.COLORING_MODES.notification = window.COLORING_MODES.reminder;
 })();

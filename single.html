@@ -22,18 +22,19 @@
 <div id="root"></div>
 <script>
   (function() {
+    window.COLORING_APP_NO_AUTO_MOUNT = true;
     var params = new URLSearchParams(window.location.search || "");
     if ((params.get('mode') || '').toLowerCase() === 'standard') {
       var target = new URL('index.html', window.location.href);
       target.search = params.toString();
+      window.COLORING_SINGLE_REDIRECTING = true;
       window.location.replace(target.href);
       return;
     }
 
-    window.COLORING_APP_NO_AUTO_MOUNT = true;
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('./sw.js?v=201').catch(function() {});
+      navigator.serviceWorker.register('./sw.js?v=203').catch(function() {});
     });
   })();
 </script>
@@ -47,7 +48,7 @@
 <script src="js/utils/save-image.js?v=1"></script>
 <script src="js/ui/components.js?v=17"></script>
 <script src="js/app.js?v=101"></script>
-<script src="js/data/modes.js?v=1"></script>
-<script src="js/single-app.js?v=1"></script>
+<script src="js/data/modes.js?v=2"></script>
+<script src="js/single-app.js?v=3"></script>
 </body>
 </html>

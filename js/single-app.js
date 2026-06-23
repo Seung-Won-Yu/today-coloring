@@ -1,4 +1,6 @@
 (function() {
+  if (window.COLORING_SINGLE_REDIRECTING) return;
+
   const e = React.createElement;
   const { Icon, isLight, Confetti } = window.UIComponents;
   const { ColoringScreen, CanvasArt, downloadCanvasPng, requestAppFullscreen } = window.ColoringRuntime;
@@ -13,6 +15,19 @@
   function getModeConfig() {
     const mode = getParams().get("mode") || "reminder";
     return MODES[mode] || MODES.reminder;
+  }
+
+  function getHostContext() {
+    const params = getParams();
+    return ["session_id", "content_id", "game_key"].reduce((acc, key) => {
+      const value = params.get(key);
+      if (value) acc[key] = value;
+      return acc;
+    }, {});
+  }
+
+  function isTestHub() {
+    return getParams().get("test_hub") === "1";
   }
 
   function readRecentIds() {
@@ -51,7 +66,7 @@
     } else if (VALID_DIFFICULTIES.includes(requestedDifficulty)) {
       pool = artworks.filter((art) => art.difficulty === requestedDifficulty);
     } else {
-      pool = artworks.filter((art) => art.difficulty !== "hard");
+      pool = artworks.slice();
     }
     if (!pool.length) pool = artworks.slice();
 
@@ -173,6 +188,7 @@
       sentRef.current = true;
       const endedAt = Date.now();
       postHostMessage("COLORING_SESSION_END", {
+        ...getHostContext(),
         mode: modeConfig.id,
         artworkId: art.id,
         title: art.title,
@@ -247,6 +263,10 @@
 
     const startColoring = () => {
       playStartedAtRef.current = Date.now();
+      if (isTestHub()) {
+        setScreen("color");
+        return;
+      }
       requestAppFullscreen().finally(() => setScreen("color"));
     };
 

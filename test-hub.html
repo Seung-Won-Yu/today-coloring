@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘의 색칠 테스트 허브</title>
+<link rel="icon" sizes="512x512" href="assets/icons/app-icon.png">
+<script src="js/data/artworks.js?v=37"></script>
+<script src="js/data/modes.js?v=2"></script>
+<style>
+  :root {
+    --bg: #f6f1e8;
+    --surface: #fffdf8;
+    --surface-2: #fbf7ef;
+    --ink: #302a24;
+    --muted: #74695d;
+    --line: #e2d9ca;
+    --green: #2f6b55;
+    --green-2: #e1eee7;
+    --red: #c95a49;
+    --shadow: 0 18px 48px rgba(48, 42, 36, 0.12);
+    font-family: Outfit, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--ink);
+    background:
+      linear-gradient(90deg, rgba(60, 52, 42, 0.035) 1px, transparent 1px) 0 0 / 24px 24px,
+      var(--bg);
+  }
+
+  button, input, select, textarea {
+    font: inherit;
+  }
+
+  button {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: 8px;
+    min-height: 44px;
+    padding: 0 14px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  button:hover { border-color: #cbbfaa; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid rgba(47, 107, 85, 0.28);
+    outline-offset: 2px;
+  }
+
+  button.primary {
+    border-color: var(--green);
+    background: var(--green);
+    color: #fff;
+  }
+
+  button.subtle {
+    background: var(--surface-2);
+    color: var(--muted);
+  }
+
+  .hub {
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  .hub__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255, 253, 248, 0.92);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    backdrop-filter: blur(12px);
+  }
+
+  .hub__title {
+    display: grid;
+    gap: 4px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(24px, 3vw, 36px);
+    line-height: 1.1;
+    letter-spacing: 0;
+  }
+
+  .hub__title span, .hint, .meta {
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .hub__status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--green-2);
+    color: var(--green);
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .hub__layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 360px) minmax(360px, 1fr) minmax(320px, 420px);
+    gap: 18px;
+    padding: 18px;
+    align-items: start;
+  }
+
+  .panel {
+    background: rgba(255, 253, 248, 0.94);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+
+  .panel__head {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: 0;
+  }
+
+  .panel__body {
+    padding: 16px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .field {
+    display: grid;
+    gap: 7px;
+  }
+
+  label, .label {
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--muted);
+  }
+
+  input, select, textarea {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+    padding: 0 12px;
+    font-weight: 800;
+  }
+
+  textarea {
+    min-height: 132px;
+    padding: 12px;
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 700;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .device-panel {
+    min-width: 0;
+  }
+
+  .device-toolbar {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) auto auto;
+    gap: 10px;
+    padding: 12px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255, 253, 248, 0.94);
+  }
+
+  .custom-size {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(90px, 1fr));
+    gap: 10px;
+    padding: 0 12px 12px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255, 253, 248, 0.94);
+  }
+
+  .frame-shell {
+    min-height: 640px;
+    display: grid;
+    place-items: center;
+    overflow: auto;
+    padding: 24px;
+  }
+
+  .device {
+    transform-origin: top center;
+  }
+
+  .device__label {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-weight: 900;
+    font-size: 13px;
+  }
+
+  .device__frame {
+    overflow: hidden;
+    border: 10px solid #2f2a25;
+    border-radius: 28px;
+    background: #fff;
+    box-shadow: 0 20px 56px rgba(48, 42, 36, 0.28);
+  }
+
+  iframe {
+    display: block;
+    border: 0;
+    background: #fff;
+  }
+
+  .placeholder {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    min-height: 280px;
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    font-weight: 900;
+    background: var(--surface-2);
+  }
+
+  .stack {
+    display: grid;
+    gap: 12px;
+  }
+
+  .kv {
+    display: grid;
+    gap: 7px;
+  }
+
+  .kv__row {
+    display: grid;
+    grid-template-columns: minmax(110px, 0.42fr) 1fr;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    min-width: 0;
+  }
+
+  .kv__key {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .kv__value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 800;
+  }
+
+  .codebox {
+    display: grid;
+    gap: 8px;
+  }
+
+  .codebox__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .url {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+
+  .log {
+    display: grid;
+    gap: 8px;
+    max-height: 260px;
+    overflow: auto;
+  }
+
+  .log__item {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    background: #fff;
+  }
+
+  .log__item strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .log__item small {
+    color: var(--muted);
+    font-weight: 800;
+  }
+
+  .empty {
+    padding: 18px;
+    border: 1px dashed #cfc4b2;
+    border-radius: 8px;
+    color: var(--muted);
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.58);
+  }
+
+  .notice {
+    border-left: 4px solid var(--red);
+    padding: 10px 12px;
+    background: #fff7f4;
+    color: #754136;
+    border-radius: 8px;
+    font-weight: 800;
+    line-height: 1.45;
+  }
+
+  @media (max-width: 1180px) {
+    .hub__layout {
+      grid-template-columns: minmax(280px, 360px) 1fr;
+    }
+
+    .result-panel {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .hub__header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .hub__layout {
+      grid-template-columns: 1fr;
+      padding: 12px;
+    }
+
+    .device-toolbar, .custom-size, .row, .actions {
+      grid-template-columns: 1fr;
+    }
+
+    .frame-shell {
+      padding: 16px 8px;
+      min-height: 520px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="hub">
+  <header class="hub__header">
+    <div class="hub__title">
+      <h1>오늘의 색칠 테스트 허브</h1>
+      <span>알림·케어 모드를 호스트 없이 실행하고 payload를 확인합니다.</span>
+    </div>
+    <span class="hub__status" id="status">대기 중</span>
+  </header>
+
+  <main class="hub__layout">
+    <section class="panel" aria-label="컨트롤 패널">
+      <div class="panel__head">
+        <h2>컨트롤</h2>
+      </div>
+      <div class="panel__body">
+        <div class="field">
+          <label for="mode">모드</label>
+          <select id="mode">
+            <option value="reminder">reminder</option>
+            <option value="care">care</option>
+            <option value="notification">notification</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="difficulty">난이도</label>
+          <select id="difficulty">
+            <option value="">자동</option>
+            <option value="easy">easy</option>
+            <option value="normal">normal</option>
+            <option value="hard">hard</option>
+          </select>
+          <span class="hint" id="difficultyHint">reminder는 자동이면 전체 도안에서 선택합니다.</span>
+        </div>
+        <div class="field">
+          <label for="art">도안 직접 지정</label>
+          <input id="art" list="artList" placeholder="예: vertical-04">
+          <datalist id="artList"></datalist>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="sessionId">session_id</label>
+            <input id="sessionId" placeholder="선택 입력">
+          </div>
+          <div class="field">
+            <label for="contentId">content_id</label>
+            <input id="contentId" placeholder="선택 입력">
+          </div>
+        </div>
+        <div class="field">
+          <label for="gameKey">game_key</label>
+          <input id="gameKey" value="today-coloring">
+        </div>
+        <div class="actions">
+          <button type="button" class="primary" id="runBtn">게임 실행</button>
+          <button type="button" class="subtle" id="resetBtn">리셋</button>
+        </div>
+        <div class="notice">이 페이지는 개발용입니다. 서비스워커 프리캐시에 넣지 않고, 로컬 서버에서 실행하세요.</div>
+      </div>
+    </section>
+
+    <section class="panel device-panel" aria-label="기기 프레임">
+      <div class="device-toolbar">
+        <select id="device" aria-label="기기 선택"></select>
+        <button type="button" id="rotateBtn">회전</button>
+        <button type="button" id="reloadBtn" class="subtle">재실행</button>
+      </div>
+      <div class="custom-size" id="customSize" hidden>
+        <div class="field">
+          <label for="customW">커스텀 W</label>
+          <input id="customW" type="number" min="280" max="1600" value="390">
+        </div>
+        <div class="field">
+          <label for="customH">커스텀 H</label>
+          <input id="customH" type="number" min="320" max="1800" value="844">
+        </div>
+      </div>
+      <div class="frame-shell" id="frameShell">
+        <div class="device" id="deviceBox">
+          <div class="device__label">
+            <span id="deviceLabel">iPhone 13/14</span>
+            <span id="scaleLabel">390×844 · 100%</span>
+          </div>
+          <div class="device__frame" id="deviceFrame">
+            <div class="placeholder" id="placeholder">모드와 기기를 고르고 게임 실행을 누르세요.</div>
+            <iframe id="gameFrame" title="오늘의 색칠 단일 모드" hidden></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel result-panel" aria-label="입출력 패널">
+      <div class="panel__head">
+        <h2>IN / OUT</h2>
+      </div>
+      <div class="panel__body">
+        <div class="stack">
+          <div class="codebox">
+            <div class="codebox__head">
+              <span class="label">보내는 값(IN)</span>
+              <button type="button" class="subtle" id="copyUrlBtn">URL 복사</button>
+            </div>
+            <div class="url" id="urlPreview">single.html?mode=reminder</div>
+          </div>
+          <div class="kv" id="paramsTable"></div>
+          <div class="codebox">
+            <div class="codebox__head">
+              <span class="label">적용 config(JSON)</span>
+            </div>
+            <textarea id="configJson" readonly></textarea>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="codebox">
+            <div class="codebox__head">
+              <span class="label">넘어오는 값(OUT)</span>
+              <button type="button" class="subtle" id="copyPayloadBtn">JSON 복사</button>
+            </div>
+            <div id="payloadTable" class="empty">아직 받은 payload가 없습니다.</div>
+            <textarea id="payloadJson" readonly placeholder="COLORING_SESSION_END payload가 여기에 표시됩니다."></textarea>
+          </div>
+          <div class="codebox">
+            <div class="codebox__head">
+              <span class="label">메시지 로그</span>
+              <button type="button" class="subtle" id="clearLogBtn">로그 지우기</button>
+            </div>
+            <div class="log" id="messageLog"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+(function() {
+  var DEVICES = [
+    { id: "iphone-se", name: "iPhone SE", w: 375, h: 667 },
+    { id: "iphone-14", name: "iPhone 13/14", w: 390, h: 844 },
+    { id: "iphone-max", name: "iPhone 15 Pro Max", w: 430, h: 932 },
+    { id: "galaxy", name: "Galaxy S 표준", w: 360, h: 800 },
+    { id: "galaxy-ultra", name: "Galaxy S Ultra", w: 412, h: 915 },
+    { id: "ipad-mini", name: "iPad mini", w: 744, h: 1133 },
+    { id: "ipad", name: "iPad 10.9", w: 820, h: 1180 },
+    { id: "ipad-pro", name: "iPad Pro 12.9", w: 1024, h: 1366 },
+    { id: "custom", name: "커스텀", w: 390, h: 844 }
+  ];
+
+  var LABELS = {
+    mode: "실행 모드",
+    artworkId: "도안",
+    art_id: "도안",
+    title: "도안명",
+    difficulty: "난이도",
+    session_id: "세션 ID",
+    content_id: "콘텐츠 ID",
+    game_key: "게임 키",
+    startedAt: "시작 시각",
+    endedAt: "종료 시각",
+    durationMs: "플레이 시간(ms)",
+    play_ms: "플레이 시간(ms)",
+    completed: "완료 여부",
+    abandoned: "중도 종료",
+    aborted_midway: "중도 종료",
+    saved: "저장됨",
+    fillCount: "색칠 횟수",
+    reason: "종료 사유"
+  };
+
+  var state = {
+    orientation: "portrait",
+    lastUrl: "",
+    lastPayload: null,
+    logs: []
+  };
+
+  var el = {};
+  [
+    "mode", "difficulty", "difficultyHint", "art", "artList", "sessionId", "contentId", "gameKey",
+    "runBtn", "resetBtn", "device", "rotateBtn", "reloadBtn", "customSize", "customW", "customH",
+    "frameShell", "deviceBox", "deviceLabel", "scaleLabel", "deviceFrame", "placeholder", "gameFrame",
+    "urlPreview", "paramsTable", "configJson", "payloadTable", "payloadJson", "messageLog",
+    "copyUrlBtn", "copyPayloadBtn", "clearLogBtn", "status"
+  ].forEach(function(id) { el[id] = document.getElementById(id); });
+
+  function fillOptions() {
+    DEVICES.forEach(function(device) {
+      var option = document.createElement("option");
+      option.value = device.id;
+      option.textContent = device.name + " · " + device.w + "×" + device.h;
+      el.device.appendChild(option);
+    });
+    el.device.value = "iphone-14";
+
+    (window.ARTWORKS || []).forEach(function(art) {
+      var option = document.createElement("option");
+      option.value = art.id;
+      option.label = art.id + " · " + art.title + " · " + art.difficulty;
+      el.artList.appendChild(option);
+    });
+  }
+
+  function currentDevice() {
+    var device = DEVICES.find(function(item) { return item.id === el.device.value; }) || DEVICES[1];
+    if (device.id !== "custom") return device;
+    return {
+      id: "custom",
+      name: "커스텀",
+      w: Math.max(280, Number(el.customW.value) || 390),
+      h: Math.max(320, Number(el.customH.value) || 844)
+    };
+  }
+
+  function currentModeConfig() {
+    var modes = window.COLORING_MODES || {};
+    return modes[el.mode.value] || modes.reminder || {};
+  }
+
+  function buildParams(includeCacheBuster) {
+    var params = new URLSearchParams();
+    params.set("mode", el.mode.value);
+    if (el.mode.value !== "care" && el.difficulty.value) params.set("difficulty", el.difficulty.value);
+    if (el.sessionId.value.trim()) params.set("session_id", el.sessionId.value.trim());
+    if (el.contentId.value.trim()) params.set("content_id", el.contentId.value.trim());
+    if (el.gameKey.value.trim()) params.set("game_key", el.gameKey.value.trim());
+    if (el.art.value.trim()) params.set("art", el.art.value.trim());
+    params.set("test_hub", "1");
+    if (includeCacheBuster) params.set("_t", String(Date.now()));
+    return params;
+  }
+
+  function buildUrl(includeCacheBuster) {
+    return "single.html?" + buildParams(includeCacheBuster).toString();
+  }
+
+  function renderKeyValues(target, rows) {
+    target.innerHTML = "";
+    rows.forEach(function(row) {
+      var item = document.createElement("div");
+      item.className = "kv__row";
+      var key = document.createElement("div");
+      key.className = "kv__key";
+      key.textContent = row.label;
+      var value = document.createElement("div");
+      value.className = "kv__value";
+      value.textContent = row.value === "" || row.value == null ? "(미전달)" : String(row.value);
+      item.appendChild(key);
+      item.appendChild(value);
+      target.appendChild(item);
+    });
+  }
+
+  function updateDifficultyState() {
+    var isCare = el.mode.value === "care";
+    el.difficulty.disabled = isCare;
+    el.difficultyHint.textContent = isCare
+      ? "care는 easy 도안 풀로 고정됩니다."
+      : "reminder/notification은 자동이면 전체 도안에서 선택합니다.";
+  }
+
+  function renderInputPanel() {
+    updateDifficultyState();
+    var params = buildParams(false);
+    var config = currentModeConfig();
+    var url = buildUrl(false);
+    el.urlPreview.textContent = url;
+    el.configJson.value = JSON.stringify({
+      id: config.id,
+      title: config.title,
+      selectionPolicy: config.selectionPolicy,
+      minPaintedToFinish: config.minPaintedToFinish,
+      autoReturnMs: config.autoReturnMs,
+      returnToHost: config.returnToHost,
+      aliasOf: el.mode.value === "notification" ? "reminder" : undefined
+    }, null, 2);
+    renderKeyValues(el.paramsTable, [
+      { label: "mode", value: params.get("mode") },
+      { label: "difficulty", value: params.get("difficulty") || (el.mode.value === "care" ? "easy 고정" : "") },
+      { label: "session_id", value: params.get("session_id") },
+      { label: "content_id", value: params.get("content_id") },
+      { label: "game_key", value: params.get("game_key") },
+      { label: "art", value: params.get("art") },
+      { label: "test_hub", value: params.get("test_hub") }
+    ]);
+  }
+
+  function applyDeviceSize() {
+    var device = currentDevice();
+    var w = device.w;
+    var h = device.h;
+    if (state.orientation === "landscape") {
+      w = device.h;
+      h = device.w;
+    }
+
+    el.customSize.hidden = device.id !== "custom";
+    el.deviceFrame.style.width = w + "px";
+    el.deviceFrame.style.height = h + "px";
+    el.gameFrame.style.width = w + "px";
+    el.gameFrame.style.height = h + "px";
+    el.placeholder.style.width = w + "px";
+    el.placeholder.style.height = h + "px";
+
+    var shellWidth = Math.max(320, el.frameShell.clientWidth - 48);
+    var shellHeight = Math.max(360, window.innerHeight - 210);
+    var scale = Math.min(1, shellWidth / (w + 20), shellHeight / (h + 54));
+    el.deviceBox.style.transform = "scale(" + scale.toFixed(3) + ")";
+    el.deviceBox.style.width = (w + 20) + "px";
+    el.deviceBox.style.height = ((h + 54) * scale) + "px";
+    el.deviceLabel.textContent = device.name + " · " + (state.orientation === "landscape" ? "가로" : "세로");
+    el.scaleLabel.textContent = w + "×" + h + " · " + Math.round(scale * 100) + "%";
+  }
+
+  function runGame() {
+    state.lastUrl = buildUrl(true);
+    el.placeholder.hidden = true;
+    el.gameFrame.hidden = false;
+    el.gameFrame.src = state.lastUrl;
+    el.status.textContent = "실행 중";
+    renderInputPanel();
+  }
+
+  function resetGame() {
+    el.gameFrame.removeAttribute("src");
+    el.gameFrame.hidden = true;
+    el.placeholder.hidden = false;
+    state.lastUrl = "";
+    state.lastPayload = null;
+    el.payloadJson.value = "";
+    el.payloadTable.className = "empty";
+    el.payloadTable.textContent = "아직 받은 payload가 없습니다.";
+    el.status.textContent = "대기 중";
+  }
+
+  function renderPayload(payload) {
+    state.lastPayload = payload;
+    el.payloadTable.className = "kv";
+    renderKeyValues(el.payloadTable, Object.keys(payload || {}).map(function(key) {
+      return { label: LABELS[key] || key, value: typeof payload[key] === "object" ? JSON.stringify(payload[key]) : payload[key] };
+    }));
+    el.payloadJson.value = JSON.stringify(payload, null, 2);
+    el.status.textContent = "payload 수신";
+  }
+
+  function renderLog() {
+    el.messageLog.innerHTML = "";
+    if (!state.logs.length) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "메시지 로그가 없습니다.";
+      el.messageLog.appendChild(empty);
+      return;
+    }
+    state.logs.slice().reverse().forEach(function(log) {
+      var item = document.createElement("div");
+      item.className = "log__item";
+      var title = document.createElement("strong");
+      title.textContent = log.type;
+      var time = document.createElement("small");
+      time.textContent = log.time;
+      item.appendChild(title);
+      item.appendChild(time);
+      el.messageLog.appendChild(item);
+    });
+  }
+
+  function receiveMessage(event) {
+    var data = event.data;
+    if (typeof data === "string") {
+      try {
+        data = JSON.parse(data);
+      } catch (_) {
+        return;
+      }
+    }
+    if (!data || !data.type) return;
+    state.logs.push({ type: data.type, payload: data.payload, time: new Date().toLocaleTimeString() });
+    renderLog();
+    if (data.type === "COLORING_SESSION_END") {
+      renderPayload(data.payload || {});
+    }
+  }
+
+  function copyText(text) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    }
+  }
+
+  function bindEvents() {
+    ["mode", "difficulty", "art", "sessionId", "contentId", "gameKey"].forEach(function(id) {
+      el[id].addEventListener("input", renderInputPanel);
+      el[id].addEventListener("change", renderInputPanel);
+    });
+    ["device", "customW", "customH"].forEach(function(id) {
+      el[id].addEventListener("input", applyDeviceSize);
+      el[id].addEventListener("change", applyDeviceSize);
+    });
+    el.runBtn.addEventListener("click", runGame);
+    el.resetBtn.addEventListener("click", resetGame);
+    el.reloadBtn.addEventListener("click", runGame);
+    el.rotateBtn.addEventListener("click", function() {
+      state.orientation = state.orientation === "portrait" ? "landscape" : "portrait";
+      applyDeviceSize();
+    });
+    el.copyUrlBtn.addEventListener("click", function() { copyText(location.origin + location.pathname.replace(/test-hub\.html$/, "") + el.urlPreview.textContent); });
+    el.copyPayloadBtn.addEventListener("click", function() { copyText(el.payloadJson.value); });
+    el.clearLogBtn.addEventListener("click", function() {
+      state.logs = [];
+      renderLog();
+    });
+    window.addEventListener("message", receiveMessage);
+    window.addEventListener("resize", applyDeviceSize);
+  }
+
+  fillOptions();
+  bindEvents();
+  renderInputPanel();
+  renderLog();
+  applyDeviceSize();
+})();
+</script>
+</body>
+</html>

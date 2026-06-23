@@ -19,6 +19,7 @@ http://localhost:8002/index.html
 http://localhost:8002/index.html?mode=standard
 http://localhost:8002/single.html?mode=reminder
 http://localhost:8002/single.html?mode=care
+http://localhost:8002/test-hub.html
 ```
 
 ## 모드
@@ -37,6 +38,13 @@ http://localhost:8002/single.html?mode=care
 
 알림/케어모드는 완료 화면에서 `핸드폰에 저장`, `더 칠하기`, `지금 돌아가기`를 제공합니다. 별도 조작이 없으면 10초 후 `COLORING_SESSION_END` 메시지를 전송해 호스트 앱으로 복귀할 수 있게 합니다.
 
+## 테스트 허브
+
+`test-hub.html`
+: 효담콜 WebView 없이 `single.html`을 iframe으로 실행하는 개발용 테스트 페이지입니다. `reminder`, `care`, `notification` 모드와 기기 프리셋을 바꿔가며 실행할 수 있고, 게임 종료 시 넘어오는 `COLORING_SESSION_END` payload를 IN/OUT 패널에서 확인할 수 있습니다.
+
+테스트 허브는 서비스워커 프리캐시에 포함하지 않습니다. 로컬 서버나 GitHub Pages URL에서 직접 열어 사용합니다.
+
 ## 구성
 
 ```text
@@ -45,6 +53,7 @@ css/                 화면별 스타일과 테마
 js/                  앱 로직, 데이터, UI 컴포넌트, 유틸, React vendor 파일
 index.html           표준모드 시작 파일
 single.html          알림/케어 단일 세션 시작 파일
+test-hub.html        알림/케어/notification 개발 테스트 허브
 manifest.webmanifest PWA 설정
 sw.js                서비스워커 캐시
 ```
