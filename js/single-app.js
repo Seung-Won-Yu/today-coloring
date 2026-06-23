@@ -144,8 +144,8 @@
               e("span", null, "지금 돌아가기")
             )
           ),
-          e("div", { className: "single-completion__timer", "aria-live": "polite" },
-            returning ? "세션 종료 신호를 보냈습니다" : remainingSeconds + "초 후 자동으로 세션이 종료됩니다"
+          !returning && e("div", { className: "single-completion__timer", "aria-live": "polite" },
+            remainingSeconds + "초 후 자동으로 세션이 종료됩니다"
           )
         )
       )

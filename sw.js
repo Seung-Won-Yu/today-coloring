@@ -1,4 +1,4 @@
-const CACHE_NAME = 'today-coloring-shell-v217';
+const CACHE_NAME = 'today-coloring-shell-v218';
 const APP_SHELL = [
   './',
   './index.html',
@@ -32,7 +32,7 @@ const APP_SHELL = [
   './js/ui/components.js?v=17',
   './js/app.js?v=104',
   './js/data/modes.js?v=3',
-  './js/single-app.js?v=8'
+  './js/single-app.js?v=9'
 ];
 
 self.addEventListener('install', function(event) {
