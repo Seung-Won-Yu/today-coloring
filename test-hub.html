@@ -619,7 +619,6 @@
     if (el.contentId.value.trim()) params.set("content_id", el.contentId.value.trim());
     if (el.gameKey.value.trim()) params.set("game_key", el.gameKey.value.trim());
     if (el.art.value.trim()) params.set("art", el.art.value.trim());
-    params.set("test_hub", "1");
     if (includeCacheBuster) params.set("_t", String(Date.now()));
     return params;
   }
@@ -674,8 +673,7 @@
       { label: "session_id", value: params.get("session_id") },
       { label: "content_id", value: params.get("content_id") },
       { label: "game_key", value: params.get("game_key") },
-      { label: "art", value: params.get("art") },
-      { label: "test_hub", value: params.get("test_hub") }
+      { label: "art", value: params.get("art") }
     ]);
   }
 
@@ -713,6 +711,24 @@
     el.gameFrame.src = state.lastUrl;
     el.status.textContent = "실행 중";
     renderInputPanel();
+  }
+
+  function disableFrameFullscreen() {
+    try {
+      var frameWindow = el.gameFrame.contentWindow;
+      if (!frameWindow || !frameWindow.Element || !frameWindow.Promise) return;
+      var blocked = function() {
+        return frameWindow.Promise.reject(new Error("Fullscreen is disabled in test hub."));
+      };
+      ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"].forEach(function(method) {
+        Object.defineProperty(frameWindow.Element.prototype, method, {
+          configurable: true,
+          writable: true,
+          value: blocked
+        });
+      });
+    } catch (_) {
+    }
   }
 
   function resetGame() {
@@ -805,6 +821,7 @@
       state.logs = [];
       renderLog();
     });
+    el.gameFrame.addEventListener("load", disableFrameFullscreen);
     window.addEventListener("message", receiveMessage);
     window.addEventListener("resize", applyDeviceSize);
   }

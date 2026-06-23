@@ -26,10 +26,6 @@
     }, {});
   }
 
-  function isTestHub() {
-    return getParams().get("test_hub") === "1";
-  }
-
   function readRecentIds() {
     try {
       const parsed = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
@@ -263,10 +259,6 @@
 
     const startColoring = () => {
       playStartedAtRef.current = Date.now();
-      if (isTestHub()) {
-        setScreen("color");
-        return;
-      }
       requestAppFullscreen().finally(() => setScreen("color"));
     };
 
