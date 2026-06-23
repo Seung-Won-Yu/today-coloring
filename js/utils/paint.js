@@ -23,6 +23,8 @@
   const VISUAL_HOLE_FILL_MIN_NEIGHBORS = 5;
   const VISUAL_HOLE_FILL_PAINTABLE_MIN_NEIGHBORS = 8;
   const VISUAL_HOLE_FILL_MAX_COLOR_DISTANCE = 42;
+  const VISUAL_THIN_GAP_FILL_RADIUS = 2;
+  const VISUAL_THIN_GAP_MAX_COLOR_DISTANCE = 42;
   const PAINT_FRAME_MAX_SIDE = 1500;
   const {
     MIN_VISIBLE_ALPHA,
@@ -642,6 +644,46 @@
     return bestIdx;
   }
 
+  function findNearestFillInDirection(fillData, width, height, x, y, dx, dy, radius) {
+    for (let distance = 1; distance <= radius; distance++) {
+      const px = x + dx * distance;
+      const py = y + dy * distance;
+      if (px < 0 || px >= width || py < 0 || py >= height) return null;
+      const idx = (py * width + px) * 4;
+      if (fillData[idx + 3] > 0) return { idx, distance };
+    }
+    return null;
+  }
+
+  function findThinGapFillPixel(fillData, baseData, width, height, x, y, radius) {
+    const idx = (y * width + x) * 4;
+    if (isHardLineCoreColor(baseData[idx], baseData[idx + 1], baseData[idx + 2], baseData[idx + 3])) return -1;
+    const stats = getPixelStats(baseData[idx], baseData[idx + 1], baseData[idx + 2]);
+    if (!isWhiteBaseColor(baseData[idx], baseData[idx + 1], baseData[idx + 2], baseData[idx + 3]) && (stats.luminance < 220 || stats.chroma > 72)) return -1;
+    const directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
+    let best = null;
+    for (const [dx, dy] of directions) {
+      const before = findNearestFillInDirection(fillData, width, height, x, y, -dx, -dy, radius);
+      if (!before) continue;
+      const after = findNearestFillInDirection(fillData, width, height, x, y, dx, dy, radius);
+      if (!after) continue;
+      if (getFillPixelColorDistance(fillData, before.idx, after.idx) > VISUAL_THIN_GAP_MAX_COLOR_DISTANCE) continue;
+      const span = before.distance + after.distance;
+      const nearest = before.distance <= after.distance ? before : after;
+      if (!best || span < best.span || (span === best.span && nearest.distance < best.nearest.distance)) {
+        best = { span, nearest };
+      }
+    }
+    return best ? best.nearest.idx : -1;
+  }
+
+  function hasAnyVisibleFill(fillData) {
+    for (let idx = 3; idx < fillData.length; idx += 4) {
+      if (fillData[idx] > 0) return true;
+    }
+    return false;
+  }
+
   function getVisualFillPixelIndex(fillData, lineData, baseData, width, height, pixelOffset) {
     const idx = pixelOffset * 4;
     if (fillData[idx + 3] > 0) return idx;
@@ -650,7 +692,9 @@
     if (lineData && lineData[idx + 3] >= VISUAL_FILL_MIN_LINE_ALPHA) {
       return findNearbyFillPixel(fillData, width, height, x, y, VISUAL_FILL_UNDER_LINE_RADIUS);
     }
-    return findSurroundedFillPixel(fillData, baseData, width, height, x, y, VISUAL_HOLE_FILL_RADIUS);
+    const surroundedFillIdx = findSurroundedFillPixel(fillData, baseData, width, height, x, y, VISUAL_HOLE_FILL_RADIUS);
+    if (surroundedFillIdx >= 0) return surroundedFillIdx;
+    return findThinGapFillPixel(fillData, baseData, width, height, x, y, VISUAL_THIN_GAP_FILL_RADIUS);
   }
 
   function composePaintLayers(baseImageData, fillLayerImageData, lineLayerImageData = null) {
@@ -659,6 +703,9 @@
     const fillData = fillLayerImageData.data;
     const baseData = baseImageData.data;
     const lineData = lineLayerImageData ? lineLayerImageData.data : buildLineLayerImageData(baseImageData).data;
+    if (!hasAnyVisibleFill(fillData)) {
+      return createImageDataLike(width, height, new Uint8ClampedArray(baseData));
+    }
     const data = new Uint8ClampedArray(width * height * 4);
     for (let idx = 0, pixelOffset = 0; idx < data.length; idx += 4, pixelOffset++) {
       const lineAlpha = lineData[idx + 3] / 255;
