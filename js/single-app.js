@@ -5,7 +5,7 @@
   const { Icon, isLight, Confetti } = window.UIComponents;
   const { ColoringScreen, CanvasArt, downloadCanvasPng, requestAppFullscreen } = window.ColoringRuntime;
   const MODES = window.COLORING_MODES || {};
-  const RECENT_KEY = "sori_single_recent_v1";
+  const RECENT_KEY = window.AppStorage && window.AppStorage.storageKeys ? window.AppStorage.storageKeys.singleRecent : "sori_single_recent_v1";
   const VALID_DIFFICULTIES = ["easy", "normal", "hard"];
 
   function getParams() {

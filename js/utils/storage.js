@@ -1,8 +1,10 @@
 (function() {
-  const STORAGE_VERSION = "v14";
+  const STORAGE_VERSION = "v1";
+  const MAX_GALLERY_ITEMS = 40;
   const GALLERY_KEY = "sori_gallery_" + STORAGE_VERSION;
   const PROGRESS_KEY = "sori_progress_" + STORAGE_VERSION;
   const SETTINGS_KEY = "sori_settings_v1";
+  const SINGLE_RECENT_KEY = "sori_single_recent_v1";
   const FONT_SCALE_OPTIONS = [1, 1.12, 1.24];
   const THEME_OPTIONS = ["따뜻", "차분", "고대비"];
   const DEFAULT_SETTINGS = {
@@ -22,7 +24,26 @@
   function writeJson(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
+      return true;
     } catch (_) {
+      return false;
+    }
+  }
+
+  function pruneLegacyKeys() {
+    try {
+      const keepKeys = new Set([PROGRESS_KEY, GALLERY_KEY, SETTINGS_KEY, SINGLE_RECENT_KEY]);
+      const managedPrefixes = ["sori_progress_", "sori_gallery_", "sori_settings_", "sori_single_recent_"];
+      for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+        const key = localStorage.key(index);
+        if (!key || keepKeys.has(key)) continue;
+        if (managedPrefixes.some((prefix) => key.indexOf(prefix) === 0)) {
+          localStorage.removeItem(key);
+        }
+      }
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -56,7 +77,7 @@
   }
 
   function saveSettings(settings) {
-    writeJson(SETTINGS_KEY, createSettings(settings));
+    return writeJson(SETTINGS_KEY, createSettings(settings));
   }
 
   function normalizeFillColor(color) {
@@ -211,6 +232,10 @@
     return { value: next, changed };
   }
 
+  function limitGalleryItems(gallery) {
+    return Array.isArray(gallery) ? gallery.slice(0, MAX_GALLERY_ITEMS) : [];
+  }
+
   function loadProgress() {
     const normalized = normalizeProgress(readJson(PROGRESS_KEY, {}));
     if (normalized.changed) writeJson(PROGRESS_KEY, normalized.value);
@@ -218,25 +243,41 @@
   }
 
   function saveProgress(map) {
-    writeJson(PROGRESS_KEY, normalizeProgress(map).value);
+    const value = normalizeProgress(map).value;
+    return {
+      saved: writeJson(PROGRESS_KEY, value),
+      value
+    };
   }
 
   function loadGallery() {
     const normalized = normalizeGallery(readJson(GALLERY_KEY, []));
-    if (normalized.changed) writeJson(GALLERY_KEY, normalized.value);
-    return normalized.value;
+    const value = limitGalleryItems(normalized.value);
+    if (normalized.changed || value.length !== normalized.value.length) writeJson(GALLERY_KEY, value);
+    return value;
   }
 
   function saveGallery(list) {
-    writeJson(GALLERY_KEY, normalizeGallery(list).value);
+    const normalized = normalizeGallery(list);
+    const value = limitGalleryItems(normalized.value);
+    return {
+      saved: writeJson(GALLERY_KEY, value),
+      value,
+      capped: value.length !== normalized.value.length,
+      maxItems: MAX_GALLERY_ITEMS
+    };
   }
+
+  pruneLegacyKeys();
 
   window.AppStorage = {
     storageVersion: STORAGE_VERSION,
+    maxGalleryItems: MAX_GALLERY_ITEMS,
     storageKeys: {
       progress: PROGRESS_KEY,
       gallery: GALLERY_KEY,
-      settings: SETTINGS_KEY
+      settings: SETTINGS_KEY,
+      singleRecent: SINGLE_RECENT_KEY
     },
     loadGallery,
     saveGallery,
@@ -244,6 +285,7 @@
     saveProgress,
     loadSettings,
     saveSettings,
+    pruneLegacyKeys,
     createSettings,
     getSavedFills,
     getSavedHistory,

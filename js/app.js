@@ -1096,7 +1096,7 @@ const THEME_OPTIONS = [
   { label: "차분", value: "차분" },
   { label: "고대비", value: "고대비" }
 ];
-function SettingsDialog({ settings, onChange, onClose, progressCount = 0, onResetProgress }) {
+function SettingsDialog({ settings, onChange, onClose, progressCount = 0, galleryCount = 0, onResetProgress, onDeleteAllRecords }) {
   const e = React.createElement;
   const dialogRef = React.useRef(null);
   const fontScale = settings && settings.fontScale ? settings.fontScale : 1;
@@ -1156,23 +1156,41 @@ function SettingsDialog({ settings, onChange, onClose, progressCount = 0, onRese
           )
         )
       ),
-      e("fieldset", { className: "settings-field settings-field--danger" },
-        e("legend", null, "도안 기록"),
-        e("button", {
-          type: "button",
-          className: "settings-reset",
-          onClick: onResetProgress,
-          disabled: progressCount <= 0
-        },
-          e("span", { className: "settings-reset__icon", "aria-hidden": "true" }, e(Icon, { name: "reset", size: 19 })),
-          e("span", { className: "settings-reset__copy" },
-            e("strong", null, "색칠 기록 초기화"),
-            e("small", null, progressCount > 0 ? progressCount + "개 도안을 처음 상태로 돌려요" : "초기화할 색칠 기록이 없어요")
-          )
+      e("p", { className: "settings-preview", "aria-live": "polite" }, "오늘의 색칠"),
+      e("div", { className: "settings-danger-zone" },
+        e("fieldset", { className: "settings-field settings-field--danger" },
+          e("legend", null, "도안 기록"),
+          e("button", {
+            type: "button",
+            className: "settings-reset",
+            onClick: onResetProgress,
+            disabled: progressCount <= 0
+          },
+            e("span", { className: "settings-reset__icon", "aria-hidden": "true" }, e(Icon, { name: "reset", size: 19 })),
+            e("span", { className: "settings-reset__copy" },
+              e("strong", null, "색칠 기록 초기화"),
+              e("small", null, progressCount > 0 ? progressCount + "개 도안을 처음 상태로 돌려요" : "초기화할 색칠 기록이 없어요")
+            )
+          ),
+          e("p", { className: "settings-help" }, "갤러리에 보관한 완성 작품은 유지돼요.")
         ),
-        e("p", { className: "settings-help" }, "갤러리에 보관한 완성 작품은 유지돼요.")
-      ),
-      e("p", { className: "settings-preview", "aria-live": "polite" }, "오늘의 색칠")
+        e("fieldset", { className: "settings-field settings-field--danger" },
+          e("legend", null, "전체 기록"),
+          e("button", {
+            type: "button",
+            className: "settings-reset settings-reset--danger",
+            onClick: onDeleteAllRecords,
+            disabled: progressCount + galleryCount <= 0
+          },
+            e("span", { className: "settings-reset__icon", "aria-hidden": "true" }, e(Icon, { name: "trash", size: 19 })),
+            e("span", { className: "settings-reset__copy" },
+              e("strong", null, "기록 전체 삭제"),
+              e("small", null, progressCount + galleryCount > 0 ? "진행 작품과 갤러리를 모두 비워요" : "삭제할 기록이 없어요")
+            )
+          ),
+          e("p", { className: "settings-help" }, "설정값은 유지돼요.")
+        )
+      )
     )
   );
 }
@@ -1725,6 +1743,7 @@ const App = function App() {
   const [toast, setToast] = React.useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = React.useState(null);
   const [resetProgressConfirmOpen, setResetProgressConfirmOpen] = React.useState(false);
+  const [deleteAllConfirmOpen, setDeleteAllConfirmOpen] = React.useState(false);
   const progressSaveTimerRef = React.useRef(null);
   const pendingProgressRef = React.useRef(null);
   const artworksList = window.ARTWORKS;
@@ -1810,28 +1829,38 @@ const App = function App() {
     setJustSaved(true);
     const item = AppStorage.createGalleryItem({ id: "g" + Date.now(), artId, fills, date: Date.now() });
     const next = [item, ...gallery];
-    setGallery(next);
-    AppStorage.saveGallery(next);
+    const saveResult = AppStorage.saveGallery(next);
+    if (!saveResult.saved) {
+      setJustSaved(false);
+      flash("저장 공간이 부족해요. 오래된 작품을 삭제해 주세요");
+      return;
+    }
+    setGallery(saveResult.value);
+    if (saveResult.capped) flash("갤러리는 최근 " + saveResult.maxItems + "개까지 보관해요");
     createGallerySnapshotDataUrl(art, fills).then((snapshotDataUrl) => {
       const itemWithSnapshot = AppStorage.createGalleryItem({ ...item, snapshotDataUrl });
       setGallery((currentGallery) => {
         const updated = currentGallery.map((galleryItem) => galleryItem.id === item.id ? itemWithSnapshot : galleryItem);
-        AppStorage.saveGallery(updated);
-        return updated;
+        const snapshotSave = AppStorage.saveGallery(updated);
+        if (!snapshotSave.saved) {
+          window.setTimeout(() => flash("저장 공간이 부족해요. 오래된 작품을 삭제해 주세요"), 0);
+          return currentGallery;
+        }
+        return snapshotSave.value;
       });
     }).catch(() => {
     });
   };
   const deleteGalleryItem = (itemId) => {
     const next = gallery.filter((item) => item.id !== itemId);
-    setGallery(next);
-    AppStorage.saveGallery(next);
+    const saveResult = AppStorage.saveGallery(next);
+    setGallery(saveResult.saved ? saveResult.value : next);
     setDeleteConfirmId(null);
     if (viewItem && viewItem.id === itemId) {
       setViewItem(null);
       setScreen("gallery");
     }
-    flash("\uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD588\uC5B4\uC694");
+    flash(saveResult.saved ? "\uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD588\uC5B4\uC694" : "저장 공간이 부족해요. 오래된 작품을 삭제해 주세요");
   };
   const resetAllProgress = () => {
     if (progressSaveTimerRef.current) {
@@ -1843,6 +1872,22 @@ const App = function App() {
     AppStorage.saveProgress({});
     setResetProgressConfirmOpen(false);
     flash("도안 색칠 기록을 초기화했어요");
+  };
+  const deleteAllRecords = () => {
+    if (progressSaveTimerRef.current) {
+      window.clearTimeout(progressSaveTimerRef.current);
+      progressSaveTimerRef.current = null;
+    }
+    pendingProgressRef.current = null;
+    AppStorage.saveProgress({});
+    AppStorage.saveGallery([]);
+    setProgress({});
+    setGallery([]);
+    setViewItem(null);
+    setJustSaved(false);
+    setDeleteAllConfirmOpen(false);
+    if (screen === "gallery" || screen === "view" || screen === "done") setScreen("home");
+    flash("기록을 모두 삭제했어요");
   };
   const saveArtworkPng = async (targetArt, targetFills) => {
     try {
@@ -1925,7 +1970,7 @@ const App = function App() {
       },
       onDelete: setDeleteConfirmId
     }
-  ), deleteConfirmId && /* @__PURE__ */ React.createElement(ConfirmDialog, { title: "\uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?", message: "\uC0AD\uC81C\uD55C \uC644\uC131\uC791\uC740 \uB2E4\uC2DC \uBCF5\uAD6C\uD560 \uC218 \uC5C6\uC5B4\uC694.", confirmLabel: "\uC0AD\uC81C", cancelLabel: "\uCDE8\uC18C", danger: true, onConfirm: () => deleteGalleryItem(deleteConfirmId), onCancel: () => setDeleteConfirmId(null) }), resetProgressConfirmOpen && /* @__PURE__ */ React.createElement(ConfirmDialog, { title: "\uC0C9\uCE60 \uAE30\uB85D\uC744 \uCD08\uAE30\uD654\uD560\uAE4C\uC694?", message: "\uBAA8\uB4E0 \uB3C4\uC548\uC758 \uC0C9\uCE60 \uC9C4\uD589 \uAE30\uB85D\uB9CC \uC9C0\uC6CC\uC838\uC694. \uAC24\uB7EC\uB9AC\uC5D0 \uBCF4\uAD00\uD55C \uC644\uC131 \uC791\uD488\uC740 \uADF8\uB300\uB85C \uB0A8\uC544\uC694.", confirmLabel: "\uCD08\uAE30\uD654", cancelLabel: "\uCDE8\uC18C", danger: true, icon: "reset", onConfirm: resetAllProgress, onCancel: () => setResetProgressConfirmOpen(false) }), toast && /* @__PURE__ */ React.createElement("div", { className: "toast toast--" + screen }, toast), showBottomNav && /* @__PURE__ */ React.createElement(
+  ), deleteConfirmId && /* @__PURE__ */ React.createElement(ConfirmDialog, { title: "\uAC24\uB7EC\uB9AC\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?", message: "\uC0AD\uC81C\uD55C \uC644\uC131\uC791\uC740 \uB2E4\uC2DC \uBCF5\uAD6C\uD560 \uC218 \uC5C6\uC5B4\uC694.", confirmLabel: "\uC0AD\uC81C", cancelLabel: "\uCDE8\uC18C", danger: true, onConfirm: () => deleteGalleryItem(deleteConfirmId), onCancel: () => setDeleteConfirmId(null) }), resetProgressConfirmOpen && /* @__PURE__ */ React.createElement(ConfirmDialog, { title: "\uC0C9\uCE60 \uAE30\uB85D\uC744 \uCD08\uAE30\uD654\uD560\uAE4C\uC694?", message: "\uBAA8\uB4E0 \uB3C4\uC548\uC758 \uC0C9\uCE60 \uC9C4\uD589 \uAE30\uB85D\uB9CC \uC9C0\uC6CC\uC838\uC694. \uAC24\uB7EC\uB9AC\uC5D0 \uBCF4\uAD00\uD55C \uC644\uC131 \uC791\uD488\uC740 \uADF8\uB300\uB85C \uB0A8\uC544\uC694.", confirmLabel: "\uCD08\uAE30\uD654", cancelLabel: "\uCDE8\uC18C", danger: true, icon: "reset", onConfirm: resetAllProgress, onCancel: () => setResetProgressConfirmOpen(false) }), deleteAllConfirmOpen && /* @__PURE__ */ React.createElement(ConfirmDialog, { title: "\uBAA8\uB4E0 \uAE30\uB85D\uC744 \uC0AD\uC81C\uD560\uAE4C\uC694?", message: "\uC9C4\uD589 \uC911\uC778 \uC791\uD488\uACFC \uAC24\uB7EC\uB9AC\uAC00 \uBAA8\uB450 \uC9C0\uC6CC\uC838\uC694. \uB418\uB3CC\uB9B4 \uC218 \uC5C6\uC5B4\uC694.", confirmLabel: "\uC804\uCCB4 \uC0AD\uC81C", cancelLabel: "\uCDE8\uC18C", danger: true, icon: "trash", onConfirm: deleteAllRecords, onCancel: () => setDeleteAllConfirmOpen(false) }), toast && /* @__PURE__ */ React.createElement("div", { className: "toast toast--" + screen }, toast), showBottomNav && /* @__PURE__ */ React.createElement(
     BottomNav,
     {
       active: activeNav,
@@ -1933,9 +1978,12 @@ const App = function App() {
     onHome: () => setScreen("home"),
       onGallery: () => setScreen("gallery")
     }
-  ), settingsOpen && /* @__PURE__ */ React.createElement(SettingsDialog, { settings, onChange: updateSettings, onClose: () => setSettingsOpen(false), progressCount: Object.keys(progress || {}).length, onResetProgress: () => {
+  ), settingsOpen && /* @__PURE__ */ React.createElement(SettingsDialog, { settings, onChange: updateSettings, onClose: () => setSettingsOpen(false), progressCount: Object.keys(progress || {}).length, galleryCount: gallery.length, onResetProgress: () => {
     setSettingsOpen(false);
     setResetProgressConfirmOpen(true);
+  }, onDeleteAllRecords: () => {
+    setSettingsOpen(false);
+    setDeleteAllConfirmOpen(true);
   } }));
 };
 window.ColoringRuntime = {
