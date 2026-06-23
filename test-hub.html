@@ -6,7 +6,7 @@
 <title>오늘의 색칠 테스트 허브</title>
 <link rel="icon" sizes="512x512" href="assets/icons/app-icon.png">
 <script src="js/data/artworks.js?v=37"></script>
-<script src="js/data/modes.js?v=2"></script>
+<script src="js/data/modes.js?v=3"></script>
 <style>
   :root {
     --bg: #f6f1e8;
@@ -401,7 +401,7 @@
   <header class="hub__header">
     <div class="hub__title">
       <h1>오늘의 색칠 테스트 허브</h1>
-      <span>표준·알림·케어 모드를 호스트 없이 실행하고 payload를 확인합니다.</span>
+      <span>표준·알람·케어 모드를 호스트 없이 실행하고 payload를 확인합니다.</span>
     </div>
     <span class="hub__status" id="status">대기 중</span>
   </header>
@@ -416,9 +416,8 @@
           <label for="mode">모드</label>
           <select id="mode">
             <option value="standard">standard</option>
-            <option value="reminder">reminder</option>
+            <option value="alarm">alarm</option>
             <option value="care">care</option>
-            <option value="notification">notification</option>
           </select>
         </div>
         <div class="field">
@@ -429,7 +428,7 @@
             <option value="normal">normal</option>
             <option value="hard">hard</option>
           </select>
-          <span class="hint" id="difficultyHint">reminder/notification은 도안 미지정 시 난이도 기준으로 랜덤 선택합니다.</span>
+          <span class="hint" id="difficultyHint">alarm은 도안 미지정 시 난이도 기준으로 랜덤 선택합니다.</span>
         </div>
         <div class="field">
           <label for="art">도안 직접 지정</label>
@@ -624,7 +623,7 @@
       };
     }
     var modes = window.COLORING_MODES || {};
-    return modes[el.mode.value] || modes.reminder || {};
+    return modes[el.mode.value] || modes.alarm || {};
   }
 
   function buildParams(includeCacheBuster) {
@@ -698,8 +697,7 @@
       selectionPolicy: config.selectionPolicy,
       minPaintedToFinish: config.minPaintedToFinish,
       autoReturnMs: config.autoReturnMs,
-      returnToHost: config.returnToHost,
-      aliasOf: el.mode.value === "notification" ? "reminder" : undefined
+      returnToHost: config.returnToHost
     }, null, 2);
     renderKeyValues(el.paramsTable, [
       { label: "entry", value: el.mode.value === "standard" ? "index.html" : "single.html" },

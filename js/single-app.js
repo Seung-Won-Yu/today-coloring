@@ -13,8 +13,8 @@
   }
 
   function getModeConfig() {
-    const mode = getParams().get("mode") || "reminder";
-    return MODES[mode] || MODES.reminder;
+    const mode = getParams().get("mode") || "alarm";
+    return MODES[mode] || MODES.alarm;
   }
 
   function getHostContext() {

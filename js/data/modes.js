@@ -1,11 +1,11 @@
 (function() {
   window.COLORING_MODES = {
-    reminder: {
-      id: "reminder",
-      title: "알림 색칠",
+    alarm: {
+      id: "alarm",
+      title: "알람 색칠",
       introTitle: "오늘의 색칠을 시작해요",
       introText: "안내를 보고 시작하면 한 작품을 차분히 완성할 수 있어요.",
-      selectionPolicy: "reminder",
+      selectionPolicy: "alarm",
       minPaintedToFinish: 1,
       autoReturnMs: 10000,
       returnToHost: true
@@ -22,5 +22,4 @@
     }
   };
 
-  window.COLORING_MODES.notification = window.COLORING_MODES.reminder;
 })();
