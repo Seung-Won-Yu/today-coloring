@@ -541,7 +541,7 @@
 }
 
 .color--bottom .canvaswrap {
-  padding:8px 5px 174px;
+  padding:8px 5px 14px;
 }
 
 .color--side .canvaswrap {
@@ -553,7 +553,7 @@
   position:absolute;
   left:50%;
   right:auto;
-  bottom:158px;
+  bottom:16px;
   width:min(78%, 520px);
   height:26px;
   border-radius:999px;
@@ -642,8 +642,8 @@
   background:rgba(255,255,255,.9);
   border:1px solid rgba(25, 28, 29, .08);
   box-shadow:0 8px 18px rgba(25, 28, 29, .08);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
 }
 
 .color-toolbelt__btn {
@@ -691,10 +691,12 @@
 }
 
 .color--bottom .palettezone--bottom {
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
+  position:relative;
+  left:auto;
+  right:auto;
+  bottom:auto;
+  flex:0 0 auto;
+  width:100%;
   display:grid;
   min-height:168px;
   grid-template-columns:92px minmax(0, 1fr);
@@ -1470,15 +1472,15 @@
   }
 
   .color--bottom .palette--bottom .palette__track {
-    grid-auto-columns:40px;
+    grid-auto-columns:50px;
     gap:7px 7px;
     padding-right:8px;
   }
 
   .color--bottom .palette--bottom .swatch {
-    width:38px;
-    min-width:38px;
-    height:38px;
+    width:44px;
+    min-width:44px;
+    height:44px;
   }
 }
 
@@ -1821,7 +1823,7 @@
   }
 
   .color--bottom .canvaswrap {
-    padding:10px 8px 174px;
+    padding:10px 8px 14px;
   }
 
   .color--bottom .canvasinner {
@@ -2058,11 +2060,11 @@
 }
 
 .color--bottom .canvaswrap {
-  padding-bottom:158px;
+  padding-bottom:14px;
 }
 
 .canvaswrap::after {
-  bottom:142px;
+  bottom:16px;
 }
 
 .color--bottom .palettezone--bottom {
@@ -2107,18 +2109,18 @@
 }
 
 .color--bottom .palette--bottom .palette__track {
-  min-height:82px;
-  grid-template-rows:repeat(2, 36px);
-  grid-auto-columns:40px;
+  min-height:98px;
+  grid-template-rows:repeat(2, 44px);
+  grid-auto-columns:50px;
   gap:6px;
   padding:5px 9px 5px 6px;
   border-radius:16px;
 }
 
 .color--bottom .palette--bottom .swatch {
-  width:36px;
-  height:36px;
-  min-width:36px;
+  width:44px;
+  height:44px;
+  min-width:44px;
   border-width:3px;
 }
 
@@ -3072,11 +3074,11 @@
 }
 
 .color--bottom .canvaswrap {
-  padding-bottom:184px;
+  padding-bottom:16px;
 }
 
 .color--bottom .canvaswrap::after {
-  bottom:168px;
+  bottom:18px;
 }
 
 .color--bottom .palettezone--bottom {
@@ -3177,16 +3179,16 @@
 
 .color--bottom .palette--bottom .palette__track {
   min-height:98px;
-  grid-template-rows:repeat(2, 42px);
+  grid-template-rows:repeat(2, 44px);
   grid-auto-columns:50px;
   gap:8px 9px;
   padding:6px 12px;
 }
 
 .color--bottom .palette--bottom .swatch {
-  width:42px;
-  min-width:42px;
-  height:42px;
+  width:44px;
+  min-width:44px;
+  height:44px;
 }
 
 .color--side .palettezone--side {
@@ -3347,16 +3349,16 @@
 
   .color--bottom .palette--bottom .palette__track {
     min-height:94px;
-    grid-template-rows:repeat(2, 40px);
+    grid-template-rows:repeat(2, 44px);
     grid-auto-columns:46px;
     gap:7px;
     padding-inline:10px;
   }
 
   .color--bottom .palette--bottom .swatch {
-    width:40px;
-    min-width:40px;
-    height:40px;
+    width:44px;
+    min-width:44px;
+    height:44px;
   }
 }
 
@@ -3383,11 +3385,11 @@
 
 @media (max-width: 520px) and (orientation: portrait) {
   .color--bottom .canvaswrap {
-    padding-bottom:184px;
+    padding-bottom:16px;
   }
 
   .color--bottom .canvaswrap::after {
-    bottom:168px;
+    bottom:18px;
   }
 
   .color--bottom .palettezone--bottom {
@@ -3552,11 +3554,11 @@
   }
 
   .color--bottom .canvaswrap {
-    padding:10px 8px 192px;
+    padding:10px 8px 16px;
   }
 
   .color--bottom .canvaswrap::after {
-    bottom:176px;
+    bottom:18px;
   }
 
   .color--bottom .palettezone--bottom {
@@ -3668,7 +3670,7 @@
   }
 
   .color--bottom .canvaswrap {
-    padding-bottom:186px;
+    padding-bottom:16px;
   }
 
   .color--bottom .palettezone--bottom {
@@ -3778,13 +3780,13 @@
 
 .swatch--light {
   box-shadow:
-    inset 0 0 0 2px rgba(74, 56, 30, .18),
+    inset 0 0 0 3px rgba(74, 56, 30, .3),
     0 7px 16px rgba(25, 28, 29, .14);
 }
 
 .swatch--light.swatch--on {
   box-shadow:
-    inset 0 0 0 2px rgba(74, 56, 30, .24),
+    inset 0 0 0 3px rgba(74, 56, 30, .34),
     0 0 0 4px rgba(255, 210, 63, .58),
     0 0 0 8px #FFF6C7,
     0 9px 18px rgba(25, 28, 29, .18);

@@ -1472,6 +1472,15 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
   const isPortraitTabletBottom = layout === "bottom" && window.innerWidth >= 521 && window.innerWidth <= 1024;
   const bottomChrome = isPortraitTabletBottom ? 295 : window.innerWidth >= 768 ? 250 : 268;
   const selectedColorName = PALETTE.find((p) => p.c === selected)?.name || "";
+  const canvasWrapStyle = {
+    width: "100%",
+    touchAction: "none",
+    overflow: scale > 1 ? "hidden" : "auto",
+    cursor: scale > 1 ? (isPanning ? "grabbing" : "grab") : "crosshair"
+  };
+  if (layout === "side") {
+    canvasWrapStyle.height = "100%";
+  }
   return e("div", { className: "screen color color--" + layout },
     e("header", { className: "appbar appbar--color", style: { position: "relative" } },
       e("button", { className: "appbar__back", onClick: onExit },
@@ -1490,7 +1499,7 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
       e("div", {
         className: "canvaswrap",
         ref: containerRef,
-        style: { width: "100%", height: "100%", touchAction: "none", overflow: "hidden", cursor: scale > 1 ? (isPanning ? "grabbing" : "grab") : "crosshair" }
+        style: canvasWrapStyle
       },
         e("div", {
           className: "canvasinner",
