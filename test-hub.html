@@ -24,6 +24,8 @@
 
   * { box-sizing: border-box; }
 
+  [hidden] { display: none !important; }
+
   body {
     margin: 0;
     min-height: 100vh;
@@ -741,7 +743,10 @@
     state.lastUrl = buildUrl(true);
     el.placeholder.hidden = true;
     el.gameFrame.hidden = false;
-    el.gameFrame.src = state.lastUrl;
+    el.gameFrame.removeAttribute("src");
+    window.requestAnimationFrame(function() {
+      el.gameFrame.src = state.lastUrl;
+    });
     el.status.textContent = "실행 중";
     renderInputPanel();
   }
@@ -766,6 +771,14 @@
       });
     } catch (_) {
     }
+  }
+
+  function handleFrameLoad() {
+    if (!state.lastUrl) return;
+    el.placeholder.hidden = true;
+    el.gameFrame.hidden = false;
+    el.status.textContent = "실행됨";
+    disableFrameFullscreen();
   }
 
   function resetGame() {
@@ -859,7 +872,7 @@
       state.logs = [];
       renderLog();
     });
-    el.gameFrame.addEventListener("load", disableFrameFullscreen);
+    el.gameFrame.addEventListener("load", handleFrameLoad);
     window.addEventListener("message", receiveMessage);
     window.addEventListener("resize", applyDeviceSize);
   }

@@ -1411,7 +1411,8 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
   }, [scale, aspect, layout]);
   const hasHistory = historyStack.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
-  const bottomChrome = window.innerWidth >= 768 ? 250 : 268;
+  const isPortraitTabletBottom = layout === "bottom" && window.innerWidth >= 521 && window.innerWidth <= 1024;
+  const bottomChrome = isPortraitTabletBottom ? 295 : window.innerWidth >= 768 ? 250 : 268;
   const selectedColorName = PALETTE.find((p) => p.c === selected)?.name || "";
   return e("div", { className: "screen color color--" + layout },
     e("header", { className: "appbar appbar--color", style: { position: "relative" } },

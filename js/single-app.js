@@ -120,7 +120,7 @@
       e("section", { className: "single-completion__copy" },
         e("span", { className: "single-pill" }, e(Icon, { name: saved ? "check" : "star", size: 18 }), saved ? "저장 완료" : "완성"),
         e("h1", null, saved ? "작품을 저장했어요" : "작품이 완성됐어요"),
-        e("p", null, "조금 더 칠하거나, 저장한 뒤 효담콜 화면으로 돌아갈 수 있어요."),
+        e("p", null, "조금 더 칠하거나, 저장한 뒤 세션을 마칠 수 있어요."),
         e("div", { className: "single-completion__certificate" },
           e("span", null, "완성 작품"),
           e("strong", null, art.title),
@@ -142,19 +142,9 @@
             )
           ),
           e("div", { className: "single-completion__timer", "aria-live": "polite" },
-            returning ? "돌아가는 중입니다" : remainingSeconds + "초 후 자동으로 돌아갑니다"
+            returning ? "세션 종료 신호를 보냈습니다" : remainingSeconds + "초 후 자동으로 세션이 종료됩니다"
           )
         )
-      )
-    );
-  }
-
-  function ReturningScreen() {
-    return e("main", { className: "single-returning" },
-      e("section", { className: "single-returning__panel" },
-        e("span", { className: "single-pill" }, e(Icon, { name: "check", size: 18 }), "완료"),
-        e("h1", null, "효담콜로 돌아갑니다"),
-        e("p", null, "잠시만 기다려주세요.")
       )
     );
   }
@@ -205,7 +195,6 @@
       if (returning) return;
       setReturning(true);
       sendSessionEnd(reason, { completed: true, abandoned: false });
-      setScreen("returning");
     }, [returning, sendSessionEnd]);
 
     React.useEffect(() => {
@@ -215,7 +204,7 @@
 
     React.useEffect(() => {
       const handlePageExit = () => {
-        const completed = screen === "done" || screen === "returning";
+        const completed = screen === "done" || returning;
         sendSessionEnd("page_exit", { completed, abandoned: !completed });
       };
       const handleVisibility = () => {
@@ -229,7 +218,7 @@
         window.removeEventListener("beforeunload", handlePageExit);
         document.removeEventListener("visibilitychange", handleVisibility);
       };
-    }, [sendSessionEnd]);
+    }, [returning, screen, sendSessionEnd]);
 
     React.useEffect(() => {
       if (screen !== "done" || returning) return;
@@ -313,7 +302,6 @@
         onMore: more,
         onReturn: () => returnToHost("manual_return")
       }),
-      screen === "returning" && e(ReturningScreen, null),
       toast && e("div", { className: "single-toast" }, toast)
     );
   }
