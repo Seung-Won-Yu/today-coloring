@@ -4,6 +4,8 @@
 
 **실행 주소:** [https://seung-won-yu.github.io/today-coloring/](https://seung-won-yu.github.io/today-coloring/)
 
+**테스트 허브:** [https://seung-won-yu.github.io/today-coloring/test-hub.html](https://seung-won-yu.github.io/today-coloring/test-hub.html)
+
 ## 실행
 
 로컬에서는 정적 서버만 켜면 됩니다.
@@ -41,9 +43,11 @@ http://localhost:8002/test-hub.html
 ## 테스트 허브
 
 `test-hub.html`
-: 효담콜 WebView 없이 게임을 iframe으로 실행하는 개발용 테스트 페이지입니다. `standard`는 `index.html` 표준모드를 열고, `reminder`, `care`, `notification`은 `single.html` 단일 세션을 엽니다. 기기 프리셋을 바꿔가며 실행할 수 있고, 단일 세션 종료 시 넘어오는 `COLORING_SESSION_END` payload를 IN/OUT 패널에서 확인할 수 있습니다.
+: 효담콜 WebView 없이 게임을 iframe 또는 새 창으로 실행하는 개발용 테스트 페이지입니다. `standard`는 `index.html` 표준모드를 열고, `reminder`, `care`, `notification`은 `single.html` 단일 세션을 엽니다. 기기 프리셋을 바꿔가며 실행할 수 있고, 단일 세션 종료 시 넘어오는 `COLORING_SESSION_END` payload를 IN/OUT 패널에서 확인할 수 있습니다.
 
-테스트 허브는 서비스워커 프리캐시에 포함하지 않습니다. 로컬 서버나 GitHub Pages URL에서 직접 열어 사용합니다.
+테스트 허브에서 `게임 실행`은 가운데 기기 프레임 안에서 실행하고, `새 창에서 실행`은 생성된 실제 URL을 새 탭으로 엽니다. 단일 세션 모드에서 도안을 비워두면 난이도 기준으로 랜덤 도안이 선택됩니다. 표준모드는 기존 목록 화면에서 직접 도안을 고르는 방식입니다.
+
+테스트 허브는 서비스워커 프리캐시에 포함하지 않습니다. 로컬 서버나 GitHub Pages URL에서 직접 열어 사용합니다. GitHub Pages 캐시가 남아 있으면 브라우저에서 강력 새로고침 후 확인합니다.
 
 ## 구성
 
