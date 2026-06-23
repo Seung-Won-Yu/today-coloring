@@ -270,21 +270,127 @@
 @media (max-width: 520px) {
   .single-intro,
   .single-completion {
-    padding-inline: 14px;
+    padding: max(12px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+  }
+
+  .single-intro {
+    place-items: start center;
+  }
+
+  .single-intro__panel {
+    gap: 10px;
+    align-content: start;
+  }
+
+  .single-intro__art {
+    width: min(54vw, 190px);
+    padding: 10px;
+    border-radius: 22px;
+    transform: rotate(-1deg);
+  }
+
+  .single-intro__art img {
+    border-radius: 14px;
   }
 
   .single-intro__copy,
   .single-returning__panel {
-    padding: 24px 18px;
-    border-radius: 24px;
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .single-pill {
+    min-height: 30px;
+    padding: 5px 12px;
+    font-size: 14px;
+  }
+
+  .single-intro h1,
+  .single-returning h1,
+  .single-completion__copy h1 {
+    margin-top: 12px;
+    font-size: 32px;
+    line-height: 1.08;
+  }
+
+  .single-intro__subtitle,
+  .single-returning p,
+  .single-completion__copy p {
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.42;
+  }
+
+  .single-intro__steps {
+    gap: 8px;
+    margin: 14px 0;
+  }
+
+  .single-intro__steps span {
+    min-height: 40px;
+    padding: 7px 10px;
+    border-radius: 14px;
+    font-size: 15px;
+  }
+
+  .single-intro__steps span::before {
+    width: 24px;
+    height: 24px;
   }
 
   .single-completion {
     align-content: start;
-    gap: 18px;
+    gap: 12px;
+  }
+
+  .single-completion__copy {
+    gap: 10px;
+  }
+
+  .single-completion__certificate {
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+
+  .single-completion__certificate strong {
+    font-size: 22px;
+  }
+
+  .single-completion__actions {
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .single-intro__start,
+  .single-completion__primary,
+  .single-completion__secondary {
+    min-height: 56px;
+    border-radius: 18px;
+    font-size: 18px;
   }
 
   .single-completion__row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .single-completion__secondary {
+    gap: 7px;
+    font-size: 16px;
+  }
+
+  .single-completion__timer {
+    font-size: 13px;
+  }
+
+  .single-completion__frame {
+    width: min(58vw, 190px);
+    justify-self: center;
+    margin: 0 auto;
+    border-radius: 14px;
+  }
+
+  .single-completion__frame canvas {
+    padding: 6px;
   }
 }
