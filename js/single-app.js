@@ -117,10 +117,13 @@
       e("div", { className: "single-completion__frame", "aria-label": "완성 작품" },
         e(CanvasArt, { art, fills, interactive: false, frameMode: "paint" })
       ),
+      e("section", { className: "single-completion__panel" },
       e("section", { className: "single-completion__copy" },
         e("span", { className: "single-pill" }, e(Icon, { name: saved ? "check" : "star", size: 18 }), saved ? "저장 완료" : "완성"),
         e("h1", null, saved ? "작품을 저장했어요" : "작품이 완성됐어요"),
-        e("p", null, "조금 더 칠하거나, 저장한 뒤 세션을 마칠 수 있어요."),
+        e("p", null, "완성한 그림을 확인하고 저장하거나 더 칠할 수 있어요.")
+      ),
+      e("section", { className: "single-completion__details" },
         e("div", { className: "single-completion__certificate" },
           e("span", null, "완성 작품"),
           e("strong", null, art.title),
@@ -145,6 +148,7 @@
             returning ? "세션 종료 신호를 보냈습니다" : remainingSeconds + "초 후 자동으로 세션이 종료됩니다"
           )
         )
+      )
       )
     );
   }
