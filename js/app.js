@@ -2002,7 +2002,7 @@ const App = function App() {
     {
       active: activeNav,
       galleryCount: gallery.length,
-    onHome: () => setScreen("home"),
+      onHome: () => setScreen("home"),
       onGallery: () => setScreen("gallery")
     }
   ), settingsOpen && /* @__PURE__ */ React.createElement(SettingsDialog, { settings, onChange: updateSettings, onClose: () => setSettingsOpen(false), progressCount: Object.keys(progress || {}).length, galleryCount: gallery.length, onResetProgress: () => {

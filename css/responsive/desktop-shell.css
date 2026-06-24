@@ -36,6 +36,93 @@
 }
 
 @media (min-width: 700px) and (max-width: 1023px) and (min-height: 740px) {
+  .app:not(.app--color) .lobby-screen {
+    padding:clamp(28px, 4vh, 44px);
+  }
+
+  .app:not(.app--color) .lobby-overlay {
+    max-width:620px;
+    min-height:100%;
+    justify-content:center;
+    gap:18px;
+    padding:clamp(26px, 4vh, 42px) clamp(34px, 6vw, 58px);
+  }
+
+  .app:not(.app--color) .lobby-showcase {
+    width:min(100%, 370px);
+    height:330px;
+  }
+
+  .app:not(.app--color) .lobby-showcase__card--0 {
+    width:226px;
+  }
+
+  .app:not(.app--color) .lobby-title {
+    max-width:520px;
+    font-size:clamp(34px, 5vw, 42px);
+    line-height:1.12;
+  }
+
+  .app:not(.app--color) .lobby-subtitle {
+    max-width:470px;
+    font-size:18px;
+  }
+
+  .app:not(.app--color) .lobby-actions {
+    width:min(100%, 500px);
+    grid-template-columns:minmax(0, 1fr) 108px;
+  }
+
+  .app:not(.app--color) .gallery--empty .empty--gallery {
+    width:min(calc(100% - 56px), 620px);
+    max-width:620px;
+    margin-top:28px;
+    padding:30px;
+  }
+
+  .app:not(.app--color) .empty-gallery__suggestions {
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+    margin-top:18px;
+  }
+
+  .app:not(.app--color) .empty-gallery__suggestion {
+    display:grid;
+    gap:9px;
+    padding:10px;
+    border-radius:18px;
+    background:#FFFDF8;
+    border:1px solid rgba(63,52,39,.12);
+    box-shadow:0 12px 24px rgba(51,40,26,.08);
+    color:var(--ink);
+    text-align:left;
+  }
+
+  .app:not(.app--color) .empty-gallery__thumb {
+    display:block;
+    aspect-ratio:3 / 4;
+    padding:6px;
+    border-radius:14px;
+    background:#F8F3EA;
+    border:1px solid rgba(63,52,39,.1);
+    box-shadow:inset 0 0 0 5px #FFFDF8;
+    overflow:hidden;
+  }
+
+  .app:not(.app--color) .empty-gallery__thumb img {
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+  }
+
+  .app:not(.app--color) .empty-gallery__title {
+    font-size:14px;
+    line-height:1.2;
+    font-weight:900;
+  }
+
   .app:not(.app--color) .completion {
     align-items:stretch;
     justify-content:flex-start;
@@ -165,7 +252,7 @@
   }
 
   .app:not(.app--color) .lobby-screen {
-    padding:clamp(24px, 4vh, 42px) clamp(34px, 4vw, 58px);
+    padding:clamp(44px, 7vh, 72px) clamp(56px, 6vw, 86px);
     background:
       radial-gradient(circle at 24% 18%, rgba(255,255,255,.82), transparent 32%),
       radial-gradient(circle at 84% 16%, rgba(220,232,220,.34), transparent 34%),
@@ -173,19 +260,19 @@
   }
 
   .app:not(.app--color) .lobby-overlay {
-    width:min(100%, 1120px);
-    max-width:1120px;
+    width:min(100%, 1040px);
+    max-width:1040px;
     height:100%;
     min-height:0;
     display:grid;
-    grid-template-columns:minmax(430px, 520px) minmax(420px, 1fr);
+    grid-template-columns:minmax(340px, 440px) minmax(420px, 480px);
     grid-template-rows:auto auto auto auto;
     align-content:center;
     align-items:center;
     justify-content:center;
-    column-gap:clamp(46px, 5vw, 78px);
-    row-gap:22px;
-    padding:clamp(30px, 4vh, 48px) clamp(38px, 4vw, 58px);
+    column-gap:clamp(58px, 6vw, 92px);
+    row-gap:20px;
+    padding:0;
     text-align:left;
     border-radius:0;
     background:transparent;
@@ -203,49 +290,40 @@
   .app:not(.app--color) .lobby-showcase {
     grid-column:1;
     grid-row:1 / span 4;
-    width:min(100%, 520px);
-    height:min(68vh, 640px);
+    width:min(100%, 430px);
+    height:min(68vh, 590px);
     min-height:520px;
     align-self:center;
+    border-radius:0;
+    background:transparent;
+    border:0;
+    box-shadow:none;
   }
 
   .app:not(.app--color) .lobby-showcase__card--0 {
-    left:42%;
-    top:4px;
-    width:min(360px, 76%);
-    transform:translateX(-50%) rotate(-1deg);
+    left:50%;
+    top:50%;
+    width:min(360px, 86%);
+    border-radius:20px;
+    transform:translate(-50%, -50%);
+    box-shadow:0 28px 54px rgba(51,40,26,.18);
   }
 
   .app:not(.app--color) .lobby-showcase__card--1,
   .app:not(.app--color) .lobby-showcase__card--2 {
-    display:flex;
-    z-index:2;
-    width:170px;
-    border-radius:16px;
-    opacity:.96;
-  }
-
-  .app:not(.app--color) .lobby-showcase__card--1 {
-    right:18px;
-    top:112px;
-    transform:rotate(7deg);
-  }
-
-  .app:not(.app--color) .lobby-showcase__card--2 {
-    right:64px;
-    bottom:76px;
-    transform:rotate(-7deg);
+    display:none;
   }
 
   .app:not(.app--color) .lobby-showcase__glow {
-    left:72px;
+    left:54px;
     right:54px;
-    bottom:48px;
-    height:38px;
+    bottom:52px;
+    height:44px;
+    opacity:.75;
   }
 
   .app:not(.app--color) .lobby-showcase__badge {
-    bottom:34px;
+    bottom:30px;
   }
 
   .app:not(.app--color) .lobby-brand,
@@ -256,13 +334,14 @@
   }
 
   .app:not(.app--color) .lobby-title {
-    max-width:560px;
-    font-size:clamp(42px, 3.8vw, 56px);
+    max-width:460px;
+    font-size:clamp(38px, 3.2vw, 48px);
     line-height:1.12;
+    white-space:nowrap;
   }
 
   .app:not(.app--color) .lobby-subtitle {
-    max-width:520px;
+    max-width:420px;
     font-size:20px;
   }
 
@@ -272,9 +351,9 @@
   }
 
   .app:not(.app--color) .lobby-actions {
-    max-width:540px;
+    max-width:440px;
     grid-template-columns:minmax(0, 1fr) 116px;
-    margin-top:18px;
+    margin-top:12px;
   }
 
   .app:not(.app--color) .lobby-start-btn {

@@ -1,4 +1,4 @@
-const CACHE_VERSION = '8';
+const CACHE_VERSION = '10';
 const CACHE_NAME = 'today-coloring-shell-v' + CACHE_VERSION;
 const APP_PAGES = [
   './',
