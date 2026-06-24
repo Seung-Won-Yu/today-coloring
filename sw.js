@@ -1,4 +1,4 @@
-const CACHE_VERSION = '10';
+const CACHE_VERSION = '12';
 const CACHE_NAME = 'today-coloring-shell-v' + CACHE_VERSION;
 const APP_PAGES = [
   './',
@@ -17,6 +17,7 @@ const APP_ASSETS = [
   './css/components/guide-navigation.css',
   './css/screens/guide/modal.css',
   './css/responsive/mobile-shell.css',
+  './css/responsive/desktop-shell.css',
   './css/screens/artworks/showcase.css',
   './css/components/canvas-feedback.css',
   './css/screens/artworks/cards.css',

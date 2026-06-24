@@ -38,7 +38,10 @@
 
 /* ── 토스트 ── */
 .toast { position:fixed; left:50%; bottom:calc(40px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+  max-width:min(420px, calc(100vw - 32px)); text-align:center; pointer-events:none;
   background:var(--ink); color:var(--paper); padding:14px 26px; border-radius:999px; font-size:calc(15px * var(--fs));
-  font-weight:700; box-shadow:var(--shadow-lg); z-index:50; animation:pop .3s ease; }
+  font-weight:700; box-shadow:var(--shadow-lg); z-index:260; animation:pop .3s ease; }
+.toast--home,
+.toast--gallery { bottom:calc(104px + env(safe-area-inset-bottom)); }
 
 @media (prefers-reduced-motion: reduce) { *{animation-duration:.01ms !important;} }

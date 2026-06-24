@@ -33,6 +33,30 @@
     min-height:100%;
     height:auto;
   }
+
+  .app:not(.app--color) .toast {
+    position:absolute;
+    left:50%;
+    bottom:clamp(28px, 5vh, 56px);
+    z-index:80;
+  }
+
+  .app:not(.app--color) .single-toast {
+    position:absolute;
+    left:50%;
+    bottom:clamp(28px, 5vh, 56px);
+    z-index:80;
+  }
+
+  .app:not(.app--color) .toast--done,
+  .app:not(.app--color) .toast--view {
+    bottom:clamp(28px, 5vh, 56px);
+  }
+
+  .app:not(.app--color).app--home .toast,
+  .app:not(.app--color).app--gallery .toast {
+    bottom:clamp(96px, 12vh, 128px);
+  }
 }
 
 @media (min-width: 700px) and (max-width: 1023px) and (min-height: 740px) {
