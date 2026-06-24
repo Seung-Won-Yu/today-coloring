@@ -442,7 +442,7 @@
   }
 }
 
-@media (min-width: 700px) and (min-height: 740px) {
+@media (min-width: 700px) and (max-width: 1023px) and (min-height: 740px) {
   .app:not(.app--color) .single-completion {
     width: min(100%, 420px);
     display: flex;
@@ -497,5 +497,19 @@
     min-height: 58px;
     border-radius: 18px;
     font-size: 18px;
+  }
+}
+
+@media (min-width: 1024px) and (min-height: 740px) {
+  .single-intro__panel {
+    width: min(100%, 1040px);
+    grid-template-columns: minmax(320px, 420px) minmax(380px, 500px);
+    justify-content: center;
+  }
+
+  .single-completion {
+    width: min(100%, 1120px);
+    grid-template-columns: minmax(340px, 520px) minmax(340px, 440px);
+    justify-content: center;
   }
 }
