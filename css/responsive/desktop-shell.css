@@ -150,18 +150,14 @@
 @media (min-width: 1024px) and (min-height: 740px) {
   .app:not(.app--color),
   .app--color {
-    flex-basis:min(100vw - 64px, 1200px);
+    flex:0 1 min(100vw - 64px, 1200px);
+    width:100%;
     max-width:min(100vw - 64px, 1200px);
-  }
-
-  .app:not(.app--color) {
     height:min(100dvh - 32px, 960px);
-  }
-
-  .app--lobby:not(.app--color) {
-    background:transparent;
-    border-color:transparent;
-    box-shadow:none;
+    border-radius:28px;
+    overflow:hidden;
+    border:1px solid rgba(74,56,30,.08);
+    box-shadow:0 24px 64px rgba(51,40,26,.20);
   }
 
   .app:not(.app--color) .appbar {
@@ -169,28 +165,32 @@
   }
 
   .app:not(.app--color) .lobby-screen {
-    padding:clamp(34px, 5vh, 58px) clamp(36px, 5vw, 76px);
-    background:transparent;
+    padding:clamp(34px, 5vh, 58px) clamp(42px, 5vw, 80px);
+    background:
+      radial-gradient(circle at 24% 18%, rgba(255,255,255,.82), transparent 32%),
+      radial-gradient(circle at 84% 16%, rgba(220,232,220,.34), transparent 34%),
+      linear-gradient(180deg, rgba(250,248,242,.92), rgba(239,232,219,.88));
   }
 
   .app:not(.app--color) .lobby-overlay {
-    max-width:1010px;
+    width:min(100%, 1100px);
+    max-width:1100px;
+    height:100%;
     min-height:0;
     display:grid;
-    grid-template-columns:minmax(330px, 410px) minmax(380px, 1fr);
+    grid-template-columns:minmax(390px, 470px) minmax(420px, 1fr);
+    grid-template-rows:auto auto auto auto;
+    align-content:center;
     align-items:center;
     justify-content:center;
-    column-gap:clamp(42px, 5vw, 68px);
-    row-gap:16px;
-    padding:clamp(36px, 5vh, 54px) clamp(38px, 5vw, 62px);
+    column-gap:clamp(48px, 5vw, 76px);
+    row-gap:18px;
+    padding:clamp(42px, 5vh, 62px) clamp(48px, 5vw, 74px);
     text-align:left;
-    border-radius:34px;
-    background:
-      radial-gradient(circle at 18% 18%, rgba(255,255,255,.92), transparent 34%),
-      radial-gradient(circle at 88% 18%, rgba(220,232,220,.5), transparent 34%),
-      linear-gradient(180deg, rgba(255,253,248,.86), rgba(248,241,230,.78));
-    border:1px solid rgba(74,56,30,.08);
-    box-shadow:0 24px 58px rgba(51,40,26,.12);
+    border-radius:0;
+    background:transparent;
+    border:0;
+    box-shadow:none;
   }
 
   .app:not(.app--color) .lobby-copy,
@@ -203,17 +203,17 @@
   .app:not(.app--color) .lobby-showcase {
     grid-column:1;
     grid-row:1 / span 4;
-    width:min(100%, 410px);
-    height:420px;
+    width:min(100%, 470px);
+    height:560px;
     align-self:center;
   }
 
   .app:not(.app--color) .lobby-showcase__card--0 {
-    width:292px;
+    width:410px;
   }
 
   .app:not(.app--color) .lobby-showcase__badge {
-    bottom:38px;
+    bottom:42px;
   }
 
   .app:not(.app--color) .lobby-brand,
@@ -224,14 +224,14 @@
   }
 
   .app:not(.app--color) .lobby-title {
-    max-width:520px;
-    font-size:clamp(36px, 3vw, 46px);
+    max-width:560px;
+    font-size:clamp(42px, 3.8vw, 56px);
     line-height:1.12;
   }
 
   .app:not(.app--color) .lobby-subtitle {
-    max-width:460px;
-    font-size:18px;
+    max-width:520px;
+    font-size:20px;
   }
 
   .app:not(.app--color) .lobby-theme-row,
@@ -240,19 +240,19 @@
   }
 
   .app:not(.app--color) .lobby-actions {
-    max-width:500px;
+    max-width:540px;
     grid-template-columns:minmax(0, 1fr) 116px;
-    margin-top:10px;
+    margin-top:14px;
   }
 
   .app:not(.app--color) .lobby-start-btn {
-    min-height:68px;
+    min-height:74px;
     border-radius:22px;
-    font-size:23px;
+    font-size:25px;
   }
 
   .app:not(.app--color) .lobby-guide-btn {
-    min-height:68px;
+    min-height:74px;
     border-radius:22px;
   }
 
@@ -391,12 +391,12 @@
   .guide-modal {
     display:grid;
     place-items:center;
-    padding:32px;
+    padding:16px;
   }
 
   .guide-modal__content {
     width:min(100%, 1200px);
-    height:min(100dvh - 64px, 960px);
+    height:min(100dvh - 32px, 960px);
     border-radius:28px;
     border:1px solid rgba(74,56,30,.08);
     box-shadow:0 24px 72px rgba(25,22,18,.28);

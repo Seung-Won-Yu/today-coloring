@@ -2353,6 +2353,7 @@
   width:min(100%, 360px);
   max-height:calc(100dvh - 44px);
   overflow-y:auto;
+  overscroll-behavior:contain;
   display:grid;
   gap:16px;
   padding:18px;
@@ -2360,6 +2361,14 @@
   background:#FFFDF8;
   border:1px solid rgba(63,52,39,.12);
   box-shadow:0 24px 70px rgba(27,22,18,.22);
+}
+
+@media (min-width: 1024px) and (min-height: 740px) {
+  .settings-card {
+    width:min(100%, 420px);
+    max-height:min(calc(100dvh - 80px), 820px);
+    padding:22px;
+  }
 }
 
 .settings-card__top {
@@ -2948,10 +2957,24 @@
     padding:18px 14px;
   }
 
+  .confirm-layer.settings-layer {
+    align-items:center;
+    padding:
+      max(14px, env(safe-area-inset-top))
+      14px
+      max(14px, env(safe-area-inset-bottom));
+  }
+
   .confirm-card {
     width:min(100%, 336px);
     padding:18px;
     border-radius:20px;
+  }
+
+  .settings-card {
+    width:min(100%, 360px);
+    max-height:calc(100dvh - 28px - env(safe-area-inset-bottom));
+    padding-bottom:22px;
   }
 
   .completion__inner {

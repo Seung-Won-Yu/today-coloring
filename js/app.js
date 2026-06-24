@@ -1469,6 +1469,10 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
   }, [scale, aspect, layout]);
   const hasHistory = historyStack.length > 0;
   const pageAspect = aspect >= 0.92 ? (layout === "side" ? 0.86 : 0.75) : aspect;
+  const usesDesktopStage = layout === "side" && window.innerWidth >= 1024 && window.innerHeight >= 740;
+  const sideCanvasHeightLimit = usesDesktopStage
+    ? `calc((100dvh - 124px) * ${pageAspect}), calc(861px * ${pageAspect})`
+    : `calc((100dvh - 84px) * ${pageAspect})`;
   const isPortraitTabletBottom = layout === "bottom" && window.innerWidth >= 521 && window.innerWidth <= 1024;
   const bottomChrome = isPortraitTabletBottom ? 295 : window.innerWidth >= 768 ? 250 : 268;
   const selectedColorName = PALETTE.find((p) => p.c === selected)?.name || "";
@@ -1504,7 +1508,7 @@ function ColoringScreen({ art, fills, history, selected, onSelect, onPaint, onHi
         e("div", {
           className: "canvasinner",
           style: {
-            width: layout === "side" ? `min(100%, calc((100dvh - 84px) * ${pageAspect}), calc(100dvw - var(--color-side-reserved, 320px)), var(--color-canvas-max-side, 920px))` : `min(calc(100dvw - 10px), calc((100dvh - ${bottomChrome}px) * ${pageAspect}), var(--color-canvas-max-bottom, 680px))`,
+            width: layout === "side" ? `min(100%, ${sideCanvasHeightLimit}, calc(100dvw - var(--color-side-reserved, 320px)), var(--color-canvas-max-side, 920px))` : `min(calc(100dvw - 10px), calc((100dvh - ${bottomChrome}px) * ${pageAspect}), var(--color-canvas-max-bottom, 680px))`,
             aspectRatio: pageAspect,
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
             transformOrigin: "0 0",
