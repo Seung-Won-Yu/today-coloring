@@ -1086,6 +1086,16 @@
   overflow:hidden;
 }
 
+.empty-gallery__copy {
+  display:grid;
+  justify-items:center;
+  gap:10px;
+}
+
+.empty-gallery__suggestions {
+  display:none;
+}
+
 .bigbtn--danger {
   background:#FFF4F0;
   color:var(--accent-d);

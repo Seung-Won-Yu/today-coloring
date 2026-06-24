@@ -140,6 +140,11 @@
   transform:translateX(-50%);
 }
 
+.lobby-showcase__card--1,
+.lobby-showcase__card--2 {
+  display:none;
+}
+
 .lobby-showcase__badge {
   position:absolute;
   z-index:4;

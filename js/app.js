@@ -845,6 +845,7 @@ function LobbyScreen({ onStart }) {
   const e = React.createElement;
   const [showGuide, setShowGuide] = React.useState(false);
   const featuredArt = window.ARTWORKS[0];
+  const showcaseArts = window.ARTWORKS.slice(1, 3);
   const openGuide = () => setShowGuide(true);
   const closeGuide = () => setShowGuide(false);
 
@@ -863,6 +864,9 @@ function LobbyScreen({ onStart }) {
         featuredArt && e("div", { className: "lobby-showcase__card lobby-showcase__card--0" },
           e(ArtworkImage, { art: featuredArt, priority: true })
         ),
+        showcaseArts.map((art, idx) => e("div", { key: art.id, className: "lobby-showcase__card lobby-showcase__card--" + (idx + 1) },
+          e(ArtworkImage, { art })
+        )),
         e("div", { className: "lobby-showcase__badge" },
           e(Icon, { name: "star", size: 16, color: "#fff" }),
           e("span", null, "작품 ", window.ARTWORKS.length, "장")
@@ -961,10 +965,11 @@ function HomeScreen({ onPick, onGallery, onSettings, artworksList, progress, gal
     )
   );
 }
-function GalleryScreen({ items, onBack, onView }) {
+function GalleryScreen({ items, onBack, onView, onPick }) {
   const e = React.createElement;
   const latest = items[0];
   const latestArt = latest ? getArtworkById(latest.artId) : window.ARTWORKS[0];
+  const suggestionArts = window.ARTWORKS.slice(0, 3);
   return e("div", { className: "screen gallery " + (items.length === 0 ? "gallery--empty" : "gallery--filled") },
     e("header", { className: "appbar" },
       e("div", { className: "appbar__brand" },
@@ -988,10 +993,18 @@ function GalleryScreen({ items, onBack, onView }) {
       e("div", { className: "gallery-summary__count" }, items.length, "점")
     ),
     items.length === 0 ? e("div", { className: "empty empty--gallery" },
-      e("div", { className: "empty__art" }, e(Thumb, { art: window.ARTWORKS[0] })),
-      e("p", { className: "empty__title" }, "아직 보관한 작품이 없어요"),
-      e("p", { className: "empty__sub" }, "마음에 드는 도안을 골라 첫 작품을 완성해보세요."),
-      e(BigButton, { icon: "plus", onClick: onBack }, "작품 고르기")
+      e("div", { className: "empty-gallery__copy" },
+        e("div", { className: "empty__art" }, e(Thumb, { art: window.ARTWORKS[0] })),
+        e("p", { className: "empty__title" }, "아직 보관한 작품이 없어요"),
+        e("p", { className: "empty__sub" }, "마음에 드는 도안을 골라 첫 작품을 완성해보세요."),
+        e(BigButton, { icon: "plus", onClick: onBack }, "작품 고르기")
+      ),
+      e("div", { className: "empty-gallery__suggestions", "aria-label": "추천 도안" },
+        suggestionArts.map((art) => e("button", { key: art.id, type: "button", className: "empty-gallery__suggestion", onClick: () => onPick ? onPick(art.id) : onBack() },
+          e("span", { className: "empty-gallery__thumb" }, e(ArtworkImage, { art })),
+          e("span", { className: "empty-gallery__title" }, art.title)
+        ))
+      )
     ) : e("div", { className: "cardgrid" }, items.map((it) => {
     const art = getArtworkById(it.artId);
     if (!art) return null;
@@ -1960,6 +1973,7 @@ const App = function App() {
     {
       items: gallery,
       onBack: () => setScreen("home"),
+      onPick: pickArt,
       onView: (it) => {
         setViewItem(it);
         setScreen("view");
