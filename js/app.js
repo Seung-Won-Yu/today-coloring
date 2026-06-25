@@ -8,6 +8,7 @@ const {
   buildPaintRegionMap,
   createFillLayerImageData,
   decodePaintRegionMapImageData,
+  getComposeBounds,
   getPaintRegionLabel,
   getPaintRegionMapSeeds,
   paintFillLayerSeed,
@@ -41,10 +42,39 @@ const REGION_ANALYSIS_CACHE_LIMIT = 12;
 const paintLayerStateCache = new Map();
 const PAINT_LAYER_STATE_CACHE_LIMIT = 6;
 const MAX_CANVAS_RENDER_DPR = 2;
-let composedPaintScratchCanvas = null;
+const PAINT_ASSET_DATA_CACHE_LIMIT = 6;
+const precomputedPaintRegionMapCache = new Map();
+const precomputedPaintLineLayerCache = new Map();
+const composedPaintScratchCanvasMap = typeof WeakMap !== "undefined" ? new WeakMap() : null;
+const scheduledCanvasDraws = typeof WeakMap !== "undefined" ? new WeakMap() : null;
+let fallbackComposedPaintScratchCanvas = null;
 function getRegionAnalysisCacheKey(art, frameMode, width, height) {
   const artKey = art ? `${art.id || ""}@${art.version || ""}@${art.src || ""}` : "";
   return `${artKey}:${frameMode}:${width}x${height}`;
+}
+
+function getPaintAssetDataCacheKey(art, frameMode, width, height, src) {
+  const artKey = art ? `${art.id || ""}@${art.version || ""}` : "";
+  return `${artKey}:${frameMode}:${width}x${height}:${src || ""}`;
+}
+
+function rememberPaintAssetDataCacheEntry(cache, cacheKey, entry) {
+  if (!cacheKey || !entry) return;
+  if (cache.has(cacheKey)) {
+    cache.delete(cacheKey);
+  } else if (cache.size >= PAINT_ASSET_DATA_CACHE_LIMIT) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey !== undefined) cache.delete(oldestKey);
+  }
+  cache.set(cacheKey, entry);
+}
+
+function readPaintAssetDataCache(cache, cacheKey) {
+  const cached = cache.get(cacheKey);
+  if (!cached) return null;
+  cache.delete(cacheKey);
+  cache.set(cacheKey, cached);
+  return cached;
 }
 
 function getFillsCacheSignature(fillsArray) {
@@ -104,15 +134,26 @@ function markProgressForSeed(progressImgData, baseData, fill, frame, regionMap =
 
 function loadPrecomputedPaintRegionMap(art, width, height, frameMode) {
   if (frameMode !== "paint" || !art || !art.regionMapSrc) return Promise.resolve(null);
-  return loadArtworkBitmap(art.regionMapSrc).then((img) => {
+  const cacheKey = getPaintAssetDataCacheKey(art, frameMode, width, height, art.regionMapSrc);
+  const cached = readPaintAssetDataCache(precomputedPaintRegionMapCache, cacheKey);
+  if (cached?.value) return Promise.resolve(cached.value);
+  if (cached?.promise) return cached.promise;
+  const promise = loadArtworkBitmap(art.regionMapSrc).then((img) => {
     if (!img || img.width !== width || img.height !== height) return null;
     const canvas = document.createElement("canvas");
     canvas.width = img.width;
     canvas.height = img.height;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.drawImage(img, 0, 0);
-    return decodePaintRegionMapImageData(ctx.getImageData(0, 0, img.width, img.height));
-  }).catch(() => null);
+    const decoded = decodePaintRegionMapImageData(ctx.getImageData(0, 0, img.width, img.height));
+    rememberPaintAssetDataCacheEntry(precomputedPaintRegionMapCache, cacheKey, { value: decoded });
+    return decoded;
+  }).catch(() => {
+    precomputedPaintRegionMapCache.delete(cacheKey);
+    return null;
+  });
+  rememberPaintAssetDataCacheEntry(precomputedPaintRegionMapCache, cacheKey, { promise });
+  return promise;
 }
 
 function loadPaintRegionMapForFrame(art, width, height, frameMode, baseImgData) {
@@ -124,15 +165,26 @@ function loadPaintRegionMapForFrame(art, width, height, frameMode, baseImgData) 
 
 function loadPrecomputedPaintLineLayer(art, width, height, frameMode) {
   if (frameMode !== "paint" || !art || !art.lineLayerSrc) return Promise.resolve(null);
-  return loadArtworkBitmap(art.lineLayerSrc).then((img) => {
+  const cacheKey = getPaintAssetDataCacheKey(art, frameMode, width, height, art.lineLayerSrc);
+  const cached = readPaintAssetDataCache(precomputedPaintLineLayerCache, cacheKey);
+  if (cached?.value) return Promise.resolve(cached.value);
+  if (cached?.promise) return cached.promise;
+  const promise = loadArtworkBitmap(art.lineLayerSrc).then((img) => {
     if (!img || img.width !== width || img.height !== height) return null;
     const canvas = document.createElement("canvas");
     canvas.width = img.width;
     canvas.height = img.height;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.drawImage(img, 0, 0);
-    return ctx.getImageData(0, 0, img.width, img.height);
-  }).catch(() => null);
+    const imageData = ctx.getImageData(0, 0, img.width, img.height);
+    rememberPaintAssetDataCacheEntry(precomputedPaintLineLayerCache, cacheKey, { value: imageData });
+    return imageData;
+  }).catch(() => {
+    precomputedPaintLineLayerCache.delete(cacheKey);
+    return null;
+  });
+  rememberPaintAssetDataCacheEntry(precomputedPaintLineLayerCache, cacheKey, { promise });
+  return promise;
 }
 
 function cloneFillLayerImageData(imageData) {
@@ -211,28 +263,126 @@ function getCanvasRenderPixelSize(canvas, sourceWidth, sourceHeight, smoothToDis
   };
 }
 
-function renderImageDataToCanvas(canvas, imageData, options = {}) {
-  const targetSize = getCanvasRenderPixelSize(canvas, imageData.width, imageData.height, options.smoothToDisplay);
-  if (!options.smoothToDisplay) {
-    if (canvas.width !== imageData.width) canvas.width = imageData.width;
-    if (canvas.height !== imageData.height) canvas.height = imageData.height;
-    canvas.getContext("2d", { willReadFrequently: true }).putImageData(imageData, 0, 0);
+function getComposedPaintScratchCanvas(canvas) {
+  if (composedPaintScratchCanvasMap && canvas) {
+    let scratch = composedPaintScratchCanvasMap.get(canvas);
+    if (!scratch) {
+      scratch = document.createElement("canvas");
+      composedPaintScratchCanvasMap.set(canvas, scratch);
+    }
+    return scratch;
+  }
+  if (!fallbackComposedPaintScratchCanvas) {
+    fallbackComposedPaintScratchCanvas = document.createElement("canvas");
+  }
+  return fallbackComposedPaintScratchCanvas;
+}
+
+function mergeRenderBounds(a, b, width, height) {
+  if (!a || !b) return null;
+  return getComposeBounds({
+    minX: Math.min(a.minX, b.minX),
+    minY: Math.min(a.minY, b.minY),
+    maxX: Math.max(a.maxX, b.maxX),
+    maxY: Math.max(a.maxY, b.maxY)
+  }, width, height);
+}
+
+function scheduleImageDataCanvasDraw(canvas, imageData, options, renderBounds) {
+  if (!scheduledCanvasDraws || !canvas) {
+    drawImageDataToCanvas(canvas, imageData, { ...options, renderBounds });
     return;
   }
-  if (!composedPaintScratchCanvas) {
-    composedPaintScratchCanvas = document.createElement("canvas");
+  const previous = scheduledCanvasDraws.get(canvas);
+  const nextBounds = previous
+    ? mergeRenderBounds(previous.renderBounds, renderBounds, imageData.width, imageData.height)
+    : renderBounds;
+  if (previous) {
+    window.cancelAnimationFrame(previous.frameId);
   }
-  if (composedPaintScratchCanvas.width !== imageData.width) composedPaintScratchCanvas.width = imageData.width;
-  if (composedPaintScratchCanvas.height !== imageData.height) composedPaintScratchCanvas.height = imageData.height;
-  const sourceCtx = composedPaintScratchCanvas.getContext("2d", { willReadFrequently: true });
-  sourceCtx.putImageData(imageData, 0, 0);
+  const drawOptions = { ...options, renderBounds: nextBounds };
+  const frameId = window.requestAnimationFrame(() => {
+    const pending = scheduledCanvasDraws.get(canvas);
+    if (!pending || pending.frameId !== frameId) return;
+    scheduledCanvasDraws.delete(canvas);
+    drawImageDataToCanvas(canvas, imageData, drawOptions);
+  });
+  scheduledCanvasDraws.set(canvas, { frameId, renderBounds: nextBounds });
+}
+
+function renderImageDataToCanvas(canvas, imageData, options = {}) {
+  const renderBounds = getComposeBounds(options.renderBounds || options.bounds, imageData.width, imageData.height);
+  if (options.deferToAnimationFrame && typeof window.requestAnimationFrame === "function") {
+    scheduleImageDataCanvasDraw(canvas, imageData, options, renderBounds);
+    return;
+  }
+  drawImageDataToCanvas(canvas, imageData, { ...options, renderBounds });
+}
+
+function drawImageDataToCanvas(canvas, imageData, options = {}) {
+  const targetSize = getCanvasRenderPixelSize(canvas, imageData.width, imageData.height, options.smoothToDisplay);
+  const renderBounds = options.renderBounds;
+  if (!options.smoothToDisplay) {
+    const resized = canvas.width !== imageData.width || canvas.height !== imageData.height;
+    if (canvas.width !== imageData.width) canvas.width = imageData.width;
+    if (canvas.height !== imageData.height) canvas.height = imageData.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!resized && renderBounds) {
+      ctx.putImageData(
+        imageData,
+        0,
+        0,
+        renderBounds.minX,
+        renderBounds.minY,
+        renderBounds.maxX - renderBounds.minX + 1,
+        renderBounds.maxY - renderBounds.minY + 1
+      );
+    } else {
+      ctx.putImageData(imageData, 0, 0);
+    }
+    return;
+  }
+  const scratchCanvas = getComposedPaintScratchCanvas(canvas);
+  const scratchResized = scratchCanvas.width !== imageData.width || scratchCanvas.height !== imageData.height;
+  if (scratchCanvas.width !== imageData.width) scratchCanvas.width = imageData.width;
+  if (scratchCanvas.height !== imageData.height) scratchCanvas.height = imageData.height;
+  const sourceCtx = scratchCanvas.getContext("2d", { willReadFrequently: true });
+  if (!scratchResized && renderBounds) {
+    sourceCtx.putImageData(
+      imageData,
+      0,
+      0,
+      renderBounds.minX,
+      renderBounds.minY,
+      renderBounds.maxX - renderBounds.minX + 1,
+      renderBounds.maxY - renderBounds.minY + 1
+    );
+  } else {
+    sourceCtx.putImageData(imageData, 0, 0);
+  }
+  const targetResized = canvas.width !== targetSize.width || canvas.height !== targetSize.height;
   if (canvas.width !== targetSize.width) canvas.width = targetSize.width;
   if (canvas.height !== targetSize.height) canvas.height = targetSize.height;
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(composedPaintScratchCanvas, 0, 0, canvas.width, canvas.height);
+  if (!targetResized && !scratchResized && renderBounds) {
+    const sx = renderBounds.minX;
+    const sy = renderBounds.minY;
+    const sw = renderBounds.maxX - renderBounds.minX + 1;
+    const sh = renderBounds.maxY - renderBounds.minY + 1;
+    const dx = Math.floor(sx / imageData.width * canvas.width);
+    const dy = Math.floor(sy / imageData.height * canvas.height);
+    const dx2 = Math.ceil((renderBounds.maxX + 1) / imageData.width * canvas.width);
+    const dy2 = Math.ceil((renderBounds.maxY + 1) / imageData.height * canvas.height);
+    const dw = Math.max(1, dx2 - dx);
+    const dh = Math.max(1, dy2 - dy);
+    ctx.clearRect(dx, dy, dw, dh);
+    ctx.drawImage(scratchCanvas, sx, sy, sw, sh, dx, dy, dw, dh);
+  } else {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(scratchCanvas, 0, 0, canvas.width, canvas.height);
+  }
 }
 
 function renderComposedPaintFrame(canvas, baseImgData, fillLayer, lineLayer, options = {}) {
@@ -387,16 +537,16 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
   }, [art.src, frameMode, shouldAnalyzeRegions]);
   const redraw = (cw, ch) => {
     if (!canvasRef.current || !baseCanvasRef.current) return;
+    const cacheKey = getPaintLayerStateCacheKey(art, frameMode, cw, ch, fillsArray);
+    if (lastRenderedPaintKeyRef.current === cacheKey && composedImageDataRef.current) return;
     const baseCtx = baseCanvasRef.current.getContext("2d", { willReadFrequently: true });
     const baseImgData = baseImageDataRef.current || baseCtx.getImageData(0, 0, cw, ch);
     const lineLayer = lineLayerImageDataRef.current || buildLineLayerImageData(baseImgData);
     lineLayerImageDataRef.current = lineLayer;
-    const cacheKey = getPaintLayerStateCacheKey(art, frameMode, cw, ch, fillsArray);
     const { fillLayer, progressImgData } = getOrBuildPaintLayerState(
       cacheKey,
       () => buildPaintLayerState(baseImgData, fillsArray, frameRef.current, regionMapRef.current)
     );
-    if (lastRenderedPaintKeyRef.current === cacheKey && composedImageDataRef.current) return;
     composedImageDataRef.current = renderComposedPaintFrame(canvasRef.current, baseImgData, fillLayer, lineLayer, { smoothToDisplay: true });
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
@@ -506,7 +656,8 @@ function CanvasArt({ art, fills, onPaint, selected, interactive = true, frameMod
     composedImageDataRef.current = renderComposedPaintFrame(canvasRef.current, baseImgData, fillLayer, lineLayer, {
       smoothToDisplay: true,
       bounds: dirtyBounds,
-      previousImageData: composedImageDataRef.current
+      previousImageData: composedImageDataRef.current,
+      deferToAnimationFrame: true
     });
     fillLayerImageDataRef.current = fillLayer;
     progressImageDataRef.current = progressImgData;
@@ -1677,8 +1828,12 @@ function renderArtworkDataUrl(art, fills, options = {}) {
     };
   });
 }
-function createGallerySnapshotDataUrl(art, fills) {
-  return renderArtworkDataUrl(art, fills, { maxSide: 420, mimeType: "image/webp", quality: 0.74 }).then((snapshot) => snapshot.dataUrl);
+function createGallerySnapshotDataUrl(art, fills, options = {}) {
+  return renderArtworkDataUrl(art, fills, {
+    maxSide: options.maxSide || 420,
+    mimeType: options.mimeType || "image/webp",
+    quality: options.quality || 0.74
+  }).then((snapshot) => snapshot.dataUrl);
 }
 function downloadCanvasPng(art, fills) {
   return renderArtworkDataUrl(art, fills).then(({ dataUrl }) => {
@@ -1863,19 +2018,34 @@ const App = function App() {
     }
     setGallery(saveResult.value);
     if (saveResult.capped) flash("갤러리는 최근 " + saveResult.maxItems + "개까지 보관해요");
-    createGallerySnapshotDataUrl(art, fills).then((snapshotDataUrl) => {
+    else if (saveResult.snapshotsTrimmed) flash("저장 공간 보호를 위해 오래된 미리보기를 줄였어요");
+    const saveSnapshot = (snapshotDataUrl, retried = false) => {
       const itemWithSnapshot = AppStorage.createGalleryItem({ ...item, snapshotDataUrl });
       setGallery((currentGallery) => {
+        if (!currentGallery.some((galleryItem) => galleryItem.id === item.id)) return currentGallery;
         const updated = currentGallery.map((galleryItem) => galleryItem.id === item.id ? itemWithSnapshot : galleryItem);
         const snapshotSave = AppStorage.saveGallery(updated);
         if (!snapshotSave.saved) {
-          window.setTimeout(() => flash("저장 공간이 부족해요. 오래된 작품을 삭제해 주세요"), 0);
+          if (!retried) {
+            window.setTimeout(() => {
+              createGallerySnapshotDataUrl(art, fills, { maxSide: 320, quality: 0.62 })
+                .then((compactSnapshotDataUrl) => saveSnapshot(compactSnapshotDataUrl, true))
+                .catch(() => flash("저장 공간이 부족해요. 오래된 작품을 삭제해 주세요"));
+            }, 0);
+          } else {
+            window.setTimeout(() => flash("저장 공간이 부족해요. 오래된 작품을 삭제해 주세요"), 0);
+          }
           return currentGallery;
+        }
+        if (snapshotSave.snapshotsTrimmed) {
+          window.setTimeout(() => flash("저장 공간 보호를 위해 오래된 미리보기를 줄였어요"), 0);
         }
         return snapshotSave.value;
       });
-    }).catch(() => {
-    });
+    };
+    createGallerySnapshotDataUrl(art, fills).then((snapshotDataUrl) => {
+      saveSnapshot(snapshotDataUrl);
+    }).catch(() => {});
   };
   const deleteGalleryItem = (itemId) => {
     const next = gallery.filter((item) => item.id !== itemId);
@@ -1928,7 +2098,8 @@ const App = function App() {
     setScreen("home");
   };
   const normTweaks = {
-    palettePos: t.palettePos === "\uCE21\uBA74" ? "side" : t.palettePos === "\uD558\uB2E8" ? "bottom" : "auto"
+    palettePos: t.palettePos === "\uCE21\uBA74" ? "side" : t.palettePos === "\uD558\uB2E8" ? "bottom" : "auto",
+    paintFeedback: t.paintFeedback !== false
   };
   const themeAttr = t.theme === "\uCC28\uBD84" ? "cool" : t.theme === "\uACE0\uB300\uBE44" ? "contrast" : "warm";
   const showBottomNav = ["home", "gallery"].includes(screen);

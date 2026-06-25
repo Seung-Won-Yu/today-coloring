@@ -436,7 +436,13 @@
 
   function getPaintRegionByLabel(regionMap, label) {
     if (!isValidRegionMap(regionMap) || !label) return null;
-    return regionMap.regions.find((region) => region.label === label) || null;
+    if (!regionMap.regionByLabel || typeof regionMap.regionByLabel.get !== "function") {
+      regionMap.regionByLabel = new Map();
+      regionMap.regions.forEach((region) => {
+        if (region && region.label) regionMap.regionByLabel.set(region.label, region);
+      });
+    }
+    return regionMap.regionByLabel.get(label) || null;
   }
 
   function getPaintRegionMapSeeds(regionMap) {
@@ -749,19 +755,23 @@
     }
     const previous = isSameImageSize(options.previousImageData, baseImageData) ? options.previousImageData : null;
     const bounds = previous ? getComposeBounds(options.bounds, width, height) : null;
-    const data = previous ? new Uint8ClampedArray(previous.data) : new Uint8ClampedArray(width * height * 4);
+    const data = bounds ? previous.data : previous ? new Uint8ClampedArray(previous.data) : new Uint8ClampedArray(width * height * 4);
     if (bounds) {
       for (let y = bounds.minY; y <= bounds.maxY; y++) {
         for (let x = bounds.minX; x <= bounds.maxX; x++) {
           composePaintPixel(data, baseData, fillData, lineData, width, height, y * width + x);
         }
       }
+      previous.dirtyBounds = bounds;
+      return previous;
     } else {
       for (let pixelOffset = 0; pixelOffset < width * height; pixelOffset++) {
         composePaintPixel(data, baseData, fillData, lineData, width, height, pixelOffset);
       }
     }
-    return createImageDataLike(width, height, data);
+    const composed = createImageDataLike(width, height, data);
+    composed.dirtyBounds = null;
+    return composed;
   }
 
   const safeArtworkFrameCache = new Map();
@@ -875,6 +885,7 @@
     getPaintRegionMapSeeds,
     paintRegionMapSeed,
     markProgressRegionMap,
+    getComposeBounds,
     findNearestUnpaintedStart,
     findNearestPaintedStart,
     markProgressRegion,

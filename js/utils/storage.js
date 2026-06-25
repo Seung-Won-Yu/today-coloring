@@ -283,6 +283,24 @@
     return a.every((item, index) => b[index] && item.id === b[index].id);
   }
 
+  function stripGallerySnapshot(item) {
+    if (!item || !item.snapshotDataUrl) return item;
+    const next = { ...item };
+    delete next.snapshotDataUrl;
+    return next;
+  }
+
+  function compactGallerySnapshots(gallery, keepFirstSnapshot) {
+    let changed = false;
+    const value = gallery.map((item, index) => {
+      if (keepFirstSnapshot && index === 0) return item;
+      const compacted = stripGallerySnapshot(item);
+      if (compacted !== item) changed = true;
+      return compacted;
+    });
+    return { value, changed };
+  }
+
   function loadProgress() {
     const normalized = normalizeProgress(readJson(PROGRESS_KEY, {}));
     if (normalized.changed) writeJson(PROGRESS_KEY, normalized.value);
@@ -308,11 +326,34 @@
   function saveGallery(list) {
     const normalized = normalizeGallery(list);
     const deduped = dedupeGalleryItems(normalized.value);
-    const value = limitGalleryItems(deduped);
+    let value = limitGalleryItems(deduped);
+    let saved = writeJson(GALLERY_KEY, value);
+    let snapshotsTrimmed = false;
+    if (!saved) {
+      const compactedOld = compactGallerySnapshots(value, true);
+      if (compactedOld.changed) {
+        saved = writeJson(GALLERY_KEY, compactedOld.value);
+        if (saved) {
+          value = compactedOld.value;
+          snapshotsTrimmed = true;
+        }
+      }
+    }
+    if (!saved) {
+      const compactedAll = compactGallerySnapshots(value, false);
+      if (compactedAll.changed) {
+        saved = writeJson(GALLERY_KEY, compactedAll.value);
+        if (saved) {
+          value = compactedAll.value;
+          snapshotsTrimmed = true;
+        }
+      }
+    }
     return {
-      saved: writeJson(GALLERY_KEY, value),
+      saved,
       value,
       capped: value.length !== deduped.length,
+      snapshotsTrimmed,
       maxItems: MAX_GALLERY_ITEMS
     };
   }
