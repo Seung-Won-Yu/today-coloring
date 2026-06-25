@@ -518,10 +518,10 @@
 
 .guide-modal__dots button {
   position:relative;
-  width:34px;
-  height:34px;
-  min-width:34px;
-  min-height:34px;
+  width:42px;
+  height:42px;
+  min-width:42px;
+  min-height:42px;
   padding:0;
   border:0;
   background:transparent;
